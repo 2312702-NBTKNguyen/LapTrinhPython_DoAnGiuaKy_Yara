@@ -1,0 +1,12 @@
+# Python virtual environment
+.venv/
+
+# Local secrets
+.env
+
+# Generated output
+malware_signatures.json
+
+# Python cache
+__pycache__/
+*.pyc
