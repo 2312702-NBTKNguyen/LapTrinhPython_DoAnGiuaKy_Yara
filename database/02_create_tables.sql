@@ -11,7 +11,6 @@ CREATE TABLE IF NOT EXISTS malware_signatures (
 	sha256_hash VARCHAR(64) NOT NULL UNIQUE,
 	sha3_384_hash VARCHAR(96)
 );
-GO
 
 -- Bảng lưu trữ lịch sử quét
 CREATE TABLE IF NOT EXISTS scan_results (
@@ -23,12 +22,10 @@ CREATE TABLE IF NOT EXISTS scan_results (
 	detection_method VARCHAR(50),
     scan_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-GO
 
 ALTER TABLE scan_results
 ADD CONSTRAINT check_method
 CHECK (detection_method IN ('HASH_MATCH', 'YARA_MATCH', 'CLEAN'));
-GO
 
 -- Indexes cho truy vấn malware_signatures
 CREATE INDEX IF NOT EXISTS idx_malware_signatures_md5_hash
