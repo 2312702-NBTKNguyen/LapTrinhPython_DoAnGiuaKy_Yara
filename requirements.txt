@@ -1,8 +1,14 @@
+# Gọi API MalwareBazaar
 requests
 
+# Quản lý biến môi trường từ file .env
 python-dotenv
 
+# Kết nối và tương tác với PostgreSQL
 psycopg2-binary
 
+# Xử lý dữ liệu
 pandas
 
+# Phân tích và quét file (chính)
+yara-python
