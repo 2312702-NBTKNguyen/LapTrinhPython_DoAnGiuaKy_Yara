@@ -1,0 +1,32 @@
+rule Ransomware_LockBit {
+	meta:
+        author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
+		description = "Phát hiện LockBit ransomware dựa trên ransom note, đuôi mã hóa và liên kết TOX."
+		reference = "https://attack.mitre.org/software/S0622/"
+		date = "2026-03-18"
+		malware_family = "LockBit"
+		severity = "high"
+
+	strings:
+        // Nhóm 1: Dấu hiệu Đặc trưng cao (High Fidelity)
+        $lb_name = "LockBit" ascii wide nocase
+        $lb_note = "Restore-My-Files.txt" ascii wide nocase // Tên file tống tiền kinh điển
+        $lb_ext  = ".lockbit" ascii wide nocase           // Đuôi file sau khi bị mã hóa
+
+        // Nhóm 2: Các chuỗi giao tiếp / tống tiền (Generic)
+        $msg_enc = "Your files are encrypted" ascii wide nocase
+        // Cải tiến chuỗi TOX
+        $tox_id  = "TOX ID:" ascii wide nocase 
+        $tox_url = "hxxp://tox.chat" ascii wide nocase // LockBit hay đính kèm link tải ứng dụng chat
+
+    condition:
+        // Phải là file PE (EXE/DLL)
+        uint16(0) == 0x5A4D and 
+        (
+            // Kịch bản 1: File chứa thẳng tên file tống tiền đặc trưng hoặc đuôi .lockbit
+            1 of ($lb_note, $lb_ext)
+            or
+            // Kịch bản 2: Có chứa từ khóa LockBit, đi kèm với câu đe dọa hoặc ID Tox để liên hệ
+            ($lb_name and 1 of ($msg_enc, $tox_*))
+        )
+}

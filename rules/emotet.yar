@@ -1,0 +1,40 @@
+rule BankingTrojan_Emotet {
+    meta:
+        author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
+        description = "Phát hiện Emotet Dropper dựa trên chuỗi lệnh PowerShell ẩn và kỹ thuật tải từ WordPress."
+        reference = "https://attack.mitre.org/software/S0367/"
+        date = "2026-03-18"
+        malware_family = "Emotet"
+        severity = "high"
+
+    strings:
+        // Nhóm 1: Tên định danh (Hiếm khi xuất hiện, nhưng có thể có ở file unpack)
+        $id_emotet = "Emotet" ascii wide nocase
+
+        // Nhóm 2: Lệnh PowerShell đặc trưng của Emotet Dropper
+        $ps_cmd    = "powershell" ascii wide nocase
+        $ps_window = "-w hidden" ascii wide nocase
+        $ps_enc    = "-enc" ascii wide nocase
+        $ps_web    = "Net.WebClient" ascii wide nocase
+        $ps_down   = "DownloadFile" ascii wide nocase
+
+        // Nhóm 3: Dấu vết mạng (Chỉ có giá trị khi đi kèm với Nhóm 2)
+        $net_wp    = "/wp-content/" ascii wide nocase // Các site WordPress bị hack làm C2
+        $net_http  = "http://" ascii wide nocase
+
+    condition:
+        // Đảm bảo là file PE (EXE/DLL/DOC chứa Macro gọi shell)
+        uint16(0) == 0x5A4D and 
+        (
+            // Kịch bản 1: Để lộ tên định danh
+            $id_emotet
+            or
+            // Kịch bản 2: Chuỗi hành vi Dropper kinh điển
+            // Yêu cầu phải có gọi PowerShell ẨN mã hóa, CỘNG VỚI lệnh tải file, CỘNG VỚI link tải từ WordPress
+            (
+                ($ps_cmd and $ps_window and $ps_enc)
+                and 1 of ($ps_web, $ps_down)
+                and ($net_http and $net_wp)
+            )
+        )
+}

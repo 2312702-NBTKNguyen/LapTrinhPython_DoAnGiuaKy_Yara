@@ -1,0 +1,36 @@
+rule BankingTrojan_Dridex {
+    meta:
+        author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
+        description = "Phát hiện Dridex dựa trên cấu trúc file cấu hình XML và hành vi webinject."
+        reference = "https://attack.mitre.org/software/S0384/"
+        date = "2026-03-18"
+        malware_family = "Dridex"
+        severity = "high"
+
+    strings:
+        // Nhóm 1: Tên định danh (Bổ sung thêm Bugat - tên gốc của Dridex)
+        $id_dridex = "Dridex" ascii wide nocase
+        $id_bugat  = "Bugat" ascii wide nocase
+
+        // Nhóm 2: Cấu trúc XML đặc trưng của hệ thống Dridex Webinject
+        // Là những tags mà Dridex dùng để biết cách sửa đổi giao diện trang web ngân hàng
+        $xml_inj_start = "<webinjects>" ascii wide nocase
+        $xml_inj_url   = "<set_url>" ascii wide nocase
+        $xml_inj_data  = "<data_before>" ascii wide nocase // Mã HTML cần chèn
+        $xml_inj_end   = "</webinjects>" ascii wide nocase
+
+        // Nhóm 3: Chuỗi mạng và hành vi
+        $net_post = "POST" ascii wide
+        $net_ua   = "User-Agent:" ascii wide nocase
+
+    condition:
+        // Phải là file PE (EXE/DLL)
+        uint16(0) == 0x5A4D and 
+        (
+            // Kịch bản 1: File bất cẩn để lộ tên định danh Dridex hoặc Bugat
+            any of ($id_*)
+            or
+            // Kịch bản 2: Bắt được trọn bộ cấu hình chèn mã độc
+            (3 of ($xml_*) and all of ($net_*))
+        )
+}
