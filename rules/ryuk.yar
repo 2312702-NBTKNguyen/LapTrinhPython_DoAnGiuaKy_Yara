@@ -1,3 +1,5 @@
+import "pe"
+
 rule Ransomware_Ryuk {
 	meta:
         author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
@@ -21,12 +23,12 @@ rule Ransomware_Ryuk {
 
     condition:
         // Phải là file thực thi Windows (EXE/DLL)
-        uint16(0) == 0x5A4D and 
+        pe.is_pe and 
         (
             // Tín hiệu mạnh: Chỉ cần có tên Ransom note hoặc đuôi .RYK là đủ kết luận
             1 of ($ryuk_*)
             or
             // Trường hợp biến thể ẩn tên, phải gom đủ ít nhất 3 hành vi đáng ngờ mới được báo động
-            3 of ($beh_*)
+            2 of ($beh_*)
         )
 }

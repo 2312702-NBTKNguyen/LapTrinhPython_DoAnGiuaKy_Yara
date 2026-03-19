@@ -1,3 +1,5 @@
+import "pe"
+
 rule BankingTrojan_Emotet {
     meta:
         author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
@@ -23,18 +25,17 @@ rule BankingTrojan_Emotet {
         $net_http  = "http://" ascii wide nocase
 
     condition:
-        // Đảm bảo là file PE (EXE/DLL/DOC chứa Macro gọi shell)
-        uint16(0) == 0x5A4D and 
+        // Đảm bảo là file PE (EXE/DLL)
+        pe.is_pe and 
         (
             // Kịch bản 1: Để lộ tên định danh
             $id_emotet
             or
             // Kịch bản 2: Chuỗi hành vi Dropper kinh điển
-            // Yêu cầu phải có gọi PowerShell ẨN mã hóa, CỘNG VỚI lệnh tải file, CỘNG VỚI link tải từ WordPress
+            // Nới ngưỡng để giảm bỏ sót biến thể đã pack/obfuscate
             (
-                ($ps_cmd and $ps_window and $ps_enc)
-                and 1 of ($ps_web, $ps_down)
-                and ($net_http and $net_wp)
+                2 of ($ps_*)
+                and 1 of ($net_*)
             )
         )
 }

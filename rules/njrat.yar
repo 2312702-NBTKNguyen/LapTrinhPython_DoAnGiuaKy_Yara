@@ -1,3 +1,5 @@
+import "pe"
+
 rule RAT_njRAT {
 	meta:
         author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
@@ -22,7 +24,7 @@ rule RAT_njRAT {
         $beh_env      = "SEE_MASK_NOZONECHECKS" ascii wide 
 
     condition:
-        uint16(0) == 0x5A4D and 
+        pe.is_pe and 
         (
             // Kịch bản 1: Có tên mã độc HOẶC có chuỗi phân cách mạng độc quyền (Chỉ cần 1 là đủ kết luận)
             any of ($str_*) or any of ($net_*)

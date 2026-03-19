@@ -1,3 +1,5 @@
+import "pe"
+
 rule BankingTrojan_Dridex {
     meta:
         author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
@@ -25,12 +27,12 @@ rule BankingTrojan_Dridex {
 
     condition:
         // Phải là file PE (EXE/DLL)
-        uint16(0) == 0x5A4D and 
+        pe.is_pe and 
         (
             // Kịch bản 1: File bất cẩn để lộ tên định danh Dridex hoặc Bugat
             any of ($id_*)
             or
             // Kịch bản 2: Bắt được trọn bộ cấu hình chèn mã độc
-            (3 of ($xml_*) and all of ($net_*))
+            (2 of ($xml_*) and 1 of ($net_*))
         )
 }

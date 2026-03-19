@@ -1,3 +1,5 @@
+import "pe"
+
 rule RAT_Remcos {
 	meta:
         author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
@@ -22,7 +24,7 @@ rule RAT_Remcos {
         $beh_runkey = "Software\\Microsoft\\Windows\\CurrentVersion\\Run" ascii wide nocase
 
     condition:
-        uint16(0) == 0x5A4D and 
+        pe.is_pe and 
         (
             // Kịch bản 1: File bất cẩn để lộ tên Remcos hoặc tên vendor -> Chắc chắn là mã độc
             any of ($str_*)

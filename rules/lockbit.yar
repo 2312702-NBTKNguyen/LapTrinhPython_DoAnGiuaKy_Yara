@@ -1,3 +1,5 @@
+import "pe"
+
 rule Ransomware_LockBit {
 	meta:
         author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
@@ -21,7 +23,7 @@ rule Ransomware_LockBit {
 
     condition:
         // Phải là file PE (EXE/DLL)
-        uint16(0) == 0x5A4D and 
+        pe.is_pe and 
         (
             // Kịch bản 1: File chứa thẳng tên file tống tiền đặc trưng hoặc đuôi .lockbit
             1 of ($lb_note, $lb_ext)
