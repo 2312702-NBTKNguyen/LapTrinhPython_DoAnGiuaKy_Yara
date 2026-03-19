@@ -1,3 +1,5 @@
+import "pe"
+
 rule BankingTrojan_TrickBot {
 	meta:
         author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
@@ -24,13 +26,13 @@ rule BankingTrojan_TrickBot {
         $c2_client_id = "client_id" ascii wide nocase
 
     condition:
-        uint16(0) == 0x5A4D and 
+        pe.is_pe and 
         (
             // Dấu hiệu cực mạnh: Chứa ít nhất 2 thẻ cấu hình XML của Trickbot
             2 of ($xml_*) 
             or
             // Dấu hiệu mạnh: Chứa ít nhất 3 tên module con đặc trưng
-            3 of ($mod_*) 
+            2 of ($mod_*) 
             or
             // Dấu hiệu kết hợp: Có thẻ XML + Module + Tham số C2
             (1 of ($xml_*) and 1 of ($mod_*) and 1 of ($c2_*))

@@ -1,3 +1,5 @@
+import "pe"
+
 rule Infostealer_LokiBot {
 	meta:
         author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
@@ -27,7 +29,7 @@ rule Infostealer_LokiBot {
 
     condition:
         // Đảm bảo là file PE (EXE/DLL)
-        uint16(0) == 0x5A4D and 
+        pe.is_pe and 
         (
             // Kịch bản 1: Để lộ đường dẫn C2 hoặc User-Agent độc quyền -> Chắc chắn là LokiBot
             any of ($c2_*) or $ua_charon

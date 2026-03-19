@@ -26,12 +26,12 @@ rule Ransomware_WannaCry {
         $ioc_ext_wnry     = ".WNRY" ascii nocase
 
     condition:
-        uint16(0) == 0x5A4D and
+        pe.is_pe and
         (
             // Tín hiệu mạnh: có kill-switch và ít nhất 1 dấu vết khác.
             ($killswitch and 1 of ($ioc_*))
             or
-            // Trường hợp biến thể đã bị vá kill-switch: cần ít nhất 4 dấu vết.
-            (4 of ($ioc_*))
+            // Trường hợp biến thể đã bị vá kill-switch: cần ít nhất 3 dấu vết.
+            (3 of ($ioc_*))
         )
 }

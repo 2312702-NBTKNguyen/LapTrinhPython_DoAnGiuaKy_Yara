@@ -1,3 +1,5 @@
+import "pe"
+
 rule Ransomware_Conti {
     meta:
         author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
@@ -20,7 +22,7 @@ rule Ransomware_Conti {
 
     condition:
         // Đảm bảo là file PE (EXE/DLL)
-        uint16(0) == 0x5A4D and 
+        pe.is_pe and 
         (
             // Kịch bản 1: Để lộ thẳng đuôi file mã hóa .CONTI -> Chắc chắn là mã độc
             $id_ext
