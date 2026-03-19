@@ -1,0 +1,18 @@
+BÁO CÁO QUÉT MALWARE
+============================================================
+Thời gian xuất báo cáo: 2026-03-19 14:05:07.296226
+Tổng bản ghi quét thành công: 2
+============================================================
+
+[2026-03-19 14:05:07.287857] HASH_MATCH
+File: test_lockbit.txt
+Path: D:\Projects\LapTrinhPython_DoAnGiuaKy_Yara\samples\test_lockbit.txt
+SHA256: 9dd012b2c4af9ca26d474a96aaad6b991b4270696e5f83dcd8b4042064526918
+Signature: test_lockbit.txt (Ransomware_LockBit)
+------------------------------------------------------------
+[2026-03-19 14:05:07.290163] HASH_MATCH
+File: test_wannacry.txt
+Path: D:\Projects\LapTrinhPython_DoAnGiuaKy_Yara\samples\test_wannacry.txt
+SHA256: 591ebf3b1f2904ae3376a2a17e212d17afccc8d9154cc8ad084b13989310637f
+Signature: test_wannacry.txt (Ransomware_WannaCry)
+------------------------------------------------------------
