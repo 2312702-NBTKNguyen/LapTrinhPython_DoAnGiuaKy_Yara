@@ -1,0 +1,8 @@
+MZ - WannaCry Ransomware (Fake Test Sample)
+iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com
+mssecsvc2.0
+tasksche.exe
+@WanaDecryptor@.exe
+@Please_Read_Me@.txt
+Oops, your files have been encrypted!
+.WNCRY

@@ -1,0 +1,5 @@
+MZ - LockBit Ransomware (Fake Test Sample)
+LockBit
+Your files have been encrypted!
+Contact us at: lockbit@example.com
+Payment required in Bitcoin
