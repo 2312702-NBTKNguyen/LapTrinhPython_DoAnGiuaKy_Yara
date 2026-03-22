@@ -9,7 +9,7 @@ from pathlib import Path
 
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import Static, DirectoryTree, TextLog
+from textual.widgets import Static, DirectoryTree, RichLog
 from textual.containers import Container, Horizontal
 
 
@@ -42,11 +42,11 @@ class RulesScreen(Screen):
                 yield YaraRuleTree(Path("rules"), id="rules-tree")
 
             with Container(id="rule-content-panel"):
-                yield TextLog(id="rule-content", highlight=True, wrap=True)
+                yield RichLog(id="rule-content", highlight=True, wrap=True)
 
     def on_directory_tree_file_selected(self, event) -> None:
         """Display selected rule file content."""
-        content_log = self.query_one("#rule-content", TextLog)
+        content_log = self.query_one("#rule-content", RichLog)
         content_log.clear()
 
         try:
