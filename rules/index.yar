@@ -1,3 +1,5 @@
+include "core/pe_analyzer.yar"
+
 include "agent_tesla.yar"
 include "conti.yar"
 include "dridex.yar"
