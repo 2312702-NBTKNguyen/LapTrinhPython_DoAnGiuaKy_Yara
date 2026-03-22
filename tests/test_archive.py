@@ -119,8 +119,8 @@ def test_direct_file_comparison():
     rules = load_yara_rules("rules/index.yar")
     scanner = ArchiveScanner(rules)
 
-    # Scan direct file
-    direct_file = "tests/samples/test_emotet.txt"
+    # Scan direct PE file
+    direct_file = "tests/samples/test_emotet.exe"
     direct_matches = scan_with_yara(rules, direct_file)
 
     # Scan archive containing same file
@@ -138,7 +138,7 @@ def test_direct_file_comparison():
         print("\n✅ PASS: Both methods detect malware")
         return True
     else:
-        print("\n⚠️  WARNING: Detection inconsistency")
+        print("\n❌ FAIL: Detection inconsistency")
         return False
 
 
