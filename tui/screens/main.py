@@ -6,6 +6,7 @@ and progress bar at the bottom.
 """
 
 import os
+import asyncio
 from pathlib import Path
 
 from textual.app import ComposeResult
@@ -117,27 +118,29 @@ class MainScreen(Screen):
         table = self.query_one("#results-table", ScanResultsTable)
 
         status.update(f"[bold green]Scanning: {target_path}[/bold green]")
-        progress.update(total=None)  # Indeterminate progress
+        progress.update(total=None)
 
-        # Import scanner here to avoid circular imports
         from malware_scanner.service import MalwareScanner
         from malware_scanner.engine import load_yara_rules
 
         try:
-            rules = load_yara_rules("rules/index.yar")
-            scanner = MalwareScanner(rules_path="rules/index.yar")
+            rules = await asyncio.to_thread(load_yara_rules, "rules/index.yar")
+            scanner = await asyncio.to_thread(
+                lambda: MalwareScanner(rules_path="rules/index.yar")
+            )
 
             if os.path.isfile(target_path):
-                result = scanner.scan_target(target_path)
+                result = await asyncio.to_thread(scanner.scan_target, target_path)
                 if result:
                     self._add_result(table, target_path, result)
             elif os.path.isdir(target_path):
                 for root, dirs, files in os.walk(target_path):
                     for file in files:
                         filepath = os.path.join(root, file)
-                        result = scanner.scan_target(filepath)
+                        result = await asyncio.to_thread(scanner.scan_target, filepath)
                         if result:
                             self._add_result(table, filepath, result)
+                        await asyncio.sleep(0)
 
             scanner.close()
             status.update("[bold]Scan complete.[/bold]")
