@@ -11,3 +11,14 @@ malware_signatures.csv
 # Python cache
 __pycache__/
 *.pyc
+
+# Scan logs (generated at runtime)
+logs/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

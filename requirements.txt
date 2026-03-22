@@ -1,14 +1,22 @@
-# Gọi API MalwareBazaar
+# API calls
 requests
 
-# Quản lý biến môi trường từ file .env
+# Environment variables
 python-dotenv
 
-# Kết nối và tương tác với PostgreSQL
+# Database
 psycopg2-binary
 
-# Xử lý dữ liệu
+# Data processing
 pandas
 
-# Phân tích và quét file (chính)
+# YARA scanning (core)
 yara-python
+
+# Archive scanning
+py7zr>=0.20.0
+rarfile>=4.0
+
+# TUI framework
+textual>=0.40.0
+rich>=13.0.0
