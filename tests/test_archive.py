@@ -9,7 +9,7 @@ import os
 import sys
 from pathlib import Path
 
-# Add parent directory to path
+# Thêm thư mục cha vào path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from malware_scanner.engine import load_yara_rules
@@ -18,9 +18,9 @@ from malware_scanner.exceptions import ArchiveBombError, NestedDepthError
 
 
 def test_zip_scanning():
-    """Test scanning files inside ZIP archive."""
+    """Test quét file bên trong ZIP archive."""
     print("=" * 60)
-    print("TEST: ZIP Archive Scanning")
+    print("TEST: Quét ZIP Archive")
     print("=" * 60)
 
     rules = load_yara_rules("rules/index.yar")
@@ -29,32 +29,32 @@ def test_zip_scanning():
     zip_path = "tests/samples/archives/test_malware.zip"
 
     if not os.path.exists(zip_path):
-        print(f"ERROR: Test ZIP not found: {zip_path}")
+        print(f"LỖI: Không tìm thấy file test ZIP: {zip_path}")
         return False
 
-    print(f"\nScanning: {zip_path}")
+    print(f"\nĐang quét: {zip_path}")
     print("-" * 60)
 
     results = list(scanner.scan(zip_path))
 
-    print(f"\nFound {len(results)} matches:")
+    print(f"\nTìm thấy {len(results)} kết quả khớp:")
     for result in results:
         print(f"  - {result.file_path}")
         print(f"    Rule: {result.rule_name}")
-        print(f"    Size: {result.file_size} bytes")
+        print(f"    Kích thước: {result.file_size} bytes")
 
     if len(results) > 0:
-        print("\n✅ PASS: Archive scanning detected malware patterns")
+        print("\n✅ PASS: Quét archive phát hiện malware patterns")
         return True
     else:
-        print("\n❌ FAIL: No malware patterns detected")
+        print("\n❌ FAIL: Không phát hiện malware patterns")
         return False
 
 
 def test_nested_zip():
-    """Test scanning nested ZIP archives."""
+    """Test quét nested ZIP archives."""
     print("\n" + "=" * 60)
-    print("TEST: Nested ZIP Scanning")
+    print("TEST: Quét Nested ZIP")
     print("=" * 60)
 
     rules = load_yara_rules("rules/index.yar")
@@ -63,55 +63,55 @@ def test_nested_zip():
     zip_path = "tests/samples/archives/test_nested.zip"
 
     if not os.path.exists(zip_path):
-        print(f"ERROR: Test ZIP not found: {zip_path}")
+        print(f"LỖI: Không tìm thấy file test ZIP: {zip_path}")
         return False
 
-    print(f"\nScanning: {zip_path}")
+    print(f"\nĐang quét: {zip_path}")
     print("-" * 60)
 
     results = list(scanner.scan(zip_path))
 
-    print(f"\nFound {len(results)} matches:")
+    print(f"\nTìm thấy {len(results)} kết quả khớp:")
     for result in results:
         print(f"  - {result.file_path}")
         print(f"    Rule: {result.rule_name}")
 
     if len(results) > 0:
-        print("\n✅ PASS: Nested archive scanning works")
+        print("\n✅ PASS: Quét nested archive hoạt động")
         return True
     else:
-        print("\n❌ FAIL: No malware patterns detected in nested archive")
+        print("\n❌ FAIL: Không phát hiện malware patterns trong nested archive")
         return False
 
 
 def test_depth_limit():
-    """Test that nesting depth limit is enforced."""
+    """Test kiểm tra giới hạn depth nested archive."""
     print("\n" + "=" * 60)
-    print("TEST: Nesting Depth Limit")
+    print("TEST: Giới hạn Depth Nested")
     print("=" * 60)
 
     rules = load_yara_rules("rules/index.yar")
-    scanner = ArchiveScanner(rules, max_depth=0)  # No nesting allowed
+    scanner = ArchiveScanner(rules, max_depth=0)  # Không cho phép nesting
 
     zip_path = "tests/samples/archives/test_nested.zip"
 
     try:
         results = list(scanner.scan(zip_path))
-        # If we get here with max_depth=0, nested archives should be skipped
-        print("✅ PASS: Depth limit handled gracefully")
+        # Nếu đến đây với max_depth=0, nested archives sẽ bị bỏ qua
+        print("✅ PASS: Xử lý giới hạn depth thành công")
         return True
     except NestedDepthError:
-        print("✅ PASS: Depth limit exception raised correctly")
+        print("✅ PASS: Exception giới hạn depth được raise đúng")
         return True
     except Exception as e:
-        print(f"❌ FAIL: Unexpected error: {e}")
+        print(f"❌ FAIL: Lỗi không mong muốn: {e}")
         return False
 
 
 def test_direct_file_comparison():
-    """Compare archive scanning vs direct file scanning."""
+    """So sánh quét archive vs quét file trực tiếp."""
     print("\n" + "=" * 60)
-    print("TEST: Archive vs Direct File Scanning")
+    print("TEST: So sánh Archive vs File Trực Tiếp")
     print("=" * 60)
 
     from malware_scanner.engine import scan_with_yara
@@ -119,33 +119,33 @@ def test_direct_file_comparison():
     rules = load_yara_rules("rules/index.yar")
     scanner = ArchiveScanner(rules)
 
-    # Scan direct PE file
+    # Quét file PE trực tiếp
     direct_file = "tests/samples/test_emotet.exe"
     direct_matches = scan_with_yara(rules, direct_file)
 
-    # Scan archive containing same file
+    # Quét archive chứa cùng file
     zip_path = "tests/samples/archives/test_malware.zip"
     archive_results = list(scanner.scan(zip_path))
 
-    print(f"\nDirect file scan: {direct_file}")
-    print(f"  Matches: {direct_matches}")
+    print(f"\nQuét file trực tiếp: {direct_file}")
+    print(f"  Kết quả khớp: {direct_matches}")
 
-    print(f"\nArchive scan: {zip_path}")
+    print(f"\nQuét archive: {zip_path}")
     archive_matches = [r.rule_name for r in archive_results if "Emotet" in r.rule_name]
-    print(f"  Emotet matches: {archive_matches}")
+    print(f"  Emotet khớp: {archive_matches}")
 
     if direct_matches and len(archive_matches) > 0:
-        print("\n✅ PASS: Both methods detect malware")
+        print("\n✅ PASS: Cả hai phương pháp đều phát hiện malware")
         return True
     else:
-        print("\n❌ FAIL: Detection inconsistency")
+        print("\n❌ FAIL: Không nhất quán trong phát hiện")
         return False
 
 
 def main():
-    """Run all tests."""
+    """Chạy tất cả tests."""
     print("\n" + "=" * 60)
-    print("ARCHIVE SCANNING TEST SUITE")
+    print("BỘ TEST QUÉT ARCHIVE")
     print("=" * 60 + "\n")
 
     tests = [
@@ -161,24 +161,24 @@ def main():
             result = test()
             results.append(result)
         except Exception as e:
-            print(f"\n❌ TEST FAILED with exception: {e}")
+            print(f"\n❌ TEST FAILED với exception: {e}")
             results.append(False)
 
-    # Summary
+    # Tổng kết
     print("\n" + "=" * 60)
-    print("TEST SUMMARY")
+    print("TỔNG KẾT TEST")
     print("=" * 60)
 
     passed = sum(results)
     total = len(results)
 
-    print(f"\nPassed: {passed}/{total}")
+    print(f"\nĐạt: {passed}/{total}")
 
     if passed == total:
-        print("\n🎉 ALL TESTS PASSED!")
+        print("\n🎉 TẤT CẢ TESTS ĐỀU ĐẠT!")
         return 0
     else:
-        print(f"\n⚠️  {total - passed} test(s) failed")
+        print(f"\n⚠️  {total - passed} test(s) không đạt")
         return 1
 
 

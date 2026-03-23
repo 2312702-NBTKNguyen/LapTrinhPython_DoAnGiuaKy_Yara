@@ -1,18 +1,18 @@
-# API calls
+# Gọi API
 requests
 
-# Environment variables
+# Biến môi trường
 python-dotenv
 
 # Database
 psycopg2-binary
 
-# Data processing
+# Xử lý dữ liệu
 pandas
 
-# YARA scanning (core)
+# Quét YARA (core)
 yara-python
 
-# Archive scanning
+# Quét archive
 py7zr>=0.20.0
 rarfile>=4.0
