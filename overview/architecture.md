@@ -11,16 +11,15 @@ YARA Malware Scanner là hệ thống phát hiện mã độc sử dụng kết 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         ENTRY POINT                             │
-│                      scanner.py / tui.py                        │
+│                          scanner.py                             │
 └────────────────────────────┬────────────────────────────────────┘
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                      PRESENTATION LAYER                         │
-├─────────────────────────────┬───────────────────────────────────┤
-│      CLI Interface          │         TUI Interface             │
-│     (malware_scanner/cli.py)│       (tui/app.py)                │
-└─────────────────────────────┴───────────────────────────────────┘
+│                      CLI Interface                              │
+│                    (malware_scanner/cli.py)                     │
+└────────────────────────────┬────────────────────────────────────┘
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
@@ -69,15 +68,6 @@ YARA Malware Scanner là hệ thống phát hiện mã độc sử dụng kết 
 | `reporting.py` | Output | Report generation |
 | `exceptions.py` | Error handling | Custom exception classes |
 | `config.py` | Configuration | Settings management |
-
-### TUI modules (`tui/`)
-
-| Module | Purpose | Responsibilities |
-|--------|---------|------------------|
-| `app.py` | Main application | App initialization, screen routing |
-| `screens/` | UI screens | File browser, scan, results, rules |
-| `widgets/` | Reusable widgets | Tables, progress bars, trees |
-| `styles/` | CSS styling | Theme, layout, colors |
 
 ### Data flow
 

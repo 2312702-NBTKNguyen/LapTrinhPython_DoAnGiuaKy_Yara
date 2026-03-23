@@ -143,89 +143,6 @@ Phát hiện các patterns mạng đáng ngờ.
 
 ---
 
-## 3. TUI Interface
-
-### Mô tả
-Giao diện dòng lệnh nâng cao (Terminal User Interface) sử dụng Textual framework.
-
-### Screens
-
-#### 3.1 Main Screen
-```
-┌─────────────────────────────────────────────────────────────┐
-│  YARA Malware Scanner v2.0                    [Settings] [?]│
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌──────────────┐  ┌────────────────────────────────────┐  │
-│  │ FILE BROWSER │  │ SCAN RESULTS                       │  │
-│  │              │  ├────────────────────────────────────┤  │
-│  │ /home/user/  │  │ File       │ Rule    │ Status      │  │
-│  │ ├── docs/    │  ├────────────────────────────────────┤  │
-│  │ ├── downloads│  │ test.exe   │ Emotet  │ ⚠ SUSPECT  │  │
-│  │ └── malware/ │  │ clean.txt  │ -       │ ✅ CLEAN   │  │
-│  │              │  │ virus.zip  │ WannaCry│ 🔴 DANGER  │  │
-│  │ [Scan]       │  └────────────────────────────────────┘  │
-│  └──────────────┘  ┌────────────────────────────────────┐  │
-│                    │ [████████████████░░░░] 80%          │  │
-│                    │ Scanning: malware.zip::readme.txt   │  │
-│                    └────────────────────────────────────┘  │
-│                                                             │
-├─────────────────────────────────────────────────────────────┤
-│ [Q]uit [S]can [R]esults [F]ilter [E]xport [H]istory      │
-└─────────────────────────────────────────────────────────────┘
-```
-
-#### 3.2 Features
-
-| Feature | Description | Key binding |
-|---------|-------------|-------------|
-| File browser | Navigate and select files/dirs | Arrow keys |
-| Start scan | Begin scanning selected target | `S` |
-| View results | Show detailed results table | `R` |
-| Filter results | Filter by severity/rule | `F` |
-| Export | Export results to file | `E` |
-| View history | Browse past scan results | `H` |
-| Quit | Exit application | `Q` |
-
-### Widgets
-
-#### ScanResultsTable
-```python
-COLUMNS = [
-    ("file", "File Path", 40),
-    ("rule", "YARA Match", 20),
-    ("severity", "Severity", 12),
-    ("size", "Size", 10),
-    ("scanned", "Scanned At", 20),
-]
-```
-
-#### ProgressDisplay
-- Progress bar with percentage
-- Current file being scanned
-- Files scanned / total files
-- Estimated time remaining
-
-#### FileBrowser
-- DirectoryTree with custom filtering
-- Exclude system directories
-- Highlight suspicious file types
-- Multi-select support
-
-### Styling
-
-**Theme: "Hacker Green"**
-```css
-$primary: #00ff00;
-$background: #0a0a0a;
-$surface: #1a1a1a;
-$warning: #ffaa00;
-$error: #ff3333;
-$success: #00cc00;
-```
-
----
-
 ## 4. Error Handling
 
 ### Exception hierarchy
@@ -293,10 +210,6 @@ MAX_ARCHIVE_SIZE_MB=100
 MAX_EXTRACTION_RATIO=100
 MAX_NESTED_DEPTH=3
 MAX_FILES_PER_ARCHIVE=1000
-
-# TUI settings
-TUI_THEME=hacker_green
-TUI_REFRESH_RATE=60
 ```
 
 ### Config file (future)
@@ -321,8 +234,4 @@ archive:
 database:
   pool_size: 5
   timeout: 10
-
-tui:
-  theme: hacker_green
-  refresh_rate: 60
 ```

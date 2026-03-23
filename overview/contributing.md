@@ -155,13 +155,12 @@ test: Add archive scanning tests
 ## Directory structure rules
 
 ```
-1. malware_scanner/     - Core business logic (no UI code)
-2. tui/                 - UI code only (imports from malware_scanner)
-3. rules/               - YARA rules only
-4. tests/               - All test files
-5. overview/            - Documentation only
-6. database/            - SQL scripts
-7. src/                 - Data pipeline scripts
+1. malware_scanner/     - Core business logic
+2. rules/               - YARA rules only
+3. tests/               - All test files
+4. overview/            - Documentation only
+5. database/            - SQL scripts
+6. src/                 - Data pipeline scripts
 ```
 
 ## Dependencies
@@ -178,10 +177,6 @@ test: Add archive scanning tests
 # Archive scanning
 py7zr>=0.20.0      # 7z support
 rarfile>=4.0        # RAR support
-
-# TUI
-textual>=0.40.0     # Terminal UI framework
-rich>=13.0.0        # Text formatting (textual dependency)
 ```
 
 ## Review process
