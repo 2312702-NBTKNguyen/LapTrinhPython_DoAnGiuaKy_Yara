@@ -132,12 +132,3 @@ Chạy test suite:
 ```bash
 python tests/test_archive.py
 ```
-
-## License
-
-Dự án này là bài tập giữa kỳ môn Lập trình Python.
-
-## Tác giả
-
-- Nguyễn Bá Thiều Khôi Nguyên
-- Hồ Quốc Long
