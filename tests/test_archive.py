@@ -1,8 +1,8 @@
 """
-Test archive scanning functionality.
+Test chức năng quét archive.
 
-Tests ZIP scanning with fake malware samples
-to verify YARA rules detect patterns inside archives.
+Test quét ZIP với fake malware samples
+để verify YARA rules phát hiện patterns bên trong archives.
 """
 
 import os
