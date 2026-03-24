@@ -4,11 +4,6 @@ version = "1.0.0"
 description = "Hệ thống phát hiện mã độc sử dụng YARA rules và hash-based detection"
 readme = "README.md"
 requires-python = ">=3.14"
-license = {text = "MIT"}
-authors = [
-    {name = "2312702-NBTKNguyen"},
-    {name = "hoquoclong"},
-]
 dependencies = [
     "requests>=2.31.0",
     "python-dotenv>=1.0.0",

@@ -14,6 +14,8 @@
 - [x] Core YARA rules
 - [x] Custom exception hierarchy
 - [x] Project documentation
+- [x] JSON/CSV export
+- [x] uv support
 
 ## Version 2.0 - Enhanced Features (Future)
 
@@ -26,7 +28,6 @@
 
 ### Phase 2: Additional Features
 - [ ] RAR file support (requires unrar)
-- [ ] JSON/CSV export
 - [ ] Scan scheduling
 - [ ] Memory scanning (requires root)
 

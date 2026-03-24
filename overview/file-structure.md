@@ -18,7 +18,7 @@ LapTrinhPython_DoAnGiuaKy_Yara/
 │   ├── engine.py               # Hash calculation, YARA scanning
 │   ├── archive.py              # Archive scanning (ZIP, 7z, RAR)
 │   ├── db.py                   # PostgreSQL operations
-│   ├── reporting.py            # Report generation
+│   ├── reporting.py            # Report generation (TXT, JSON, CSV)
 │   └── exceptions.py           # Custom exceptions
 │
 ├── rules/                      # YARA rules
@@ -58,11 +58,13 @@ LapTrinhPython_DoAnGiuaKy_Yara/
 │   ├── test_wannacry.txt
 │   └── test_lockbit.txt
 │
-├── logs/                       # Scan reports
-│   └── scan_report_*.txt
+├── logs/                       # Scan reports (generated at runtime)
+│   └── scan_report_*.txt/json/csv
 │
 ├── scanner.py                  # Entry point
-├── requirements.txt            # Python dependencies
+├── pyproject.toml              # Project metadata & uv dependencies
+├── uv.lock                     # Reproducible builds (uv)
+├── requirements.txt            # Python dependencies (pip)
 ├── .env                        # Environment variables (not in git)
 ├── .gitignore
 └── README.md
