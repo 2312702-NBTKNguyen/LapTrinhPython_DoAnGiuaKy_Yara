@@ -53,8 +53,8 @@ psql -U postgres -d yara_malware_signatures -f database/02_create_tables.sql
 ### Bước 5: Import dữ liệu malware signatures
 
 ```bash
-python src/get_malware_data.py
-python src/malware_data_filter.py
+python scripts/get_malware_data.py
+python scripts/malware_data_filter.py
 python database/import_data.py
 ```
 
@@ -94,7 +94,7 @@ Báo cáo sẽ được hiển thị trên terminal và lưu vào thư mục `lo
 │   └── families/           # Malware family rules
 ├── tests/                  # Test files
 ├── database/               # Database setup scripts
-├── src/                    # Data fetching scripts
+├── scripts/                 # Data fetching scripts
 └── scanner.py              # Entry point
 ```
 

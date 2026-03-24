@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YARA Malware Scanner - Presentation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* ===========================================
+           CSS CUSTOM PROPERTIES
+           =========================================== */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f7f4;
+            --bg-card: #fefefe;
+            --text-primary: #1a1a1a;
+            --text-secondary: #555555;
+            --text-muted: #888888;
+            --accent: #c41e3a;
+            --accent-light: rgba(196, 30, 58, 0.1);
+            --border: #e0ddd5;
+            --shadow: rgba(0, 0, 0, 0.06);
+
+            --font-display: 'Playfair Display', 'Times New Roman', Times, serif;
+            --font-body: 'Source Serif 4', 'Times New Roman', Times, serif;
+            --title-size: clamp(2rem, 5vw, 3.5rem);
+            --h2-size: clamp(1.5rem, 3.5vw, 2.2rem);
+            --h3-size: clamp(1rem, 2vw, 1.3rem);
+            --body-size: clamp(0.85rem, 1.3vw, 1.05rem);
+            --small-size: clamp(0.7rem, 1vw, 0.85rem);
+
+            --slide-padding: clamp(2rem, 5vw, 5rem);
+            --content-gap: clamp(1rem, 2vw, 2rem);
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --duration-normal: 0.6s;
+        }
+
+        /* ===========================================
+           BASE STYLES
+           =========================================== */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        html {
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+
+        /* ===========================================
+           PROGRESS BAR
+           =========================================== */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: var(--accent);
+            z-index: 1000;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        /* ===========================================
+           SLIDE STRUCTURE
+           =========================================== */
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .slide-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-height: 100%;
+            overflow: hidden;
+            padding: var(--slide-padding);
+            max-width: min(90vw, 1100px);
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* ===========================================
+           REVEAL ANIMATIONS
+           =========================================== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(25px);
+            transition: opacity var(--duration-normal) var(--ease-out-expo),
+                        transform var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .slide.visible .reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal:nth-child(1) { transition-delay: 0.1s; }
+        .reveal:nth-child(2) { transition-delay: 0.2s; }
+        .reveal:nth-child(3) { transition-delay: 0.3s; }
+        .reveal:nth-child(4) { transition-delay: 0.4s; }
+        .reveal:nth-child(5) { transition-delay: 0.5s; }
+        .reveal:nth-child(6) { transition-delay: 0.6s; }
+
+        /* ===========================================
+           NAVIGATION DOTS (TOC)
+           =========================================== */
+        .nav-dots {
+            position: fixed;
+            right: clamp(1rem, 2vw, 2rem);
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 999;
+        }
+
+        .nav-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--border);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-dot:hover {
+            background: var(--text-secondary);
+            transform: scale(1.3);
+        }
+
+        .nav-dot.active {
+            background: var(--accent);
+            transform: scale(1.2);
+        }
+
+        .nav-dot::after {
+            content: attr(data-label);
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--text-primary);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            font-family: var(--font-body);
+        }
+
+        .nav-dot:hover::after {
+            opacity: 1;
+        }
+
+        /* ===========================================
+           SLIDE NUMBER
+           =========================================== */
+        .slide-number {
+            position: fixed;
+            bottom: clamp(1rem, 2vw, 2rem);
+            left: clamp(1rem, 2vw, 2rem);
+            font-size: var(--small-size);
+            color: var(--text-muted);
+            font-family: var(--font-body);
+            z-index: 999;
+        }
+
+        /* ===========================================
+           KEYBOARD HINT
+           =========================================== */
+        .keyboard-hint {
+            position: fixed;
+            bottom: clamp(1rem, 2vw, 2rem);
+            right: clamp(1rem, 2vw, 2rem);
+            font-size: var(--small-size);
+            color: var(--text-muted);
+            z-index: 999;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .key {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-family: var(--font-body);
+        }
+
+        /* ===========================================
+           TYPOGRAPHY
+           =========================================== */
+        h1 {
+            font-family: var(--font-display);
+            font-size: var(--title-size);
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: var(--content-gap);
+            color: var(--text-primary);
+        }
+
+        h2 {
+            font-family: var(--font-display);
+            font-size: var(--h2-size);
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: var(--content-gap);
+            color: var(--text-primary);
+            padding-bottom: 0.5em;
+            border-bottom: 2px solid var(--accent);
+            display: inline-block;
+        }
+
+        h3 {
+            font-family: var(--font-display);
+            font-size: var(--h3-size);
+            font-weight: 700;
+            margin-bottom: 0.5em;
+            color: var(--text-primary);
+        }
+
+        p {
+            font-size: var(--body-size);
+            margin-bottom: 0.8em;
+            color: var(--text-secondary);
+        }
+
+        ul, ol {
+            font-size: var(--body-size);
+            margin-left: 1.5em;
+            margin-bottom: 1em;
+            color: var(--text-secondary);
+        }
+
+        li {
+            margin-bottom: 0.4em;
+            line-height: 1.6;
+        }
+
+        strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        code {
+            font-family: 'Courier New', monospace;
+            background: var(--bg-secondary);
+            padding: 0.15em 0.4em;
+            border-radius: 3px;
+            font-size: 0.9em;
+            border: 1px solid var(--border);
+        }
+
+        /* ===========================================
+           TITLE SLIDE
+           =========================================== */
+        .title-slide {
+            background: var(--bg-secondary);
+        }
+
+        .title-slide .slide-content {
+            text-align: center;
+            align-items: center;
+        }
+
+        .title-slide h1 {
+            border: none;
+            margin-bottom: 0.5em;
+        }
+
+        .subtitle {
+            font-size: clamp(1rem, 2vw, 1.4rem);
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-bottom: 2em;
+        }
+
+        .author-info {
+            font-size: var(--body-size);
+            color: var(--text-muted);
+            margin-top: 1em;
+        }
+
+        .accent-line {
+            width: 60px;
+            height: 3px;
+            background: var(--accent);
+            margin: 1.5em auto;
+        }
+
+        /* ===========================================
+           CONTENT CARDS
+           =========================================== */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+            gap: var(--content-gap);
+            margin-top: var(--content-gap);
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            box-shadow: 0 2px 8px var(--shadow);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 16px var(--shadow);
+        }
+
+        .card h3 {
+            color: var(--accent);
+            margin-bottom: 0.5em;
+            font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+        }
+
+        .card p {
+            font-size: var(--small-size);
+            margin-bottom: 0;
+        }
+
+        /* ===========================================
+           CODE BLOCKS
+           =========================================== */
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            border-radius: 8px;
+            font-family: 'Courier New', Consolas, monospace;
+            font-size: clamp(0.65rem, 1vw, 0.85rem);
+            line-height: 1.6;
+            overflow-x: auto;
+            margin: var(--content-gap) 0;
+            white-space: pre;
+        }
+
+        .code-block .comment { color: #6a9955; }
+        .code-block .keyword { color: #569cd6; }
+        .code-block .string { color: #ce9178; }
+        .code-block .function { color: #dcdcaa; }
+
+        /* ===========================================
+           TABLE STYLES
+           =========================================== */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: var(--content-gap) 0;
+            font-size: var(--small-size);
+        }
+
+        th, td {
+            padding: 0.6em 1em;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+            font-family: var(--font-display);
+        }
+
+        td {
+            color: var(--text-secondary);
+        }
+
+        tr:hover td {
+            background: var(--bg-secondary);
+        }
+
+        /* ===========================================
+           LAYER BOXES
+           =========================================== */
+        .layer-box {
+            background: var(--bg-card);
+            border-left: 4px solid var(--accent);
+            padding: clamp(0.8rem, 1.5vw, 1.2rem);
+            margin-bottom: 1em;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .layer-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.3em;
+            font-size: var(--body-size);
+        }
+
+        .layer-box p {
+            font-size: var(--small-size);
+            margin-bottom: 0;
+        }
+
+        /* ===========================================
+           MALWARE GRID
+           =========================================== */
+        .malware-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+            gap: 1em;
+            margin-top: var(--content-gap);
+        }
+
+        .malware-category {
+            background: var(--bg-secondary);
+            padding: clamp(0.8rem, 1.5vw, 1.2rem);
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .category-title {
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 0.5em;
+            font-size: var(--body-size);
+        }
+
+        .malware-category ul {
+            margin-left: 1.2em;
+            margin-bottom: 0;
+            font-size: var(--small-size);
+        }
+
+        .malware-category li {
+            margin-bottom: 0.2em;
+        }
+
+        /* ===========================================
+           TWO COLUMN LAYOUT
+           =========================================== */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--content-gap);
+            margin-top: var(--content-gap);
+        }
+
+        @media (max-width: 700px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===========================================
+           SECTION NUMBER
+           =========================================== */
+        .section-num {
+            font-family: var(--font-display);
+            font-size: clamp(0.7rem, 1vw, 0.85rem);
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 0.5em;
+        }
+
+        /* ===========================================
+           HIGHLIGHT BOX
+           =========================================== */
+        .highlight {
+            background: var(--accent-light);
+            border-left: 3px solid var(--accent);
+            padding: clamp(0.8rem, 1.5vw, 1rem);
+            border-radius: 0 6px 6px 0;
+            margin: var(--content-gap) 0;
+        }
+
+        .highlight p {
+            color: var(--text-primary);
+            margin-bottom: 0;
+        }
+
+        /* ===========================================
+           RESPONSIVE
+           =========================================== */
+        @media (max-height: 700px) {
+            :root {
+                --slide-padding: clamp(1rem, 3vw, 2rem);
+                --content-gap: clamp(0.5rem, 1.5vw, 1rem);
+            }
+        }
+
+        @media (max-height: 600px) {
+            .keyboard-hint {
+                display: none;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.2s !important;
+            }
+            html {
+                scroll-behavior: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Bar -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Navigation Dots (TOC) -->
+    <nav class="nav-dots" id="navDots"></nav>
+
+    <!-- Slide Number -->
+    <div class="slide-number" id="slideNumber">01 / 18</div>
+
+    <!-- Keyboard Hint -->
+    <div class="keyboard-hint">
+        <span class="key">←</span><span class="key">→</span> Điều hướng
+    </div>
+
+    <!-- ===========================================
+         SLIDE 1: TITLE
+         =========================================== -->
+    <section class="slide title-slide" id="slide-1">
+        <div class="slide-content">
+            <h1 class="reveal">YARA Malware Scanner</h1>
+            <p class="subtitle reveal">Hệ thống phát hiện mã độc sử dụng YARA Rules và Hash-based Detection</p>
+            <div class="accent-line reveal"></div>
+            <p class="author-info reveal">Đồ án Giữa kỳ — Lập trình Python</p>
+            <p class="author-info reveal"><strong>Nguyễn Bá Thiều Khôi Nguyên — Hồ Quốc Long</strong></p>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 2: TABLE OF CONTENTS
+         =========================================== -->
+    <section class="slide" id="slide-2">
+        <div class="slide-content">
+            <div class="section-num reveal">Mục lục</div>
+            <h2 class="reveal">Nội dung trình bày</h2>
+            <ol class="reveal">
+                <li>Giới thiệu tổng quan dự án</li>
+                <li>Cấu trúc thư mục dự án</li>
+                <li>Các thành phần chính</li>
+                <li>3 lớp phát hiện mã độc</li>
+                <li>YARA Rules — 14 họ Malware</li>
+                <li>Cơ chế quét Archive</li>
+                <li>Database PostgreSQL</li>
+                <li>Báo cáo và xuất dữ liệu</li>
+                <li>Cách sử dụng hệ thống</li>
+                <li>Tổng kết</li>
+            </ol>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 3: OVERVIEW
+         =========================================== -->
+    <section class="slide" id="slide-3">
+        <div class="slide-content">
+            <div class="section-num reveal">01 — Giới thiệu</div>
+            <h2 class="reveal">Tổng quan dự án</h2>
+            <p class="reveal">YARA Malware Scanner là hệ thống phát hiện mã độc kết hợp <strong>hai phương pháp</strong> mạnh mẽ:</p>
+            <div class="card-grid">
+                <div class="card reveal">
+                    <h3>Hash-based Detection</h3>
+                    <p>So sánh SHA256 hash của file với database malware đã biết. Tốc độ O(1), độ tin cậy cao — khớp chính xác 100%.</p>
+                </div>
+                <div class="card reveal">
+                    <h3>YARA Pattern Matching</h3>
+                    <p>Quét file bằng các rule YARA để phát hiện malware patterns, variants và families chưa có trong database.</p>
+                </div>
+            </div>
+            <div class="highlight reveal">
+                <p><strong>Tính năng chính:</strong> Quét file/thư mục • Hỗ trợ ZIP, 7z • 14 họ malware • Báo cáo TXT, JSON, CSV</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 4: PROJECT STRUCTURE
+         =========================================== -->
+    <section class="slide" id="slide-4">
+        <div class="slide-content">
+            <div class="section-num reveal">02 — Cấu trúc</div>
+            <h2 class="reveal">Thư mục dự án</h2>
+            <div class="code-block reveal"><span class="comment">LapTrinhPython_DoAnGiuaKy_Yara/</span>
+├── malware_scanner/        <span class="comment"># Core package</span>
+│   ├── cli.py              <span class="comment"># Giao diện dòng lệnh</span>
+│   ├── service.py          <span class="comment"># Business logic chính</span>
+│   ├── engine.py           <span class="comment"># YARA scanning engine</span>
+│   ├── archive.py          <span class="comment"># Quét file archive</span>
+│   ├── db.py               <span class="comment"># Thao tác PostgreSQL</span>
+│   ├── reporting.py        <span class="comment"># Tạo báo cáo</span>
+│   └── exceptions.py       <span class="comment"># Custom exceptions</span>
+├── rules/                  <span class="comment"># YARA rules (14 families)</span>
+│   ├── index.yar           <span class="comment"># Master rule file</span>
+│   └── *.yar               <span class="comment"># Rules từng malware family</span>
+├── database/               <span class="comment"># Database setup scripts</span>
+├── scripts/                <span class="comment"># Scripts lấy dữ liệu malware</span>
+├── tests/                  <span class="comment"># Test files</span>
+├── scanner.py              <span class="comment"># Entry point</span></div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 5: MAIN COMPONENTS
+         =========================================== -->
+    <section class="slide" id="slide-5">
+        <div class="slide-content">
+            <div class="section-num reveal">03 — Thành phần</div>
+            <h2 class="reveal">Các module chính</h2>
+            <table class="reveal">
+                <thead>
+                    <tr><th>Module</th><th>Chức năng</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>cli.py</strong></td><td>Giao diện dòng lệnh, nhập đường dẫn file/thư mục cần quét</td></tr>
+                    <tr><td><strong>service.py</strong></td><td>Lớp MalwareScanner — điều phối luồng quét, thống kê kết quả</td></tr>
+                    <tr><td><strong>engine.py</strong></td><td>Tính hash (MD5, SHA1, SHA256, SHA3-384), biên dịch YARA rules</td></tr>
+                    <tr><td><strong>archive.py</strong></td><td>Quét file ZIP, 7z trong memory, phát hiện archive bomb</td></tr>
+                    <tr><td><strong>db.py</strong></td><td>Kết nối PostgreSQL, truy vấn hash, lưu kết quả quét</td></tr>
+                    <tr><td><strong>reporting.py</strong></td><td>Xuất báo cáo: terminal, TXT, JSON, CSV</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 6: DETECTION LAYERS
+         =========================================== -->
+    <section class="slide" id="slide-6">
+        <div class="slide-content">
+            <div class="section-num reveal">04 — Phát hiện</div>
+            <h2 class="reveal">Ba lớp phát hiện mã độc</h2>
+            <div class="layer-box reveal">
+                <div class="layer-title">Lớp 1: Hash-based Detection</div>
+                <p>Tính SHA256 hash → Kiểm tra PostgreSQL database → Tốc độ O(1) — Độ tin cậy cao (khớp chính xác)</p>
+            </div>
+            <div class="layer-box reveal">
+                <div class="layer-title">Lớp 2: YARA Pattern Matching</div>
+                <p>Compile YARA rules vào RAM (một lần) → Quét bằng pattern matching → Phát hiện malware variants và families</p>
+            </div>
+            <div class="layer-box reveal">
+                <div class="layer-title">Lớp 3: Archive Scanning</div>
+                <p>Extract contents vào memory → Quét từng file bên trong → Hỗ trợ nested archives (depth ≤ 3)</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 7: SCANNING FLOW
+         =========================================== -->
+    <section class="slide" id="slide-7">
+        <div class="slide-content">
+            <div class="section-num reveal">04 — Phát hiện</div>
+            <h2 class="reveal">Luồng quét trong service.py</h2>
+            <div class="code-block reveal"><span class="keyword">def</span> <span class="function">scan_target</span>(self, target_path):
+    <span class="comment"># 1. Tính Hash (MD5, SHA1, SHA256, SHA3-384)</span>
+    file_hashes = calculate_file_hashes(target_path)
+    file_hash = file_hashes[<span class="string">"sha256_hash"</span>]
+
+    <span class="comment"># 2. Fast Path: Check Hash Database</span>
+    db_match = check_hash_in_db(self.db_conn, file_hash)
+    <span class="keyword">if</span> db_match:
+        <span class="comment"># Phát hiện qua HASH_MATCH → Dừng, ghi log</span>
+        <span class="keyword">return</span>
+
+    <span class="comment"># 3. Deep Path: YARA Scan</span>
+    yara_match = scan_with_yara(self.yara_rules, target_path)
+    <span class="keyword">if</span> yara_match:
+        <span class="comment"># Phát hiện qua YARA_MATCH → Dừng, ghi log</span>
+        <span class="keyword">return</span>
+
+    <span class="comment"># 4. Clean File — Ghi log CLEAN</span></div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 8: YARA RULES
+         =========================================== -->
+    <section class="slide" id="slide-8">
+        <div class="slide-content">
+            <div class="section-num reveal">05 — YARA Rules</div>
+            <h2 class="reveal">14 họ Malware được phát hiện</h2>
+            <div class="malware-grid">
+                <div class="malware-category reveal">
+                    <div class="category-title">Info Stealers</div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5em;">Mã độc đánh cắp thông tin</p>
+                    <ul>
+                        <li>RedLineStealer</li>
+                        <li>LokiBot</li>
+                        <li>AgentTesla</li>
+                        <li>Formbook</li>
+                    </ul>
+                </div>
+                <div class="malware-category reveal">
+                    <div class="category-title">Banking Trojans</div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5em;">Trojan ngân hàng & Botnet</p>
+                    <ul>
+                        <li>Emotet</li>
+                        <li>TrickBot</li>
+                        <li>Mirai</li>
+                        <li>Dridex</li>
+                    </ul>
+                </div>
+                <div class="malware-category reveal">
+                    <div class="category-title">Ransomware</div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5em;">Mã độc tống tiền</p>
+                    <ul>
+                        <li>WannaCry</li>
+                        <li>LockBit</li>
+                        <li>Conti</li>
+                        <li>Ryuk</li>
+                    </ul>
+                </div>
+                <div class="malware-category reveal">
+                    <div class="category-title">RATs</div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5em;">Remote Access Trojans</p>
+                    <ul>
+                        <li>RemcosRAT</li>
+                        <li>njRAT</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 9: YARA RULE EXAMPLE
+         =========================================== -->
+    <section class="slide" id="slide-9">
+        <div class="slide-content">
+            <div class="section-num reveal">05 — YARA Rules</div>
+            <h2 class="reveal">Ví dụ: Rule phát hiện Emotet</h2>
+            <div class="code-block reveal"><span class="keyword">rule</span> BankingTrojan_Emotet {
+    <span class="keyword">meta</span>:
+        author = <span class="string">"Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"</span>
+        malware_family = <span class="string">"Emotet"</span>
+        severity = <span class="string">"high"</span>
+
+    <span class="keyword">strings</span>:
+        $id_emotet = <span class="string">"Emotet"</span> ascii wide nocase
+        $ps_cmd    = <span class="string">"powershell"</span> ascii wide nocase
+        $ps_window = <span class="string">"-w hidden"</span> ascii wide nocase
+        $ps_enc    = <span class="string">"-enc"</span> ascii wide nocase
+        $ps_web    = <span class="string">"Net.WebClient"</span> ascii wide nocase
+        $ps_down   = <span class="string">"DownloadFile"</span> ascii wide nocase
+        $net_wp    = <span class="string">"/wp-content/"</span> ascii wide nocase
+
+    <span class="keyword">condition</span>:
+        pe.is_pe and (
+            $id_emotet
+            or (2 of ($ps_*) and 1 of ($net_*))
+        )
+}</div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 10: ARCHIVE SCANNING
+         =========================================== -->
+    <section class="slide" id="slide-10">
+        <div class="slide-content">
+            <div class="section-num reveal">06 — Archive</div>
+            <h2 class="reveal">Cơ chế quét Archive</h2>
+            <div class="two-column">
+                <div class="reveal">
+                    <h3>Đặc điểm</h3>
+                    <ul>
+                        <li>Hỗ trợ <strong>ZIP</strong> và <strong>7z</strong></li>
+                        <li>Extract vào <strong>memory</strong> — không ghi ra disk</li>
+                        <li>Quét từng file bằng YARA rules</li>
+                        <li>Hỗ trợ nested archives (depth ≤ 3)</li>
+                    </ul>
+                </div>
+                <div class="reveal">
+                    <h3>Bảo vệ</h3>
+                    <table>
+                        <tr><td>Archive Bomb</td><td>Ratio ≤ 100:1</td></tr>
+                        <tr><td>Nested Depth</td><td>Tối đa 3 lớp</td></tr>
+                        <tr><td>File Count</td><td>Tối đa 1000</td></tr>
+                        <tr><td>Size Limit</td><td>Tối đa 100MB</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 11: DATABASE
+         =========================================== -->
+    <section class="slide" id="slide-11">
+        <div class="slide-content">
+            <div class="section-num reveal">07 — Database</div>
+            <h2 class="reveal">PostgreSQL Database</h2>
+            <p class="reveal">Cơ sở dữ liệu: <code>yara_malware_signatures</code></p>
+            <div class="two-column">
+                <div class="card reveal">
+                    <h3>Bảng malware_signatures</h3>
+                    <ul>
+                        <li>Lưu malware signatures từ API</li>
+                        <li>SHA256 hash (UNIQUE)</li>
+                        <li>MD5, SHA1, SHA3-384 hashes</li>
+                        <li>Index cho truy vấn nhanh</li>
+                    </ul>
+                </div>
+                <div class="card reveal">
+                    <h3>Bảng scan_results</h3>
+                    <ul>
+                        <li>Lịch sử quét</li>
+                        <li>Detection method: HASH_MATCH, YARA_MATCH, CLEAN</li>
+                        <li>Timestamp tự động</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="highlight reveal">
+                <p><strong>Nguồn dữ liệu:</strong> MalwareBazaar API (abuse.ch) — lấy signatures cho 14 họ malware</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 12: REPORTING
+         =========================================== -->
+    <section class="slide" id="slide-12">
+        <div class="slide-content">
+            <div class="section-num reveal">08 — Báo cáo</div>
+            <h2 class="reveal">Báo cáo và xuất dữ liệu</h2>
+            <div class="two-column">
+                <div class="reveal">
+                    <h3>Báo cáo Terminal</h3>
+                    <ul>
+                        <li>Tổng số file đã quét</li>
+                        <li>Phát hiện qua Database Hash</li>
+                        <li>Phát hiện qua YARA Rules</li>
+                        <li>File an toàn / File lỗi</li>
+                        <li>Thời gian quét</li>
+                    </ul>
+                </div>
+                <div class="reveal">
+                    <h3>Xuất file (logs/)</h3>
+                    <table>
+                        <tr><td><strong>TXT</strong></td><td>Báo cáo dạng text</td></tr>
+                        <tr><td><strong>JSON</strong></td><td>Structured data</td></tr>
+                        <tr><td><strong>CSV</strong></td><td>Import vào Excel</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 13: USAGE
+         =========================================== -->
+    <section class="slide" id="slide-13">
+        <div class="slide-content">
+            <div class="section-num reveal">09 — Sử dụng</div>
+            <h2 class="reveal">Cài đặt và sử dụng</h2>
+            <div class="code-block reveal"><span class="comment"># Cài đặt dependencies</span>
+pip install -r requirements.txt
+
+<span class="comment"># Cấu hình database (.env)</span>
+DB_HOST=localhost
+DB_NAME=yara_malware_signatures
+DB_USER=postgres
+DB_PASSWORD=your_password
+
+<span class="comment"># Khởi tạo database & Import dữ liệu</span>
+psql -U postgres -f database/01_create_database.sql
+python scripts/get_malware_data.py
+
+<span class="comment"># Chạy chương trình</span>
+python scanner.py</div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 14: CLI DEMO
+         =========================================== -->
+    <section class="slide" id="slide-14">
+        <div class="slide-content">
+            <div class="section-num reveal">09 — Sử dụng</div>
+            <h2 class="reveal">Giao diện dòng lệnh</h2>
+            <div class="code-block reveal" style="background: #0d1117; color: #c9d1d9;">
+<span style="color: #58a6ff;">$</span> python scanner.py
+
+==================================== HỆ THỐNG PHÁT HIỆN MÃ ĐỘC ====================================
+
+Nhập đường dẫn file hoặc thư mục cần quét: <span style="color: #7ee787;">/home/user/sample.exe</span>
+
+[!] <span style="color: #f85149;">DANGER (HASH_MATCH)</span>: sample.exe → malware.exe (Emotet)
+
+======================================== BÁO CÁO KẾT QUẢ QUÉT ========================================
+Tổng số file đã quét: <span style="color: #7ee787;">1</span>
+Phát hiện qua Database Hash: <span style="color: #f85149;">1</span>
+File an toàn: <span style="color: #8b949e;">0</span>
+Thời gian quét: <span style="color: #79c0ff;">0.05 giây</span></div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 15: EXCEPTIONS
+         =========================================== -->
+    <section class="slide" id="slide-15">
+        <div class="slide-content">
+            <div class="section-num reveal">Chi tiết</div>
+            <h2 class="reveal">Custom Exception Hierarchy</h2>
+            <div class="code-block reveal">ScannerError (Base)
+├── DatabaseError
+│   ├── ConnectionError
+│   ├── QueryError
+│   └── SchemaError
+├── YaraError
+│   ├── RuleCompilationError
+│   ├── RuleNotFoundError
+│   └── ScanError
+├── ArchiveError
+│   ├── UnsupportedFormatError
+│   ├── ExtractionError
+│   ├── PasswordProtectedError
+│   ├── ArchiveBombError
+│   └── NestedDepthError
+├── ConfigurationError
+│   └── MissingConfigError / InvalidConfigError
+└── PermissionError
+    └── InsufficientPrivilegesError / AccessDeniedError</div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 16: DEPENDENCIES
+         =========================================== -->
+    <section class="slide" id="slide-16">
+        <div class="slide-content">
+            <div class="section-num reveal">Chi tiết</div>
+            <h2 class="reveal">Dependencies</h2>
+            <table class="reveal">
+                <thead>
+                    <tr><th>Package</th><th>Phiên bản</th><th>Công dụng</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>yara-python</strong></td><td>≥ 4.5.0</td><td>YARA pattern matching engine</td></tr>
+                    <tr><td><strong>psycopg2-binary</strong></td><td>≥ 2.9.0</td><td>PostgreSQL database driver</td></tr>
+                    <tr><td><strong>requests</strong></td><td>≥ 2.31.0</td><td>HTTP client cho MalwareBazaar API</td></tr>
+                    <tr><td><strong>pandas</strong></td><td>≥ 2.0.0</td><td>Xử lý dữ liệu malware</td></tr>
+                    <tr><td><strong>py7zr</strong></td><td>≥ 0.20.0</td><td>Hỗ trợ định dạng 7z</td></tr>
+                    <tr><td><strong>python-dotenv</strong></td><td>≥ 1.0.0</td><td>Đọc biến môi trường từ .env</td></tr>
+                </tbody>
+            </table>
+            <p class="reveal"><strong>Yêu cầu:</strong> Python 3.8+ • PostgreSQL 12+</p>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 17: SUMMARY
+         =========================================== -->
+    <section class="slide" id="slide-17">
+        <div class="slide-content">
+            <div class="section-num reveal">10 — Tổng kết</div>
+            <h2 class="reveal">Điểm nổi bật</h2>
+            <div class="card-grid">
+                <div class="card reveal">
+                    <h3>2 phương pháp</h3>
+                    <p>Hash-based + YARA Pattern Matching — bao phủ known và unknown threats</p>
+                </div>
+                <div class="card reveal">
+                    <h3>14 họ malware</h3>
+                    <p>Info Stealers, Banking Trojans, Ransomware, RATs</p>
+                </div>
+                <div class="card reveal">
+                    <h3>Quét archive an toàn</h3>
+                    <p>Memory-based, không extract ra disk, chống archive bomb</p>
+                </div>
+                <div class="card reveal">
+                    <h3>Báo cáo đa dạng</h3>
+                    <p>Terminal, TXT, JSON, CSV — dễ tích hợp và phân tích</p>
+                </div>
+            </div>
+            <div class="highlight reveal">
+                <p><strong>Mở rộng:</strong> GUI (Tkinter) • Real-time monitoring • VirusTotal API • ML-based detection</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 18: THANK YOU
+         =========================================== -->
+    <section class="slide title-slide" id="slide-18">
+        <div class="slide-content">
+            <h1 class="reveal" style="border: none;">Cảm ơn!</h1>
+            <div class="accent-line reveal"></div>
+            <p class="subtitle reveal">Questions & Answers</p>
+            <p class="author-info reveal" style="margin-top: 2em;">github.com/2312702-NBTKNguyen/LapTrinhPython_DoAnGiuaKy_Yara</p>
+        </div>
+    </section>
+
+    <!-- ===========================================
+         JAVASCRIPT
+         =========================================== -->
+    <script>
+        class SlidePresentation {
+            constructor() {
+                this.slides = document.querySelectorAll('.slide');
+                this.currentSlide = 0;
+                this.totalSlides = this.slides.length;
+                this.progressBar = document.getElementById('progressBar');
+                this.slideNumberEl = document.getElementById('slideNumber');
+                this.navDotsContainer = document.getElementById('navDots');
+
+                this.setupIntersectionObserver();
+                this.setupKeyboardNav();
+                this.setupNavDots();
+                this.updateProgress();
+            }
+
+            setupIntersectionObserver() {
+                const options = {
+                    root: null,
+                    rootMargin: '0px',
+                    threshold: 0.5
+                };
+
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                            const index = Array.from(this.slides).indexOf(entry.target);
+                            if (index !== -1) {
+                                this.currentSlide = index;
+                                this.updateProgress();
+                                this.updateNavDots();
+                                this.updateSlideNumber();
+                            }
+                        }
+                    });
+                }, options);
+
+                this.slides.forEach(slide => observer.observe(slide));
+            }
+
+            setupKeyboardNav() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+                        e.preventDefault();
+                        this.nextSlide();
+                    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        this.prevSlide();
+                    } else if (e.key === 'Home') {
+                        e.preventDefault();
+                        this.goToSlide(0);
+                    } else if (e.key === 'End') {
+                        e.preventDefault();
+                        this.goToSlide(this.totalSlides - 1);
+                    }
+                });
+            }
+
+            setupNavDots() {
+                const labels = [
+                    'Title', 'Mục lục', 'Tổng quan', 'Cấu trúc', 'Thành phần',
+                    '3 lớp phát hiện', 'Luồng quét', 'YARA Rules', 'Ví dụ Rule',
+                    'Archive', 'Database', 'Báo cáo', 'Cài đặt', 'CLI',
+                    'Exceptions', 'Dependencies', 'Tổng kết', 'Cảm ơn'
+                ];
+
+                this.slides.forEach((_, index) => {
+                    const dot = document.createElement('button');
+                    dot.className = 'nav-dot';
+                    dot.setAttribute('data-label', labels[index] || `Slide ${index + 1}`);
+                    dot.setAttribute('aria-label', `Go to slide ${index + 1}: ${labels[index]}`);
+                    dot.addEventListener('click', () => this.goToSlide(index));
+                    this.navDotsContainer.appendChild(dot);
+                });
+
+                this.updateNavDots();
+            }
+
+            goToSlide(index) {
+                if (index >= 0 && index < this.totalSlides) {
+                    this.slides[index].scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+
+            nextSlide() {
+                if (this.currentSlide < this.totalSlides - 1) {
+                    this.goToSlide(this.currentSlide + 1);
+                }
+            }
+
+            prevSlide() {
+                if (this.currentSlide > 0) {
+                    this.goToSlide(this.currentSlide - 1);
+                }
+            }
+
+            updateProgress() {
+                const progress = ((this.currentSlide + 1) / this.totalSlides) * 100;
+                this.progressBar.style.width = `${progress}%`;
+            }
+
+            updateNavDots() {
+                const dots = this.navDotsContainer.querySelectorAll('.nav-dot');
+                dots.forEach((dot, index) => {
+                    dot.classList.toggle('active', index === this.currentSlide);
+                });
+            }
+
+            updateSlideNumber() {
+                const num = String(this.currentSlide + 1).padStart(2, '0');
+                const total = String(this.totalSlides).padStart(2, '0');
+                this.slideNumberEl.textContent = `${num} / ${total}`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new SlidePresentation();
+        });
+    </script>
+</body>
+</html>
