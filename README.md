@@ -101,18 +101,21 @@ Báo cáo sẽ được hiển thị trên terminal và lưu vào thư mục `lo
 ## Phát hiện malware
 
 ### Layer 1: Hash-based Detection
+
 - Tính SHA256 hash của file
 - Kiểm tra trong PostgreSQL database
 - Thời gian: O(1)
 - Độ tin cậy: Cao (khớp chính xác)
 
 ### Layer 2: YARA Pattern Matching
+
 - Compile YARA rules vào RAM
 - Quét file bằng pattern matching
 - Phát hiện malware variants và families
 - Thời gian: Tùy thuộc kích thước file
 
 ### Layer 3: Archive Scanning
+
 - Extract archive contents vào memory
 - Quét từng file bên trong archive
 - Hỗ trợ nested archives (giới hạn depth)

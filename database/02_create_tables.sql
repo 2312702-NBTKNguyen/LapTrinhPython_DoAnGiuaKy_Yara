@@ -1,5 +1,5 @@
 -- Bảng lưu trữ Malware Signatures (Từ API)
-CREATE TABLE IF NOT EXISTS malware_signatures (
+CREATE TABLE IF NOT EXISTS malware_signatures.malware_signatures (
 	id SERIAL PRIMARY KEY,
 	file_name VARCHAR(255),
 	signature VARCHAR(255),
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS malware_signatures (
 );
 
 -- Bảng lưu trữ lịch sử quét
-CREATE TABLE IF NOT EXISTS scan_results (
+CREATE TABLE IF NOT EXISTS malware_signatures.scan_results (
 	id SERIAL PRIMARY KEY,
 	signature VARCHAR(255),
 	file_name VARCHAR(255),
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS scan_results (
     scan_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-ALTER TABLE scan_results
+ALTER TABLE malware_signatures.scan_results
 ADD CONSTRAINT check_method
 CHECK (detection_method IN ('HASH_MATCH', 'YARA_MATCH', 'CLEAN'));
 

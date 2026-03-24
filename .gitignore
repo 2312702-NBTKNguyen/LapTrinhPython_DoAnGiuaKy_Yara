@@ -8,8 +8,8 @@
 .python-version
 
 # Generated output
-malware_signatures.json
-malware_signatures.csv
+data/malware_signatures.json
+data/malware_signatures.csv
 
 # Python cache
 __pycache__/
