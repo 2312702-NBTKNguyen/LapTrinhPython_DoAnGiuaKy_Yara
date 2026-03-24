@@ -55,7 +55,13 @@ psql -U postgres -d yara_malware_signatures -f database/02_create_tables.sql
 ```bash
 python scripts/get_malware_data.py
 python scripts/malware_data_filter.py
-python database/import_data.py
+python scripts/import_data.py
+
+# Khởi chạy lần đầu (setup DB + fetch + filter + import)
+python main.py --run
+
+# Các lần sau chỉ cập nhật dữ liệu signatures
+python main.py --update
 ```
 
 ## Cách sử dụng
@@ -63,7 +69,12 @@ python database/import_data.py
 ### Chạy chương trình
 
 ```bash
-python scanner.py
+python main.py --run
+python main.py --update
+python main.py --interactive
+
+# Quét ngầm một file/thư mục rồi thoát
+python main.py --scan /path/to/file_or_folder
 ```
 
 ### Quét file hoặc thư mục
@@ -94,8 +105,10 @@ Báo cáo sẽ được hiển thị trên terminal và lưu vào thư mục `lo
 │   └── families/           # Malware family rules
 ├── tests/                  # Test files
 ├── database/               # Database setup scripts
-├── scripts/                 # Data fetching scripts
-└── scanner.py              # Entry point
+├── scripts/                # Data + workflow scripts
+│   └── workflows.py        # Nghiệp vụ update/scan/interactive
+├── main.py                 # CLI entry point chính
+└── scanner.py              # Wrapper tương thích lệnh cũ
 ```
 
 ## Phát hiện malware

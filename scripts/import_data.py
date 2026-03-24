@@ -7,8 +7,25 @@ from psycopg2.extras import execute_values
 
 load_dotenv()
 
+
+def _log_info(message: str) -> None:
+    print(f"[INFO] {message}")
+
+
+def _log_success(message: str) -> None:
+    print(f"[SUCCESS] {message}")
+
+
+def _log_warn(message: str) -> None:
+    print(f"[WARN] {message}")
+
+
+def _log_error(message: str) -> None:
+    print(f"[ERROR] {message}")
+
+
 def import_csv_to_db(csv_file_path):
-    print(f"Bắt đầu import dữ liệu từ {csv_file_path} vào PostgreSQL...")
+    _log_info(f"Bắt đầu import dữ liệu từ {csv_file_path} vào PostgreSQL...")
 
     try:
         conn = psycopg2.connect(
@@ -19,9 +36,9 @@ def import_csv_to_db(csv_file_path):
             password=os.getenv("DB_PASSWORD") 
         )
         cursor = conn.cursor()
-        print("-> Kết nối Database thành công.")
+        _log_success("Kết nối Database thành công.")
     except Exception as e:
-        print(f"-> Lỗi kết nối Database: {e}")
+        _log_error(f"Lỗi kết nối Database: {e}")
         return
     
     records_to_insert = []
@@ -42,7 +59,7 @@ def import_csv_to_db(csv_file_path):
                     row['sha3_384_hash']
                 ))
     except FileNotFoundError:
-        print(f"Không tìm thấy file {csv_file_path}.")
+        _log_error(f"Không tìm thấy file {csv_file_path}.")
         return
     
     if records_to_insert:
@@ -56,16 +73,16 @@ def import_csv_to_db(csv_file_path):
         try:
             execute_values(cursor, insert_query, records_to_insert)
             conn.commit()
-            print(f"-> Thành công! Đã thêm {len(records_to_insert)} records vào database.")
+            _log_success(f"Đã thêm {len(records_to_insert)} records vào database.")
         except Exception as e:
             conn.rollback()
-            print(f"Lỗi khi thực hiện insert: {e}")
+            _log_error(f"Lỗi khi thực hiện insert: {e}")
         finally:
             cursor.close()
             conn.close()
-            print("-> Đóng kết nối Database.")
+            _log_info("Đóng kết nối Database.")
     else:
-        print("-> Không có records nào để thêm vào database.")
+        _log_warn("Không có records nào để thêm vào database.")
 
 if __name__ == "__main__":
     import_csv_to_db('./data/malware_signatures.csv')
