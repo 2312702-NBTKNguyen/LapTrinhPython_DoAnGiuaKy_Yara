@@ -4,6 +4,9 @@
 # Local secrets
 .env
 
+# Python version (local)
+.python-version
+
 # Generated output
 malware_signatures.json
 malware_signatures.csv
