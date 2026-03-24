@@ -7,19 +7,19 @@
 1. **Docstrings:** Sử dụng Google style docstrings
 ```python
 def function(arg1: str, arg2: int) -> bool:
-    """Short description.
+    """Mô tả ngắn gọn.
     
-    Longer description if needed.
+    Mô tả chi tiết hơn nếu cần.
     
     Args:
-        arg1: Description of arg1.
-        arg2: Description of arg2.
+        arg1: Mô tả arg1.
+        arg2: Mô tả arg2.
     
     Returns:
-        Description of return value.
+        Mô tả giá trị trả về.
     
     Raises:
-        ValueError: If arg2 is negative.
+        ValueError: Nếu arg2 âm.
     """
 ```
 
@@ -31,12 +31,12 @@ def scan_file(filepath: str, rules: yara.Rules) -> list[Match]:
 
 3. **Comments:** Section-level, không comment từng dòng
 ```python
-# GOOD: Section comment
-# Calculate file hashes for database lookup
+# TỐT: Section comment
+# Tính file hashes để tra cứu database
 hashes = calculate_file_hashes(filepath)
 
-# BAD: Line-by-line comment
-hashes = calculate_file_hashes(filepath)  # Calculate hashes
+# KHÔNG TỐT: Line-by-line comment
+hashes = calculate_file_hashes(filepath)  # Tính hashes
 ```
 
 4. **Imports:** Sắp xếp theo thứ tự
@@ -54,49 +54,49 @@ from .engine import scan_with_yara
 from .db import check_hash_in_db
 ```
 
-### Error handling
+### Xử lý lỗi
 
 1. **Sử dụng custom exceptions** từ `exceptions.py`
 2. **Catch specific exceptions**, không catch generic `Exception`
-3. **Log lỗi** với context đầy đủ
+3. **Ghi log lỗi** với context đầy đủ
 4. **Không swallow errors** (catch rồi bỏ qua)
 
 ```python
-# GOOD
+# TỐT
 try:
     result = db.query(sql, params)
 except DatabaseError as e:
-    logger.error(f"Query failed: {e}", exc_info=True)
+    logger.error(f"Truy vấn thất bại: {e}", exc_info=True)
     raise
 
-# BAD
+# KHÔNG TỐT
 try:
     result = db.query(sql, params)
 except:
     pass
 ```
 
-### File organization
+### Tổ chức file
 
-1. **Mỗi file** có header comment mô tả purpose
+1. **Mỗi file** có header comment mô tả mục đích
 2. **Group related functions** vào cùng class/module
-3. **Keep files focused** - 1 file = 1 responsibility
+3. **Keep files focused** - 1 file = 1 trách nhiệm
 4. **Max file length:** ~300 lines
 
 ### Header template
 
 ```python
 """
-Module name - Short description.
+Tên module - Mô tả ngắn gọn.
 
-Longer description of what this module does,
-its main classes, and key responsibilities.
+Mô tả chi tiết hơn về module này,
+các class chính, và trách nhiệm chính.
 
 Example:
-    Basic usage example if helpful.
+    Ví dụ sử dụng nếu hữu ích.
 
 Attributes:
-    MODULE_CONSTANT: Description.
+    MODULE_CONSTANT: Mô tả.
 """
 ```
 
@@ -114,11 +114,11 @@ Net.WebClient
 http://example.com/wp-content/payload.exe
 ```
 
-### Test structure
+### Cấu trúc test
 
 ```python
 def test_zip_scanning():
-    """Test ZIP archive scanning."""
+    """Test quét ZIP archive."""
     scanner = ArchiveScanner(rules)
     
     # Test với fake malware
@@ -132,32 +132,32 @@ def test_zip_scanning():
 
 ## Git workflow
 
-### Branch naming
+### Đặt tên branch
 - `feature/archive-scanning`
 - `fix/database-connection`
 - `docs/README-update`
 
 ### Commit messages
 ```
-feat: Add ZIP archive scanning support
-fix: Handle password-protected ZIPs
-docs: Add feature specifications
-test: Add archive scanning tests
+feat: Thêm hỗ trợ quét ZIP archive
+fix: Xử lý ZIP được bảo vệ bằng password
+docs: Thêm đặc tả tính năng
+test: Thêm test quét archive
 ```
 
 ### Pull request checklist
-- [ ] Code follows style guide
+- [ ] Code tuân thủ style guide
 - [ ] Tests pass
-- [ ] Documentation updated
-- [ ] No hardcoded secrets
-- [ ] Error handling implemented
+- [ ] Documentation được cập nhật
+- [ ] Không có hardcoded secrets
+- [ ] Xử lý lỗi đầy đủ
 
-## Directory structure rules
+## Quy tắc cấu trúc thư mục
 
 ```
 1. malware_scanner/     - Core business logic
 2. rules/               - YARA rules only
-3. tests/               - All test files
+3. tests/               - Tất cả file test
 4. overview/            - Documentation only
 5. database/            - SQL scripts
 6. src/                 - Data pipeline scripts
@@ -165,26 +165,26 @@ test: Add archive scanning tests
 
 ## Dependencies
 
-### Adding new dependencies
+### Thêm dependencies mới
 
-1. **Check if stdlib can do it** first
-2. **Evaluate alternatives** (popularity, maintenance)
-3. **Pin versions** in requirements.txt
-4. **Document** why it's needed
+1. **Kiểm tra xem stdlib có thể làm được không** trước
+2. **Đánh giá alternatives** (popularity, maintenance)
+3. **Pin versions** trong requirements.txt
+4. **Document** lý do cần
 
 ```
 # requirements.txt
-# Archive scanning
-py7zr>=0.20.0      # 7z support
-rarfile>=4.0        # RAR support
+# Quét archive
+py7zr>=0.20.0      # Hỗ trợ 7z
+rarfile>=4.0        # Hỗ trợ RAR
 ```
 
 ## Review process
 
 ### Code review checklist
-- [ ] Follows code style
-- [ ] Error handling complete
+- [ ] Tuân thủ code style
+- [ ] Xử lý lỗi đầy đủ
 - [ ] Tests included
-- [ ] Documentation updated
-- [ ] No security issues
-- [ ] Performance considered
+- [ ] Documentation cập nhật
+- [ ] Không có vấn đề bảo mật
+- [ ] Hiệu suất được xem xét

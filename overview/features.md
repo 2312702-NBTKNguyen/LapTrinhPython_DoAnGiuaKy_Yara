@@ -26,7 +26,7 @@ import zipfile
 with zipfile.ZipFile(archive_path) as zf:
     for info in zf.infolist():
         if not info.is_dir():
-            data = zf.read(info.filename)  # Read to memory
+            data = zf.read(info.filename)  # Đọc vào memory
             matches = yara_rules.match(data=data)
 ```
 
@@ -41,47 +41,47 @@ with py7zr.SevenZipFile(archive_path) as z:
         matches = yara_rules.match(data=buffer.read())
 ```
 
-### Protection mechanisms
+### Cơ chế bảo vệ
 
-1. **Archive bomb detection:**
-   - Giới hạn extraction size (default: 100MB)
-   - Giới hạn compression ratio (default: 100:1)
-   - Giới hạn số file (default: 1000 files)
+1. **Phát hiện archive bomb:**
+   - Giới hạn kích thước extract (mặc định: 100MB)
+   - Giới hạn compression ratio (mặc định: 100:1)
+   - Giới hạn số file (mặc định: 1000 files)
 
-2. **Nested archive limit:**
-   - Max depth: 3 levels
-   - Track visited archives to prevent cycles
+2. **Giới hạn nested archive:**
+   - Độ sâu tối đa: 3 levels
+   - Theo dõi archive đã truy cập để tránh cycles
 
-### Error handling
+### Xử lý lỗi
 
 ```python
 class ArchiveError(ScannerError):
-    """Base exception for archive operations."""
+    """Exception base cho thao tác archive."""
     pass
 
 class UnsupportedFormatError(ArchiveError):
-    """File format not supported."""
+    """Định dạng file không được hỗ trợ."""
     pass
 
 class ExtractionError(ArchiveError):
-    """Failed to extract archive."""
+    """Không thể extract archive."""
     pass
 
 class ArchiveBombError(ArchiveError):
-    """Potential archive bomb detected."""
+    """Phát hiện archive bomb tiềm ẩn."""
     pass
 ```
 
 ### Test cases
 
-| Test | Input | Expected |
-|------|-------|----------|
-| TC-ARC-01 | ZIP with clean file | CLEAN result |
-| TC-ARC-02 | ZIP with malware pattern | YARA_MATCH result |
-| TC-ARC-03 | Nested ZIP (2 levels) | Scan both levels |
-| TC-ARC-04 | Archive bomb (huge ratio) | ArchiveBombError |
-| TC-ARC-05 | Password-protected ZIP | Skip with warning |
-| TC-ARC-06 | Corrupted archive | ExtractionError |
+| Test | Input | Kết quả mong đợi |
+|------|-------|-------------------|
+| TC-ARC-01 | ZIP với file sạch | Kết quả CLEAN |
+| TC-ARC-02 | ZIP với malware pattern | Kết quả YARA_MATCH |
+| TC-ARC-03 | Nested ZIP (2 levels) | Quét cả hai levels |
+| TC-ARC-04 | Archive bomb (ratio lớn) | ArchiveBombError |
+| TC-ARC-05 | ZIP được bảo vệ password | Bỏ qua với cảnh báo |
+| TC-ARC-06 | Archive bị hỏng | ExtractionError
 
 ---
 
@@ -95,12 +95,12 @@ Bổ sung các rule YARA generic để phát hiện các patterns phổ biến.
 #### 2.1 PE Analyzer (`pe_analyzer.yar`)
 Phát hiện các đặc điểm đáng ngờ trong file PE.
 
-| Rule ID | Pattern | Description |
-|---------|---------|-------------|
-| PE-001 | High entropy sections | Packed/encrypted code |
-| PE-002 | Suspicious imports | Dangerous APIs |
-| PE-003 | Anomalous timestamps | Compilation time anomalies |
-| PE-004 | Overlay detection | Hidden data in overlay |
+| Rule ID | Pattern | Mô tả |
+|---------|---------|-------|
+| PE-001 | High entropy sections | Code packed/encrypted |
+| PE-002 | Suspicious imports | APIs nguy hiểm |
+| PE-003 | Anomalous timestamps | Bất thường thời gian compile |
+| PE-004 | Overlay detection | Dữ liệu ẩn trong overlay |
 
 #### 2.2 Packer Detection (`packer_detection.yar`)
 Phát hiện các packer/crypter phổ biến.
@@ -134,16 +134,16 @@ Phát hiện các API call đáng ngờ.
 #### 2.5 Network Indicators (`network_indicators.yar`)
 Phát hiện các patterns mạng đáng ngờ.
 
-| Rule ID | Pattern | Description |
-|---------|---------|-------------|
-| NET-001 | Hardcoded IPs | Suspicious IP addresses |
+| Rule ID | Pattern | Mô tả |
+|---------|---------|-------|
+| NET-001 | Hardcoded IPs | Địa chỉ IP đáng ngờ |
 | NET-002 | DGA patterns | Domain generation algorithms |
 | NET-003 | Tor indicators | Tor exit nodes, .onion |
 | NET-004 | C2 patterns | Command & control patterns |
 
 ---
 
-## 4. Error Handling
+## 4. Xử lý lỗi
 
 ### Exception hierarchy
 
@@ -170,29 +170,29 @@ ScannerError(Exception)
     └── AccessDeniedError
 ```
 
-### Error handling strategy
+### Chiến lược xử lý lỗi
 
-1. **Service layer** catches all exceptions
-2. **Log error** with context
-3. **Return error result** (don't crash)
-4. **Display user-friendly message**
+1. **Service layer** bắt tất cả exceptions
+2. **Ghi log lỗi** với context đầy đủ
+3. **Trả về kết quả lỗi** (không crash)
+4. **Hiển thị thông báo thân thiện** với người dùng
 
 ```python
 try:
     result = scanner.scan_target(filepath)
 except YaraError as e:
-    logger.error(f"YARA scan failed: {e}")
+    logger.error(f"Quét YARA thất bại: {e}")
     return ScanResult(error=str(e))
 except Exception as e:
-    logger.exception(f"Unexpected error: {e}")
-    return ScanResult(error="Internal error")
+    logger.exception(f"Lỗi không mong muốn: {e}")
+    return ScanResult(error="Lỗi nội bộ")
 ```
 
 ---
 
-## 5. Configuration
+## 5. Cấu hình
 
-### Environment variables
+### Biến môi trường
 
 ```bash
 # Database
@@ -212,7 +212,7 @@ MAX_NESTED_DEPTH=3
 MAX_FILES_PER_ARCHIVE=1000
 ```
 
-### Config file (future)
+### File cấu hình (tương lai)
 
 ```yaml
 # config.yaml

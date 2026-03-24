@@ -10,112 +10,111 @@ YARA Malware Scanner là hệ thống phát hiện mã độc sử dụng kết 
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         ENTRY POINT                             │
+│                         ĐIỂM VÀO                                │
 │                          scanner.py                             │
 └────────────────────────────┬────────────────────────────────────┘
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      PRESENTATION LAYER                         │
+│                      LỚP TRÌNH DIỆN                             │
 │                      CLI Interface                              │
 │                    (malware_scanner/cli.py)                     │
 └────────────────────────────┬────────────────────────────────────┘
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                       SERVICE LAYER                             │
+│                       LỚP DỊCH VỤ                               │
 │                  (malware_scanner/service.py)                    │
 │                                                                 │
-│  MalwareScanner class - Orchestrates all scanning operations   │
+│  MalwareScanner class - Điều phối tất cả thao tác quét         │
 └────────────────────────────┬────────────────────────────────────┘
                              │
            ┌─────────────────┼─────────────────┐
            ▼                 ▼                 ▼
 ┌──────────────────┐ ┌──────────────┐ ┌──────────────────┐
-│   ENGINE LAYER   │ │  ARCHIVE     │ │   MEMORY LAYER   │
-│                  │ │  LAYER       │ │   (Future)       │
+│   LỚP ENGINE     │ │  LỚP ARCHIVE │ │   LỚP MEMORY     │
+│                  │ │              │ │   (Tương lai)    │
 │ engine.py        │ │ archive.py   │ │ memory.py        │
-│ - Hash calc      │ │ - ZIP scan   │ │ - Process scan   │
-│ - YARA scan      │ │ - 7z scan    │ │ - Memory dump    │
-│ - File scan      │ │ - RAR scan   │ │                  │
+│ - Tính hash      │ │ - Quét ZIP   │ │ - Quét process   │
+│ - Quét YARA      │ │ - Quét 7z    │ │ - Memory dump    │
+│ - Quét file      │ │ - Quét RAR   │ │                  │
 └────────┬─────────┘ └──────────────┘ └──────────────────┘
          │
          ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                       DATA LAYER                                │
+│                       LỚP DỮ LIỆU                               │
 ├─────────────────────────────┬───────────────────────────────────┤
 │      Database               │         Reporting                 │
 │     (db.py)                 │      (reporting.py)               │
 │                             │                                   │
-│ - PostgreSQL connection     │ - Terminal report                 │
-│ - Hash lookup               │ - File export (.txt)              │
-│ - Scan history              │ - JSON export                     │
+│ - Kết nối PostgreSQL        │ - Báo cáo terminal                │
+│ - Tra cứu hash              │ - Xuất file (.txt)                │
+│ - Lịch sử quét              │ - Xuất JSON                       │
 │ - Malware signatures        │                                   │
 └─────────────────────────────┴───────────────────────────────────┘
 ```
 
-## Module descriptions
+## Mô tả các module
 
 ### Core modules (`malware_scanner/`)
 
-| Module | Purpose | Responsibilities |
-|--------|---------|------------------|
-| `cli.py` | CLI interface | User interaction, input handling |
-| `service.py` | Business logic | Scan orchestration, workflow |
-| `engine.py` | Scanning engine | Hash calculation, YARA scanning |
-| `archive.py` | Archive support | ZIP/7z/RAR scanning |
-| `db.py` | Data persistence | PostgreSQL operations |
-| `reporting.py` | Output | Report generation |
-| `exceptions.py` | Error handling | Custom exception classes |
-| `config.py` | Configuration | Settings management |
+| Module | Mô tả | Trách nhiệm |
+|--------|---------|-------------|
+| `cli.py` | CLI interface | Tương tác người dùng, xử lý input |
+| `service.py` | Business logic | Điều phối quét, workflow |
+| `engine.py` | Engine quét | Tính hash, quét YARA |
+| `archive.py` | Hỗ trợ archive | Quét ZIP/7z/RAR |
+| `db.py` | Lưu trữ dữ liệu | Thao tác PostgreSQL |
+| `reporting.py` | Đầu ra | Tạo báo cáo |
+| `exceptions.py` | Xử lý lỗi | Custom exception classes |
 
-### Data flow
+### Luồng dữ liệu
 
 ```
-User Input (File/Directory/Archive)
+Input người dùng (File/Thư mục/Archive)
     │
     ▼
-Service Layer (MalwareScanner)
+Lớp Dịch vụ (MalwareScanner)
     │
-    ├─► Calculate Hashes
+    ├─► Tính Hashes
     │   └─► engine.calculate_file_hashes()
     │
-    ├─► Hash Database Check (Fast Path)
+    ├─► Kiểm tra Hash Database (Nhanh)
     │   └─► db.check_hash_in_db()
-    │       ├─► MATCH → HASH_MATCH detection
-    │       └─► NO MATCH → Continue to YARA
+    │       ├─► KHỚP → Phát hiện HASH_MATCH
+    │       └─► KHÔNG KHỚP → Chuyển sang YARA
     │
-    ├─► YARA Pattern Scan (Deep Path)
+    ├─► Quét YARA Pattern (Sâu)
     │   └─► engine.scan_with_yara()
-    │       ├─► MATCH → YARA_MATCH detection
-    │       └─► NO MATCH → CLEAN
+    │       ├─► KHỚP → Phát hiện YARA_MATCH
+    │       └─► KHÔNG KHỚP → SẠCH
     │
-    └─► Log & Report
+    └─► Ghi log & Báo cáo
         ├─► db.log_scan_result()
         └─► reporting.print_summary()
 ```
 
-## Detection flow
+## Luồng phát hiện
 
-### Layer 1: Hash-based (Fast)
-- Calculate SHA256 hash of file
-- Query PostgreSQL for known malware hashes
-- O(1) lookup time
-- High confidence (exact match)
+### Layer 1: Hash-based (Nhanh)
+- Tính SHA256 hash của file
+- Truy vấn PostgreSQL để tìm hash malware đã biết
+- Thời gian tra cứu: O(1)
+- Độ tin cậy: Cao (khớp chính xác)
 
-### Layer 2: YARA pattern (Deep)
-- Compile YARA rules at startup
-- Scan file content against rules
-- Pattern matching for known malware signatures
-- Can detect variants and families
+### Layer 2: YARA pattern (Sâu)
+- Compile YARA rules khi khởi động
+- Quét nội dung file theo rules
+- Pattern matching cho các malware signatures đã biết
+- Có thể phát hiện variants và families
 
-### Layer 3: Archive scanning
-- Extract archive contents to memory
-- Scan each extracted file
-- Support nested archives (with depth limit)
-- No disk extraction (security)
+### Layer 3: Quét archive
+- Extract contents của archive vào memory
+- Quét từng file đã extract
+- Hỗ trợ nested archives (với giới hạn depth)
+- Không extract ra disk (bảo mật)
 
-## Error handling strategy
+## Chiến lược xử lý lỗi
 
 ```
 Exception Hierarchy:
@@ -132,4 +131,4 @@ Exception Hierarchy:
     └── ConfigurationError
 ```
 
-All errors are caught at service layer and logged appropriately.
+Tất cả lỗi được bắt ở service layer và ghi log đầy đủ.
