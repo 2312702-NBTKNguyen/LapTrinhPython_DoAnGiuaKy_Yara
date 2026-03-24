@@ -7,10 +7,6 @@
 # Python version (local)
 .python-version
 
-# Generated output
-data/malware_signatures.json
-data/malware_signatures.csv
-
 # Python cache
 __pycache__/
 *.pyc
