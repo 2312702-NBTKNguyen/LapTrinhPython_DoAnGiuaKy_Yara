@@ -40,6 +40,7 @@ DB_NAME=your_database_name_here
 DB_USER=your_username_here
 DB_PASSWORD=your_password_here
 ```
+
 Ví dụ:
 
 ```bash
@@ -72,10 +73,6 @@ psql -U postgres -d yara_malware_signatures -f database/02_create_tables.sql
 ### Bước 6: Import dữ liệu malware signatures
 
 ```bash
-python scripts/get_malware_data.py
-python scripts/malware_data_filter.py
-python scripts/import_data.py
-
 # Khởi chạy lần đầu (setup DB + fetch + filter + import)
 python main.py --run
 
@@ -102,6 +99,7 @@ python main.py --scan /path/to/file_or_folder
 # Nhập đường dẫn file hoặc thư mục
 /home/user/malware_sample.exe
 /home/user/downloads
+...
 ```
 
 ### Xem báo cáo
@@ -125,7 +123,6 @@ Báo cáo sẽ được hiển thị trên terminal và lưu vào thư mục `lo
 ├── tests/                  # Test files
 ├── database/               # Database setup scripts
 ├── scripts/                # Data + workflow scripts
-│   └── workflows.py        # Nghiệp vụ update/scan/interactive
 ├── main.py                 # CLI entry point chính
 └── pyproject.toml          # Project metadata
 ```
@@ -148,12 +145,12 @@ Báo cáo sẽ được hiển thị trên terminal và lưu vào thư mục `lo
 
 ### Layer 3: Archive Scanning
 
-- Extract archive contents vào memory
+- Giải nén archive contents vào memory
 - Quét từng file bên trong archive
 - Hỗ trợ nested archives (giới hạn depth)
-- Không extract ra disk (bảo mật)
+- Không giải nén file ra disk (bảo mật)
 
-## Malware families (14)
+## Các họ Malware (14)
 
 - **Info Stealers**: RedLineStealer, LokiBot, AgentTesla, Formbook
 - **Banking Trojans**: Emotet, TrickBot, Mirai, Dridex
