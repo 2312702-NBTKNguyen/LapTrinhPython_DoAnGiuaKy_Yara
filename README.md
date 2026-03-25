@@ -34,20 +34,25 @@ pip install -r requirements.txt
 Dựa vào file `.env.example`, tạo file `.env` với các thông tin database:
 
 ```bash
-cp .env.example .env
+DB_HOST=your_host_here
+DB_PORT=your_port_here
+DB_NAME=your_database_name_here
+DB_USER=your_username_here
+DB_PASSWORD=your_password_here
 ```
+Ví dụ:
 
 ```bash
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=yara_malware_signatures
 DB_USER=postgres
-DB_PASSWORD=your_password
+DB_PASSWORD=your_password_
 ```
 
 ### Bước 4: Lấy và cấu hình MalwareBazaar API key
 
-1. Đăng ký/đăng nhập tài khoản tại MalwareBazaar.
+1. Đăng ký/đăng nhập tài khoản tại [MalwareBazaar](https://bazaar.abuse.ch/).
 2. Tạo API key trong phần quản lý tài khoản.
 3. Mở file `.env` và điền giá trị vào biến `MB_AUTH_KEY`.
 
