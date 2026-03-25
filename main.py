@@ -1,4 +1,5 @@
 import argparse
+import os
 import sys
 
 from scripts.workflows import (
@@ -14,6 +15,10 @@ DISPLAY_WIDTH = 100
 
 def _center_title(text: str) -> str:
     return text.center(DISPLAY_WIDTH)
+
+
+def clear_screen() -> None:
+    os.system("cls" if os.name == "nt" else "clear")
 
 
 def print_project_info() -> None:
@@ -84,6 +89,8 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
+
+    clear_screen()
 
     parser = build_parser()
     if not argv:
