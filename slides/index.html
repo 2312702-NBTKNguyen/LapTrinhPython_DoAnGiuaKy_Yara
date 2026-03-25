@@ -633,7 +633,7 @@
 ├── database/               <span class="comment"># Database setup scripts</span>
 ├── scripts/                <span class="comment"># Scripts lấy dữ liệu malware</span>
 ├── tests/                  <span class="comment"># Test files</span>
-├── scanner.py              <span class="comment"># Entry point</span></div>
+├── main.py                 <span class="comment"># Entry point</span></div>
         </div>
     </section>
 
@@ -905,7 +905,7 @@ psql -U postgres -f database/01_create_database.sql
 python scripts/get_malware_data.py
 
 <span class="comment"># Chạy chương trình</span>
-python scanner.py</div>
+python main.py --interactive</div>
         </div>
     </section>
 
@@ -917,7 +917,7 @@ python scanner.py</div>
             <div class="section-num reveal">09 — Sử dụng</div>
             <h2 class="reveal">Giao diện dòng lệnh</h2>
             <div class="code-block reveal" style="background: #0d1117; color: #c9d1d9;">
-<span style="color: #58a6ff;">$</span> python scanner.py
+<span style="color: #58a6ff;">$</span> python main.py --interactive
 
 ==================================== HỆ THỐNG PHÁT HIỆN MÃ ĐỘC ====================================
 

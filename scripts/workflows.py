@@ -178,15 +178,16 @@ def run_first_startup() -> int:
         load_dotenv()
         os.environ.setdefault("DB_NAME", DEFAULT_DB_NAME)
 
-        _print_section("[1/4] THIẾT LẬP DATABASE")
+        _print_section("THIẾT LẬP DATABASE")
         setup_database_from_sql()
-        _print_section("[2/4] TẢI DỮ LIỆU MALWARE")
+
+        _print_section("TẢI DỮ LIỆU MALWARE")
         _fetch_signatures_data()
 
-        _print_section("[3/4] LỌC VÀ IMPORT DỮ LIỆU")
+        _print_section("LỌC VÀ IMPORT DỮ LIỆU")
         _filter_and_import_data()
 
-        _print_section("[4/4] HOÀN TẤT KHỞI CHẠY")
+        _print_section("HOÀN TẤT KHỞI CHẠY")
         _log_success("Hệ thống đã khởi tạo thành công cho lần chạy đầu tiên.")
         return 0
 
@@ -203,11 +204,14 @@ def run_update_pipeline() -> int:
         load_dotenv()
         os.environ.setdefault("DB_NAME", DEFAULT_DB_NAME)
 
+        _print_section("TẢI DỮ LIỆU MALWARE")
         _fetch_signatures_data()
+
+        _print_section("LỌC VÀ IMPORT DỮ LIỆU")
         _filter_and_import_data()
 
         _print_section("HOÀN TẤT UPDATE")
-        _log_success("Đã cập nhật dữ liệu signatures cho lần khởi chạy tiếp theo.")
+        _log_success("Đã cập nhật dữ liệu signatures.")
         return 0
 
     except Exception as exc:
@@ -226,7 +230,7 @@ def run_scan_once(target_path: str) -> int:
     scanner = MalwareScanner(rules_path=str(RULES_INDEX_FILE))
 
     try:
-        _print_section("MALWARE SCANNER - CHẾ ĐỘ TỰ ĐỘNG")
+        _print_section("MALWARE SCANNER - CHẾ ĐỘ QUÉT TỰ ĐỘNG")
         _log_info(f"Target: {resolved_target}")
 
         if resolved_target.is_file():

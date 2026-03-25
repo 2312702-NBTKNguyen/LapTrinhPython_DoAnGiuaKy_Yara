@@ -23,9 +23,20 @@ CREATE TABLE IF NOT EXISTS scan_results (
     scan_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-ALTER TABLE scan_results
-ADD CONSTRAINT check_method
-CHECK (detection_method IN ('HASH_MATCH', 'YARA_MATCH', 'CLEAN'));
+DO $$
+BEGIN
+	IF NOT EXISTS (
+		SELECT 1
+		FROM pg_constraint
+		WHERE conname = 'check_method'
+		  AND conrelid = 'scan_results'::regclass
+	) THEN
+		ALTER TABLE scan_results
+		ADD CONSTRAINT check_method
+		CHECK (detection_method IN ('HASH_MATCH', 'YARA_MATCH', 'CLEAN'));
+	END IF;
+END
+$$;
 
 -- Indexes cho truy vấn malware_signatures
 CREATE INDEX IF NOT EXISTS idx_malware_signatures_md5_hash

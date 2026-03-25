@@ -5,31 +5,34 @@
 ### Code style
 
 1. **Docstrings:** Sử dụng Google style docstrings
+
 ```python
 def function(arg1: str, arg2: int) -> bool:
     """Mô tả ngắn gọn.
-    
+
     Mô tả chi tiết hơn nếu cần.
-    
+
     Args:
         arg1: Mô tả arg1.
         arg2: Mô tả arg2.
-    
+
     Returns:
         Mô tả giá trị trả về.
-    
+
     Raises:
         ValueError: Nếu arg2 âm.
     """
 ```
 
 2. **Type hints:** Bắt buộc cho tất cả public APIs
+
 ```python
 def scan_file(filepath: str, rules: yara.Rules) -> list[Match]:
     ...
 ```
 
 3. **Comments:** Section-level, không comment từng dòng
+
 ```python
 # TỐT: Section comment
 # Tính file hashes để tra cứu database
@@ -40,6 +43,7 @@ hashes = calculate_file_hashes(filepath)  # Tính hashes
 ```
 
 4. **Imports:** Sắp xếp theo thứ tự
+
 ```python
 # Standard library
 import os
@@ -120,12 +124,12 @@ http://example.com/wp-content/payload.exe
 def test_zip_scanning():
     """Test quét ZIP archive."""
     scanner = ArchiveScanner(rules)
-    
+
     # Test với fake malware
     with tempfile.NamedTemporaryFile(suffix='.zip') as f:
         create_test_zip(f.name, ['test_malware.txt'])
         results = scanner.scan_zip(f.name)
-        
+
     assert len(results) == 1
     assert results[0].rule == 'TestRule'
 ```
@@ -133,11 +137,13 @@ def test_zip_scanning():
 ## Git workflow
 
 ### Đặt tên branch
+
 - `feature/archive-scanning`
 - `fix/database-connection`
 - `docs/README-update`
 
 ### Commit messages
+
 ```
 feat: Thêm hỗ trợ quét ZIP archive
 fix: Xử lý ZIP được bảo vệ bằng password
@@ -146,6 +152,7 @@ test: Thêm test quét archive
 ```
 
 ### Pull request checklist
+
 - [ ] Code tuân thủ style guide
 - [ ] Tests pass
 - [ ] Documentation được cập nhật
@@ -160,7 +167,7 @@ test: Thêm test quét archive
 3. tests/               - Tất cả file test
 4. overview/            - Documentation only
 5. database/            - SQL scripts
-6. src/                 - Data pipeline scripts
+6. scripts/             - Data pipeline scripts
 ```
 
 ## Dependencies
@@ -182,6 +189,7 @@ rarfile>=4.0        # Hỗ trợ RAR
 ## Review process
 
 ### Code review checklist
+
 - [ ] Tuân thủ code style
 - [ ] Xử lý lỗi đầy đủ
 - [ ] Tests included

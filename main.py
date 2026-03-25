@@ -27,20 +27,16 @@ def print_project_info() -> None:
     print("- YARA Pattern Matching: phát hiện hành vi/mẫu malware theo rule")
 
     print(f"\n{bar}")
-    print(_center_title("LỆNH KHUYẾN NGHỊ"))
+    print(_center_title("CÁC LỆNH KHẢ DỤNG"))
     print(bar)
     print("1. Khởi chạy lần đầu: 'python main.py --run'")
-    print("2. Cập nhật dữ liệu cho các lần sau: 'python main.py --update'")
+    print("2. Cập nhật dữ liệu: 'python main.py --update'")
     print("3. Quét tự động 1 file/thư mục: 'python main.py --scan PATH'")
     print("4. Quét tương tác nhiều lần: 'python main.py --interactive'")
     print("5. Xem trợ giúp đầy đủ: 'python main.py -h'")
 
 
 def build_parser() -> argparse.ArgumentParser:
-    description = (
-        "Malware Scanner - Nhanh, rõ ràng và tự động hóa toàn bộ quy trình\n"
-        "Bao gồm: setup DB, update signatures, và quét malware theo target"
-    )
     epilog = (
         "Ví dụ sử dụng:\n"
         "  python main.py --run\n"
@@ -53,7 +49,6 @@ def build_parser() -> argparse.ArgumentParser:
 
     parser = argparse.ArgumentParser(
         prog="main.py",
-        description=description,
         epilog=epilog,
         formatter_class=argparse.RawTextHelpFormatter,
     )
@@ -62,25 +57,25 @@ def build_parser() -> argparse.ArgumentParser:
     mode_group.add_argument(
         "--run",
         action="store_true",
-        help="Khởi chạy lần đầu: setup DB -> fetch -> filter -> import",
+        help="Khởi chạy lần đầu",
     )
     mode_group.add_argument(
         "-u",
         "--update",
         action="store_true",
-        help="Cập nhật dữ liệu signatures cho các lần chạy tiếp theo",
+        help="Cập nhật dữ liệu signatures",
     )
     mode_group.add_argument(
         "-s",
         "--scan",
         metavar="PATH",
-        help="Quét 1 file/thư mục ở chế độ automation và thoát ngay sau khi xong",
+        help="Quét 1 file/thư mục ở chế độ auto",
     )
     mode_group.add_argument(
         "-i",
         "--interactive",
         action="store_true",
-        help="Mở chế độ CLI tương tác để nhập target quét thủ công",
+        help="Mở chế độ CLI tương tác để nhập đường dẫn quét thủ công",
     )
 
     return parser

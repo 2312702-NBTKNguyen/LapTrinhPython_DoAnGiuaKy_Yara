@@ -6,12 +6,8 @@ rule PE_Anomaly_HighEntropy {
         severity = "medium"
         category = "pe_anomaly"
 
-    strings:
-        $pe_header = { 4D 5A }
-
     condition:
-        $pe_header at 0 and
-        pe.number_of_sections > 8
+        pe.is_pe and pe.number_of_sections > 8
 }
 
 rule Suspicious_Imports_ProcessInjection {
@@ -28,7 +24,7 @@ rule Suspicious_Imports_ProcessInjection {
         $api5 = "RtlCreateUserThread" ascii wide nocase
 
     condition:
-        uint16(0) == 0x5A4D and 3 of ($api*)
+        pe.is_pe and 3 of ($api*)
 }
 
 rule Suspicious_Imports_Persistence {
@@ -45,7 +41,7 @@ rule Suspicious_Imports_Persistence {
         $api5 = "ChangeServiceConfig" ascii wide nocase
 
     condition:
-        uint16(0) == 0x5A4D and 3 of ($api*)
+        pe.is_pe and 3 of ($api*)
 }
 
 rule Suspicious_Imports_Evasion {
@@ -63,7 +59,7 @@ rule Suspicious_Imports_Evasion {
         $api6 = "Sleep" ascii wide nocase
 
     condition:
-        uint16(0) == 0x5A4D and 4 of ($api*)
+        pe.is_pe and 4 of ($api*)
 }
 
 rule Packer_UPX {
@@ -79,7 +75,7 @@ rule Packer_UPX {
         $upx4 = { 55 50 58 30 00 55 50 58 31 00 }
 
     condition:
-        uint16(0) == 0x5A4D and 2 of ($upx*)
+        pe.is_pe and 2 of ($upx*)
 }
 
 rule Crypto_AES_Detection {

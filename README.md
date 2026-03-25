@@ -108,7 +108,7 @@ Báo cáo sẽ được hiển thị trên terminal và lưu vào thư mục `lo
 ├── scripts/                # Data + workflow scripts
 │   └── workflows.py        # Nghiệp vụ update/scan/interactive
 ├── main.py                 # CLI entry point chính
-└── scanner.py              # Wrapper tương thích lệnh cũ
+└── pyproject.toml          # Project metadata
 ```
 
 ## Phát hiện malware
