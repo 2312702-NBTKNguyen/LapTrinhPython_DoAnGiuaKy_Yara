@@ -7,6 +7,8 @@ Test quét ZIP với fake malware samples
 
 import os
 import sys
+import tempfile
+import zipfile
 from pathlib import Path
 
 # Thêm thư mục cha vào path
@@ -15,6 +17,41 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from malware_scanner.engine import load_yara_rules
 from malware_scanner.archive import ArchiveScanner
 from malware_scanner.exceptions import ArchiveBombError, NestedDepthError
+
+
+def _build_zip_with_pe_sample() -> str:
+    # Tạo ZIP tạm chứa file PE mẫu để test strict PE rules.
+    src_file = Path("tests/samples/test_emotet.exe")
+    if not src_file.exists():
+        raise FileNotFoundError(f"Không tìm thấy file PE mẫu: {src_file}")
+
+    tmp = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
+    tmp.close()
+
+    with zipfile.ZipFile(tmp.name, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.write(src_file, arcname=src_file.name)
+
+    return tmp.name
+
+
+def _build_nested_zip_with_pe_sample() -> str:
+    # Tạo nested ZIP tạm (outer.zip chứa inner.zip, inner.zip chứa file PE mẫu).
+    src_file = Path("tests/samples/test_emotet.exe")
+    if not src_file.exists():
+        raise FileNotFoundError(f"Không tìm thấy file PE mẫu: {src_file}")
+
+    inner_tmp = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
+    inner_tmp.close()
+    with zipfile.ZipFile(inner_tmp.name, "w", zipfile.ZIP_DEFLATED) as inner_zf:
+        inner_zf.write(src_file, arcname=src_file.name)
+
+    outer_tmp = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
+    outer_tmp.close()
+    with zipfile.ZipFile(outer_tmp.name, "w", zipfile.ZIP_DEFLATED) as outer_zf:
+        outer_zf.write(inner_tmp.name, arcname="inner.zip")
+
+    os.unlink(inner_tmp.name)
+    return outer_tmp.name
 
 
 def test_zip_scanning():
@@ -26,16 +63,15 @@ def test_zip_scanning():
     rules = load_yara_rules("rules/index.yar")
     scanner = ArchiveScanner(rules)
 
-    zip_path = "tests/samples/archives/test_malware.zip"
-
-    if not os.path.exists(zip_path):
-        print(f"LỖI: Không tìm thấy file test ZIP: {zip_path}")
-        return False
+    zip_path = _build_zip_with_pe_sample()
 
     print(f"\nĐang quét: {zip_path}")
     print("-" * 60)
 
-    results = list(scanner.scan(zip_path))
+    try:
+        results = list(scanner.scan(zip_path))
+    finally:
+        os.unlink(zip_path)
 
     print(f"\nTìm thấy {len(results)} kết quả khớp:")
     for result in results:
@@ -60,16 +96,15 @@ def test_nested_zip():
     rules = load_yara_rules("rules/index.yar")
     scanner = ArchiveScanner(rules, max_depth=3)
 
-    zip_path = "tests/samples/archives/test_nested.zip"
-
-    if not os.path.exists(zip_path):
-        print(f"LỖI: Không tìm thấy file test ZIP: {zip_path}")
-        return False
+    zip_path = _build_nested_zip_with_pe_sample()
 
     print(f"\nĐang quét: {zip_path}")
     print("-" * 60)
 
-    results = list(scanner.scan(zip_path))
+    try:
+        results = list(scanner.scan(zip_path))
+    finally:
+        os.unlink(zip_path)
 
     print(f"\nTìm thấy {len(results)} kết quả khớp:")
     for result in results:
@@ -93,7 +128,7 @@ def test_depth_limit():
     rules = load_yara_rules("rules/index.yar")
     scanner = ArchiveScanner(rules, max_depth=0)  # Không cho phép nesting
 
-    zip_path = "tests/samples/archives/test_nested.zip"
+    zip_path = _build_nested_zip_with_pe_sample()
 
     try:
         results = list(scanner.scan(zip_path))
@@ -106,6 +141,8 @@ def test_depth_limit():
     except Exception as e:
         print(f"❌ FAIL: Lỗi không mong muốn: {e}")
         return False
+    finally:
+        os.unlink(zip_path)
 
 
 def test_direct_file_comparison():
@@ -124,8 +161,11 @@ def test_direct_file_comparison():
     direct_matches = scan_with_yara(rules, direct_file)
 
     # Quét archive chứa cùng file
-    zip_path = "tests/samples/archives/test_malware.zip"
-    archive_results = list(scanner.scan(zip_path))
+    zip_path = _build_zip_with_pe_sample()
+    try:
+        archive_results = list(scanner.scan(zip_path))
+    finally:
+        os.unlink(zip_path)
 
     print(f"\nQuét file trực tiếp: {direct_file}")
     print(f"  Kết quả khớp: {direct_matches}")
