@@ -8,7 +8,6 @@ Hệ thống phát hiện mã độc sử dụng kết hợp hai phương pháp:
 - **Kiểm tra hash database**: So sánh SHA256 hash với database malware đã biết
 - **Quét archive**: Hỗ trợ quét malware bên trong file ZIP và 7z mà không cần extract
 - **Báo cáo chi tiết**: Xuất báo cáo ra terminal và file .txt
-- **14 malware families**: YARA rules cho các họ malware phổ biến
 
 ## Cài đặt
 
@@ -16,7 +15,6 @@ Hệ thống phát hiện mã độc sử dụng kết hợp hai phương pháp:
 
 - Python 3.8+
 - PostgreSQL 12+
-- pip
 
 ### Bước 1: Clone repository
 
@@ -33,7 +31,11 @@ pip install -r requirements.txt
 
 ### Bước 3: Cấu hình database
 
-Tạo file `.env` với các thông tin database:
+Dựa vào file `.env.example`, tạo file `.env` với các thông tin database:
+
+```bash
+cp .env.example .env
+```
 
 ```bash
 DB_HOST=localhost
@@ -43,14 +45,28 @@ DB_USER=postgres
 DB_PASSWORD=your_password
 ```
 
-### Bước 4: Khởi tạo database
+### Bước 4: Lấy và cấu hình MalwareBazaar API key
+
+1. Đăng ký/đăng nhập tài khoản tại MalwareBazaar.
+2. Tạo API key trong phần quản lý tài khoản.
+3. Mở file `.env` và điền giá trị vào biến `MB_AUTH_KEY`.
+
+Ví dụ:
+
+```bash
+MB_AUTH_KEY=your_malwarebazaar_api_key_here
+```
+
+Lưu ý: Không commit file `.env` hoặc API key thật lên Git.
+
+### Bước 5: Khởi tạo database
 
 ```bash
 psql -U postgres -f database/01_create_database.sql
 psql -U postgres -d yara_malware_signatures -f database/02_create_tables.sql
 ```
 
-### Bước 5: Import dữ liệu malware signatures
+### Bước 6: Import dữ liệu malware signatures
 
 ```bash
 python scripts/get_malware_data.py
