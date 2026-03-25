@@ -70,7 +70,7 @@
             <div class="card-grid">
                 <div class="card reveal">
                     <h3>Hash-based Detection</h3>
-                    <p>So sánh SHA256 hash của file với database malware đã biết. Tốc độ O(1), độ tin cậy cao — khớp chính xác 100%.</p>
+                    <p>So sánh SHA256 hash của file với database malware đã biết.</p>
                 </div>
                 <div class="card reveal">
                     <h3>YARA Pattern Matching</h3>
@@ -78,7 +78,7 @@
                 </div>
             </div>
             <div class="highlight reveal">
-                <p><strong>Tính năng chính:</strong> Quét file/thư mục • Hỗ trợ ZIP, 7z • 14 họ malware • Báo cáo TXT, JSON, CSV</p>
+                <p><strong>Tính năng chính:</strong> Quét file/thư mục • Hỗ trợ file nén định dạng ZIP, 7z • 14 họ malware phổ biến • Báo cáo TXT</p>
             </div>
         </div>
     </section>
@@ -91,21 +91,29 @@
             <div class="section-num reveal">02 — Cấu trúc</div>
             <h2 class="reveal">Thư mục dự án</h2>
             <div class="code-block reveal"><span class="comment">LapTrinhPython_DoAnGiuaKy_Yara/</span>
+├── main.py                 <span class="comment"># Entry point</span>
+├── requirements.txt        <span class="comment"># Python dependencies</span>
+├── pyproject.toml          <span class="comment"># Project metadata</span>
+├── README.md               <span class="comment"># Tài liệu hướng dẫn</span>
 ├── malware_scanner/        <span class="comment"># Core package</span>
 │   ├── cli.py              <span class="comment"># Giao diện dòng lệnh</span>
-│   ├── service.py          <span class="comment"># Business logic chính</span>
+│   ├── service.py          <span class="comment"># Logic nghiệp vụ chính</span>
 │   ├── engine.py           <span class="comment"># YARA scanning engine</span>
 │   ├── archive.py          <span class="comment"># Quét file archive</span>
 │   ├── db.py               <span class="comment"># Thao tác PostgreSQL</span>
-│   ├── reporting.py        <span class="comment"># Tạo báo cáo</span>
-│   └── exceptions.py       <span class="comment"># Custom exceptions</span>
-├── rules/                  <span class="comment"># YARA rules (14 families)</span>
+│   └── reporting.py        <span class="comment"># Tạo báo cáo</span>
+├── rules/                  <span class="comment"># YARA rules (14 họ malware phổ biến)</span>
 │   ├── index.yar           <span class="comment"># Master rule file</span>
-│   └── *.yar               <span class="comment"># Rules từng malware family</span>
-├── database/               <span class="comment"># Database setup scripts</span>
-├── scripts/                <span class="comment"># Scripts lấy dữ liệu malware</span>
-├── tests/                  <span class="comment"># Test files</span>
-├── main.py                 <span class="comment"># Entry point</span></div>
+│   ├── core/               <span class="comment"># Rule lõi</span>
+│   └── malware_families/   <span class="comment"># Rule từng họ malware</span>
+├── data/                   <span class="comment"># Malware signatures (CSV/JSON)</span>
+├── database/               <span class="comment"># SQL scripts khởi tạo Database</span>
+├── scripts/                <span class="comment"># Scripts ETL dữ liệu</span>
+├── tests/                  <span class="comment"># Unit tests + mẫu test</span>
+├── samples/                <span class="comment"># File mẫu để demo quét</span>
+├── logs/                   <span class="comment"># Kết quả scan (TXT)</span>
+├── overview/               <span class="comment"># Tài liệu kiến trúc dự án</span>
+└── slides/                 <span class="comment"># Slide thuyết trình</span></div>
         </div>
     </section>
 
@@ -497,132 +505,9 @@ Thời gian quét: <span style="color: #79c0ff;">0.05 giây</span></div>
             <h1 class="reveal" style="border: none;">Cảm ơn!</h1>
             <div class="accent-line reveal"></div>
             <p class="subtitle reveal">Questions & Answers</p>
-            <p class="author-info reveal" style="margin-top: 2em;">github.com/2312702-NBTKNguyen/LapTrinhPython_DoAnGiuaKy_Yara</p>
         </div>
     </section>
 
-    <!-- ===========================================
-         JAVASCRIPT
-         =========================================== -->
-    <script>
-        class SlidePresentation {
-            constructor() {
-                this.slides = document.querySelectorAll('.slide');
-                this.currentSlide = 0;
-                this.totalSlides = this.slides.length;
-                this.progressBar = document.getElementById('progressBar');
-                this.slideNumberEl = document.getElementById('slideNumber');
-                this.navDotsContainer = document.getElementById('navDots');
-
-                this.setupIntersectionObserver();
-                this.setupKeyboardNav();
-                this.setupNavDots();
-                this.updateProgress();
-            }
-
-            setupIntersectionObserver() {
-                const options = {
-                    root: null,
-                    rootMargin: '0px',
-                    threshold: 0.5
-                };
-
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            entry.target.classList.add('visible');
-                            const index = Array.from(this.slides).indexOf(entry.target);
-                            if (index !== -1) {
-                                this.currentSlide = index;
-                                this.updateProgress();
-                                this.updateNavDots();
-                                this.updateSlideNumber();
-                            }
-                        }
-                    });
-                }, options);
-
-                this.slides.forEach(slide => observer.observe(slide));
-            }
-
-            setupKeyboardNav() {
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
-                        e.preventDefault();
-                        this.nextSlide();
-                    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        this.prevSlide();
-                    } else if (e.key === 'Home') {
-                        e.preventDefault();
-                        this.goToSlide(0);
-                    } else if (e.key === 'End') {
-                        e.preventDefault();
-                        this.goToSlide(this.totalSlides - 1);
-                    }
-                });
-            }
-
-            setupNavDots() {
-                const labels = [
-                    'Title', 'Mục lục', 'Tổng quan', 'Cấu trúc', 'Thành phần',
-                    '3 lớp phát hiện', 'Luồng quét', 'YARA Rules', 'Ví dụ Rule',
-                    'Archive', 'Database', 'Báo cáo', 'Cài đặt', 'CLI',
-                    'Exceptions', 'Dependencies', 'Tổng kết', 'Cảm ơn'
-                ];
-
-                this.slides.forEach((_, index) => {
-                    const dot = document.createElement('button');
-                    dot.className = 'nav-dot';
-                    dot.setAttribute('data-label', labels[index] || `Slide ${index + 1}`);
-                    dot.setAttribute('aria-label', `Go to slide ${index + 1}: ${labels[index]}`);
-                    dot.addEventListener('click', () => this.goToSlide(index));
-                    this.navDotsContainer.appendChild(dot);
-                });
-
-                this.updateNavDots();
-            }
-
-            goToSlide(index) {
-                if (index >= 0 && index < this.totalSlides) {
-                    this.slides[index].scrollIntoView({ behavior: 'smooth' });
-                }
-            }
-
-            nextSlide() {
-                if (this.currentSlide < this.totalSlides - 1) {
-                    this.goToSlide(this.currentSlide + 1);
-                }
-            }
-
-            prevSlide() {
-                if (this.currentSlide > 0) {
-                    this.goToSlide(this.currentSlide - 1);
-                }
-            }
-
-            updateProgress() {
-                const progress = ((this.currentSlide + 1) / this.totalSlides) * 100;
-                this.progressBar.style.width = `${progress}%`;
-            }
-
-            updateNavDots() {
-                const dots = this.navDotsContainer.querySelectorAll('.nav-dot');
-                dots.forEach((dot, index) => {
-                    dot.classList.toggle('active', index === this.currentSlide);
-                });
-            }
-
-            updateSlideNumber() {
-                const num = String(this.currentSlide + 1).padStart(2, '0');
-                const total = String(this.totalSlides).padStart(2, '0');
-                this.slideNumberEl.textContent = `${num} / ${total}`;
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            new SlidePresentation();
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
