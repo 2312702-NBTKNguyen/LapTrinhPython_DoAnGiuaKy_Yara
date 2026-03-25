@@ -28,34 +28,43 @@
          SLIDE 1: TITLE
          =========================================== -->
     <section class="slide title-slide" id="slide-1">
+        <div class="slide-brand reveal">
+            <img src="logo.png" alt="Logo Trường Đại học Đà Lạt" class="school-logo">
+            <div class="school-text">
+                <p class="school-name">TRƯỜNG ĐẠI HỌC ĐÀ LẠT</p>
+                <p class="school-faculty">KHOA CÔNG NGHỆ THÔNG TIN</p>
+            </div>
+        </div>
         <div class="slide-content">
-            <h1 class="reveal">YARA Malware Scanner</h1>
-            <p class="subtitle reveal">Hệ thống phát hiện mã độc sử dụng YARA Rules và Hash-based Detection</p>
+            <h1 class="reveal">ỨNG DỤNG THƯ VIỆN YARA VÀ NGÔN NGỮ PYTHON TRONG XÂY DỰNG HỆ THỐNG PHÁT HIỆN MÃ ĐỘC.</h1>
+            <p class="subtitle reveal">Bằng kỹ thuật phân tích đặc trưng <strong>(YARA Rules)</strong> kết hợp tối ưu hóa truy vấn <strong>Mã băm (Hash)</strong></p>
             <div class="accent-line reveal"></div>
-            <p class="author-info reveal">Đồ án Giữa kỳ — Lập trình Python</p>
-            <p class="author-info reveal"><strong>Nguyễn Bá Thiều Khôi Nguyên — Hồ Quốc Long</strong></p>
+            <p class="author-info reveal">Học phần: Lập trình Python</p>
+            <p class="author-info reveal"><strong>Sinh viên thực hiện: Hồ Quốc Long — Nguyễn Bá Thiều Khôi Nguyên</strong></p>
         </div>
     </section>
 
     <!-- ===========================================
-         SLIDE 2: TABLE OF CONTENTS
+         SLIDE 2: PROBLEM STATEMENT & OBJECTIVES
          =========================================== -->
     <section class="slide" id="slide-2">
         <div class="slide-content">
-            <div class="section-num reveal">Mục lục</div>
-            <h2 class="reveal">Nội dung trình bày</h2>
-            <ol class="reveal">
-                <li>Giới thiệu tổng quan dự án</li>
-                <li>Cấu trúc thư mục dự án</li>
-                <li>Các thành phần chính</li>
-                <li>3 lớp phát hiện mã độc</li>
-                <li>YARA Rules — 14 họ Malware</li>
-                <li>Cơ chế quét Archive</li>
-                <li>Database PostgreSQL</li>
-                <li>Báo cáo và xuất dữ liệu</li>
-                <li>Cách sử dụng hệ thống</li>
-                <li>Tổng kết</li>
-            </ol>
+            <div class="section-num reveal">01: Tổng quan — Giới thiệu bài toán</div>
+            <h2 class="reveal">GIỚI THIỆU ĐỀ TÀI & TÍNH CẤP THIẾT</h2>
+            <div class="problem-grid">
+                <article class="problem-card reveal">
+                    <h3>Bối cảnh</h3>
+                    <p>Trong môi trường an ninh mạng hiện đại, mã độc ngày càng tinh vi với các kỹ thuật ngụy trang và biến đổi cấu trúc. Vì vậy, công cụ phân tích cần đọc sâu dữ liệu thô thay vì chỉ dựa vào đuôi tệp như .exe hoặc .doc.</p>
+                </article>
+
+                <article class="problem-card reveal">
+                    <h3>Giải pháp đề xuất</h3>
+                    <ul>
+                        <li>Hệ thống sử dụng Python kết hợp với thư viện YARA để phát hiện mã độc bằng kỹ thuật so khớp mẫu.</li>
+                        <li>Tích hợp thành một hệ thống tự động có khả năng rà quét các tệp tin đơn lẻ và đệ quy toàn bộ thư mục đối với các vùng dữ liệu đáng ngờ.</li>
+                    </ul>
+                </article>
+            </div>
         </div>
     </section>
 
@@ -64,21 +73,23 @@
          =========================================== -->
     <section class="slide" id="slide-3">
         <div class="slide-content">
-            <div class="section-num reveal">01 — Giới thiệu</div>
-            <h2 class="reveal">Tổng quan dự án</h2>
-            <p class="reveal">YARA Malware Scanner là hệ thống phát hiện mã độc kết hợp <strong>hai phương pháp</strong> mạnh mẽ:</p>
-            <div class="card-grid">
-                <div class="card reveal">
-                    <h3>Hash-based Detection</h3>
-                    <p>So sánh SHA256 hash của file với database malware đã biết.</p>
-                </div>
-                <div class="card reveal">
-                    <h3>YARA Pattern Matching</h3>
-                    <p>Quét file bằng các rule YARA để phát hiện malware patterns, variants và families chưa có trong database.</p>
-                </div>
-            </div>
-            <div class="highlight reveal">
-                <p><strong>Tính năng chính:</strong> Quét file/thư mục • Hỗ trợ file nén định dạng ZIP, 7z • 14 họ malware phổ biến • Báo cáo TXT</p>
+            <div class="section-num reveal">02 — Công cụ phân tích</div>
+            <h2 class="reveal">TỔNG QUAN VỀ CÔNG CỤ YARA</h2>
+            <div class="arch-flow">
+                <article class="arch-step reveal">
+                    <span class="arch-layer">Khái niệm</span>
+                    <h3>YARA là gì?</h3>
+                    <ul>
+                        <li>YARA là công cụ mã nguồn mở, dùng để tạo quy tắc mô tả mã độc dựa trên chuỗi văn bản hoặc mẫu nhị phân.</li>
+                        <li>Hiện do VirusTotal bảo trợ và phát triển liên tục.</li>
+                    </ul>
+                </article>
+
+                <article class="arch-step reveal">
+                    <span class="arch-layer">Cơ chế hoạt động</span>
+                    <h3>Khớp dấu hiệu trên dữ liệu thô</h3>
+                    <p>YARA phân loại và nhận diện mã độc dựa trên các <strong>dấu hiệu nhận dạng (Signature-based matching)</strong>. Công cụ quét, so sánh dữ liệu thô của tệp tin với các mô tả logic do người dùng định nghĩa: chuỗi văn bản, mẫu nhị phân Hex hoặc biểu thức chính quy.</p>
+                </article>
             </div>
         </div>
     </section>
@@ -88,32 +99,30 @@
          =========================================== -->
     <section class="slide" id="slide-4">
         <div class="slide-content">
-            <div class="section-num reveal">02 — Cấu trúc</div>
-            <h2 class="reveal">Thư mục dự án</h2>
-            <div class="code-block reveal"><span class="comment">LapTrinhPython_DoAnGiuaKy_Yara/</span>
-├── main.py                 <span class="comment"># Entry point</span>
-├── requirements.txt        <span class="comment"># Python dependencies</span>
-├── pyproject.toml          <span class="comment"># Project metadata</span>
-├── README.md               <span class="comment"># Tài liệu hướng dẫn</span>
-├── malware_scanner/        <span class="comment"># Core package</span>
-│   ├── cli.py              <span class="comment"># Giao diện dòng lệnh</span>
-│   ├── service.py          <span class="comment"># Logic nghiệp vụ chính</span>
-│   ├── engine.py           <span class="comment"># YARA scanning engine</span>
-│   ├── archive.py          <span class="comment"># Quét file archive</span>
-│   ├── db.py               <span class="comment"># Thao tác PostgreSQL</span>
-│   └── reporting.py        <span class="comment"># Tạo báo cáo</span>
-├── rules/                  <span class="comment"># YARA rules (14 họ malware phổ biến)</span>
-│   ├── index.yar           <span class="comment"># Master rule file</span>
-│   ├── core/               <span class="comment"># Rule lõi</span>
-│   └── malware_families/   <span class="comment"># Rule từng họ malware</span>
-├── data/                   <span class="comment"># Malware signatures (CSV/JSON)</span>
-├── database/               <span class="comment"># SQL scripts khởi tạo Database</span>
-├── scripts/                <span class="comment"># Scripts ETL dữ liệu</span>
-├── tests/                  <span class="comment"># Unit tests + mẫu test</span>
-├── samples/                <span class="comment"># File mẫu để demo quét</span>
-├── logs/                   <span class="comment"># Kết quả scan (TXT)</span>
-├── overview/               <span class="comment"># Tài liệu kiến trúc dự án</span>
-└── slides/                 <span class="comment"># Slide thuyết trình</span></div>
+            <div class="section-num reveal">04 — Kiến trúc tổng thể</div>
+            <h2 class="reveal">KIẾN TRÚC HỆ THỐNG TỔNG THỂ</h2>
+            <div class="arch-flow">
+                <article class="arch-step reveal">
+                    <span class="arch-layer">Tầng Giao diện</span>
+                    <h3>User Interface</h3>
+                    <p>Giao diện dòng lệnh (CLI), hỗ trợ truyền tham số để nạp tệp tin đơn lẻ hoặc quét đệ quy thư mục..</p>
+                </article>
+
+                <article class="arch-step reveal">
+                    <span class="arch-layer">Tầng Ứng dụng</span>
+                    <h3>Application Layer</h3>
+                    <ul>
+                        <li>Sử dụng Python để biên dịch (compile) các quy tắc YARA.</li>
+                        <li>Điều phối luồng xử lý: Lớp 1 (Mã băm) → Lớp 2 (YARA).</li>
+                    </ul>
+                </article>
+
+                <article class="arch-step reveal">
+                    <span class="arch-layer">Tầng Dữ liệu & Đầu ra</span>
+                    <h3>Output Layer</h3>
+                    <p>Lưu trữ dữ liệu tại hệ quản trị cơ sở dữ liệu PostgreSQL, trích xuất báo cáo rà quét dưới định dạng Text và hiển thị cảnh báo trực tiếp trên màn hình.</p>
+                </article>
+            </div>
         </div>
     </section>
 
@@ -122,21 +131,33 @@
          =========================================== -->
     <section class="slide" id="slide-5">
         <div class="slide-content">
-            <div class="section-num reveal">03 — Thành phần</div>
-            <h2 class="reveal">Các module chính</h2>
-            <table class="reveal">
-                <thead>
-                    <tr><th>Module</th><th>Chức năng</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td><strong>cli.py</strong></td><td>Giao diện dòng lệnh, nhập đường dẫn file/thư mục cần quét</td></tr>
-                    <tr><td><strong>service.py</strong></td><td>Lớp MalwareScanner — điều phối luồng quét, thống kê kết quả</td></tr>
-                    <tr><td><strong>engine.py</strong></td><td>Tính hash (MD5, SHA1, SHA256, SHA3-384), biên dịch YARA rules</td></tr>
-                    <tr><td><strong>archive.py</strong></td><td>Quét file ZIP, 7z trong memory, phát hiện archive bomb</td></tr>
-                    <tr><td><strong>db.py</strong></td><td>Kết nối PostgreSQL, truy vấn hash, lưu kết quả quét</td></tr>
-                    <tr><td><strong>reporting.py</strong></td><td>Xuất báo cáo: terminal, TXT, JSON, CSV</td></tr>
-                </tbody>
-            </table>
+            <div class="section-num reveal">03 — Cấu trúc</div>
+            <h2 class="reveal">CẤU TRÚC MỘT TẬP LUẬT YARA</h2>
+            <p class="reveal">Một quy tắc (Rule) YARA tiêu chuẩn được chia thành 3 thành phần cốt lõi:</p>
+            <div class="card-grid">
+                <div class="card reveal">
+                    <h3>Meta (Siêu dữ liệu)</h3>
+                    <p>Lưu trữ thông tin về tác giả, mô tả và ngày tạo của quy tắc.</p>
+                </div>
+                <div class="card reveal">
+                    <h3>Strings (Chuỗi dấu hiệu)</h3>
+                    <p>Định nghĩa các chuỗi văn bản (Text), chuỗi thập lục phân (Hex) hoặc biểu thức chính quy (Regex).</p>
+                </div>
+                <div class="card reveal">
+                    <h3>Condition (Điều kiện logic)</h3>
+                    <p>Các phép toán logic quyết định khi nào quy tắc này được kích hoạt.</p>
+                </div>
+            </div>
+            <p class="reveal"><strong>Ví dụ minh họa cấu trúc cơ bản:</strong></p>
+            <div class="code-block reveal"><span class="keyword">rule</span> <span class="function">MalwareExample</span> {
+    <span class="keyword">meta</span>:
+        author = <span class="string">"Hồ Quốc Long — Nguyễn Bá Thiều Khôi Nguyên"</span>
+        description = <span class="string">"Phát hiện đoạn mã độc cụ thể"</span>
+    <span class="keyword">strings</span>:
+        $s1 = <span class="string">"malicious_code"</span>
+    <span class="keyword">condition</span>:
+        $s1
+}</div>
         </div>
     </section>
 
@@ -145,20 +166,29 @@
          =========================================== -->
     <section class="slide" id="slide-6">
         <div class="slide-content">
-            <div class="section-num reveal">04 — Phát hiện</div>
-            <h2 class="reveal">Ba lớp phát hiện mã độc</h2>
+            <div class="section-num reveal">05 — Tích hợp công cụ</div>
+            <h2 class="reveal">Tích hợp YARA vào Môi trường Python</h2>
+            <p class="reveal"><strong>Gói thư viện:</strong> Sử dụng <code>yara-python</code>, được cài đặt qua trình quản lý gói <code>pip</code> của Python.</p>
+
             <div class="layer-box reveal">
-                <div class="layer-title">Lớp 1: Hash-based Detection</div>
-                <p>Tính SHA256 hash → Kiểm tra PostgreSQL database → Tốc độ O(1) — Độ tin cậy cao (khớp chính xác)</p>
+                <div class="layer-title">Biên dịch (Compile)</div>
+                <p>Chuyển đổi tệp luật văn bản (.yar) thành đối tượng thực thi trong bộ nhớ (RAM) nhằm tối ưu hóa tốc độ xử lý.</p>
             </div>
+
             <div class="layer-box reveal">
-                <div class="layer-title">Lớp 2: YARA Pattern Matching</div>
-                <p>Compile YARA rules vào RAM (một lần) → Quét bằng pattern matching → Phát hiện malware variants và families</p>
+                <div class="layer-title">So khớp (Match)</div>
+                <p>Áp dụng đối tượng biên dịch lên tệp tin hoặc luồng dữ liệu thô để phát hiện vi phạm.</p>
             </div>
-            <div class="layer-box reveal">
-                <div class="layer-title">Lớp 3: Archive Scanning</div>
-                <p>Extract contents vào memory → Quét từng file bên trong → Hỗ trợ nested archives (depth ≤ 3)</p>
-            </div>
+
+            <p class="reveal"><strong>Mã nguồn minh họa:</strong></p>
+            <div class="code-block reveal"><span class="keyword">import</span> yara
+
+<span class="comment"># Bước 1: Biên dịch tập luật vào bộ nhớ</span>
+rules = yara.compile(<span class="string">'rules.yar'</span>)
+
+<span class="comment"># Bước 2: Rà quét tệp tin khả nghi</span>
+matches = rules.match(<span class="string">'suspicious.exe'</span>)
+<span class="function">print</span>(matches)  <span class="comment"># Trả về danh sách quy tắc vi phạm</span></div>
         </div>
     </section>
 
