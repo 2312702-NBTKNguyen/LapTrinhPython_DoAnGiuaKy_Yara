@@ -62,8 +62,6 @@ Ví dụ:
 MB_AUTH_KEY=your_malwarebazaar_api_key_here
 ```
 
-Lưu ý: Không commit file `.env` hoặc API key thật lên Git.
-
 ### Bước 5: Khởi tạo database
 
 ```bash
