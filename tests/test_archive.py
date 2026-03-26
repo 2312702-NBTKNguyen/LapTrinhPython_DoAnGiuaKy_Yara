@@ -54,6 +54,25 @@ def _build_nested_zip_with_pe_sample() -> str:
     return outer_tmp.name
 
 
+def _build_zip_with_non_pe_family_samples() -> str:
+    # Tạo ZIP tạm chứa mẫu doc/xls/js để test nhánh non-PE của YARA rules.
+    payloads = {
+        "trickbot.doc": b"\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1 Word.Document <mcconf> injectDll group_tag WScript.Shell powershell",
+        "remcosrat.xls": b"\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1 Workbook Remcos BreakingSecurity.net Host:Port MUTEX Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+        "lokibot.doc": b"\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1 Word.Document fre.php ftp:// MSXML2.XMLHTTP ADODB.Stream AutoOpen",
+        "agenttesla.js": b"var a='AgentTesla'; var c='smtp.gmail.com'; var s='Password:'; var x='WScript.Shell'; eval(fromCharCode(65));",
+    }
+
+    tmp = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
+    tmp.close()
+
+    with zipfile.ZipFile(tmp.name, "w", zipfile.ZIP_DEFLATED) as zf:
+        for filename, content in payloads.items():
+            zf.writestr(filename, content)
+
+    return tmp.name
+
+
 def test_zip_scanning():
     """Test quét file bên trong ZIP archive."""
     print("=" * 60)
@@ -182,6 +201,41 @@ def test_direct_file_comparison():
         return False
 
 
+def test_non_pe_family_samples_in_zip():
+    """Test quét mẫu doc/xls/js trong ZIP bằng nhánh non-PE rules."""
+    print("\n" + "=" * 60)
+    print("TEST: Quét Non-PE Family Samples Trong ZIP")
+    print("=" * 60)
+
+    rules = load_yara_rules("rules/index.yar")
+    scanner = ArchiveScanner(rules)
+
+    zip_path = _build_zip_with_non_pe_family_samples()
+
+    try:
+        results = list(scanner.scan(zip_path))
+    finally:
+        os.unlink(zip_path)
+
+    detected = {result.rule_name for result in results}
+    expected = {
+        "BankingTrojan_TrickBot",
+        "RAT_Remcos",
+        "Infostealer_LokiBot",
+        "Infostealer_AgentTesla",
+    }
+
+    print(f"\nDetected rules: {sorted(detected)}")
+    missing = sorted(expected - detected)
+
+    if not missing:
+        print("\n✅ PASS: Đã phát hiện đủ 4 family non-PE trong archive")
+        return True
+
+    print(f"\n❌ FAIL: Thiếu phát hiện: {missing}")
+    return False
+
+
 def main():
     """Chạy tất cả tests."""
     print("\n" + "=" * 60)
@@ -193,6 +247,7 @@ def main():
         test_nested_zip,
         test_depth_limit,
         test_direct_file_comparison,
+        test_non_pe_family_samples_in_zip,
     ]
 
     results = []
