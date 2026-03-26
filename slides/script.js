@@ -57,35 +57,23 @@ class SlidePresentation {
   }
 
   setupNavDots() {
-    const labels = [
-      "Title",
-      "Mục lục",
-      "Tổng quan",
-      "Cấu trúc",
-      "Thành phần",
-      "3 lớp phát hiện",
-      "Luồng quét",
-      "YARA Rules",
-      "Ví dụ Rule",
-      "Archive",
-      "Database",
-      "Báo cáo",
-      "Cài đặt",
-      "CLI",
-      "Exceptions",
-      "Dependencies",
-      "Tổng kết",
-      "Cảm ơn",
-    ];
+    this.slides.forEach((slide, index) => {
+      let label = `Slide ${index + 1}`;
+      const sectionNum = slide.querySelector(".section-num");
+      const heading = slide.querySelector("h2, h1");
 
-    this.slides.forEach((_, index) => {
+      if (slide.classList.contains("title-slide") && index === 0) {
+        label = "Title";
+      } else if (sectionNum) {
+        label = sectionNum.textContent.trim();
+      } else if (heading) {
+        label = heading.textContent.trim();
+      }
+
       const dot = document.createElement("button");
       dot.className = "nav-dot";
-      dot.setAttribute("data-label", labels[index] || `Slide ${index + 1}`);
-      dot.setAttribute(
-        "aria-label",
-        `Go to slide ${index + 1}: ${labels[index]}`,
-      );
+      dot.setAttribute("data-label", label);
+      dot.setAttribute("aria-label", `Go to slide ${index + 1}: ${label}`);
       dot.addEventListener("click", () => this.goToSlide(index));
       this.navDotsContainer.appendChild(dot);
     });

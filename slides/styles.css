@@ -541,52 +541,37 @@
             margin-bottom: 0.15em;
         }
 
-        #slide-4 .slide-content>p.reveal {
-            margin-bottom: 0.35rem;
-        }
-
-        #slide-4 .slide-content>ul.reveal {
-            margin-top: 0;
-            margin-bottom: 0.4rem;
-        }
-
-        #slide-4 .slide-content>ul.reveal li {
-            margin-bottom: 0.2rem;
-            line-height: 1.5;
-        }
-
-        #slide-4 .arch-flow {
-            margin-top: 0.3rem;
-        }
-
-        #slide-4 .card-grid {
-            margin-top: 0.45rem;
-            margin-bottom: 0.45rem;
-            gap: clamp(0.6rem, 1vw, 0.9rem);
-        }
-
-        #slide-4 .code-block {
-            margin-top: 0.4rem;
-            margin-bottom: 0;
-        }
-
-        #slide-5 .slide-content>p.reveal:first-of-type {
+        #slide-4 .slide-content>p.reveal:first-of-type {
             margin-bottom: 0.55rem;
         }
 
-        #slide-5 .card-grid {
+        #slide-4 .card-grid {
             margin-top: 0.35rem;
             margin-bottom: 0.35rem;
             gap: clamp(0.55rem, 0.9vw, 0.8rem);
         }
 
-        #slide-5 .slide-content>p.reveal:last-of-type {
+        #slide-4 .slide-content>p.reveal:last-of-type {
             margin-bottom: 0.3rem;
         }
 
-        #slide-5 .code-block {
+        #slide-4 .code-block {
             margin-top: 0.15rem;
             margin-bottom: 0;
+        }
+
+        #slide-5 h2 {
+            margin-bottom: 0.15rem;
+            padding-bottom: 0.3em;
+        }
+
+        #slide-5 .code-block {
+            margin-top: 1.5rem;
+            margin-bottom: 0;
+            font-size: clamp(0.58rem, 0.78vw, 0.74rem);
+            line-height: 1.45;
+            max-height: 66vh;
+            overflow: auto;
         }
 
         #slide-6 .slide-content>p.reveal:last-of-type {
@@ -602,18 +587,22 @@
             margin-bottom: 0;
         }
 
-        #slide-9 h2 {
-            margin-bottom: 0.15rem;
-            padding-bottom: 0.3em;
+        #slide-7 .slide-content>p.reveal {
+            margin-bottom: 0.35rem;
         }
 
-        #slide-9 .code-block {
-            margin-top: 1.5rem;
-            margin-bottom: 0;
-            font-size: clamp(0.58rem, 0.78vw, 0.74rem);
-            line-height: 1.45;
-            max-height: 66vh;
-            overflow: auto;
+        #slide-7 .slide-content>ul.reveal {
+            margin-top: 0;
+            margin-bottom: 0.4rem;
+        }
+
+        #slide-7 .slide-content>ul.reveal li {
+            margin-bottom: 0.2rem;
+            line-height: 1.5;
+        }
+
+        #slide-7 .arch-flow {
+            margin-top: 0.3rem;
         }
 
         @media (max-width: 760px) {
@@ -622,7 +611,7 @@
                 justify-items: start;
             }
 
-            #slide-9 .code-block {
+            #slide-5 .code-block {
                 max-height: 58vh;
                 font-size: clamp(0.54rem, 2.15vw, 0.66rem);
                 line-height: 1.4;

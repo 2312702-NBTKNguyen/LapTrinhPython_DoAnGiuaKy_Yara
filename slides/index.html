@@ -17,7 +17,7 @@
     <nav class="nav-dots" id="navDots"></nav>
 
     <!-- Slide Number -->
-    <div class="slide-number" id="slideNumber">01 / 18</div>
+    <div class="slide-number" id="slideNumber">01 / 10</div>
 
     <!-- Keyboard Hint -->
     <div class="keyboard-hint">
@@ -107,7 +107,7 @@
     <!-- ===========================================
          SLIDE 4: MAIN COMPONENTS
          =========================================== -->
-    <section class="slide" id="slide-5">
+    <section class="slide" id="slide-4">
         <div class="slide-content">
             <div class="section-num reveal">03 — Cấu trúc</div>
             <h2 class="reveal">CẤU TRÚC MỘT TẬP LUẬT YARA</h2>
@@ -142,7 +142,7 @@
     <!-- ===========================================
          SLIDE 5: YARA RULE EXAMPLE
          =========================================== -->
-    <section class="slide" id="slide-9">
+    <section class="slide" id="slide-5">
         <div class="slide-content">
             <div class="section-num reveal">04 — YARA Rules</div>
             <h2 class="reveal">VÍ DỤ: RULE PHÁT HIỆN WANNACRY</h2>
@@ -174,12 +174,18 @@
         $ioc_ext_wnry     = <span class="string">".WNRY"</span> ascii nocase
 
     <span class="keyword">condition</span>:
-        pe.is_pe and
         (
+            pe.is_pe and
             <span class="comment">// Tín hiệu mạnh: có kill-switch và ít nhất 1 dấu vết khác.</span>
             ($killswitch and 1 of ($ioc_*))
             or
             <span class="comment">// Trường hợp biến thể đã bị vá kill-switch: cần ít nhất 3 dấu vết.</span>
+            (3 of ($ioc_*))
+        )
+        or
+        (
+            ($killswitch and 1 of ($ioc_*))
+            or
             (3 of ($ioc_*))
         )
 }</div>
@@ -220,7 +226,7 @@ matches = rules.match(<span class="string">'suspicious.exe'</span>)
     <!-- ===========================================
          SLIDE 7: PROJECT STRUCTURE
          =========================================== -->
-    <section class="slide" id="slide-4">
+    <section class="slide" id="slide-7">
         <div class="slide-content">
             <div class="section-num reveal">06 — Kiến trúc tổng thể</div>
             <h2 class="reveal">TỔNG QUAN KIẾN TRÚC</h2>
@@ -254,39 +260,11 @@ matches = rules.match(<span class="string">'suspicious.exe'</span>)
     </section>
 
     <!-- ===========================================
-         SLIDE 8: SCANNING FLOW
-         =========================================== -->
-    <section class="slide" id="slide-7">
-        <div class="slide-content">
-            <div class="section-num reveal">07 — Cơ chế xử lý tệp nén</div>
-            <h2 class="reveal">CƠ CHẾ XỬ LÝ TỆP NÉN (ZIP/RAR)</h2>
-
-            <article class="arch-step reveal">
-                <span class="arch-layer">Vấn đề</span>
-                <p>Một số mã độc được lưu trữ trong các <strong>tệp nén (ZIP/RAR)</strong>, làm xáo trộn cấu trúc nhị phân để qua mặt cơ chế quét YARA.</p>
-            </article>
-
-            <div class="arch-flow">
-                <article class="arch-step reveal">
-                    <span class="arch-layer">Giải pháp</span>
-                    <h3>Cơ chế Vùng cách ly</h3>
-                    <ul>
-                        <li>Nhận diện tệp nén qua thư viện <code>zipfile</code> của Python.</li>
-                        <li>Bung nén đệ quy toàn bộ nội dung tệp tin vào vùng cách ly.</li>
-                        <li>Chuyển hướng quét YARA vào từng tệp con.</li>
-                        <li>Dọn dẹp tự động vùng cách ly sau hoàn tất để tiết kiệm bộ nhớ.</li>
-                    </ul>
-                </article>
-            </div>
-        </div>
-    </section>
-
-    <!-- ===========================================
-         SLIDE 9: YARA RULES
+         SLIDE 8: YARA RULES
          =========================================== -->
     <section class="slide" id="slide-8">
         <div class="slide-content">
-            <div class="section-num reveal">08 — CÁC HỌ MALWARE</div>
+            <div class="section-num reveal">07 — CÁC HỌ MALWARE</div>
             <h2 class="reveal">14 HỌ MALWARE PHỔ BIẾN</h2>
             <div class="malware-grid">
                 <div class="malware-category reveal">
@@ -332,235 +310,37 @@ matches = rules.match(<span class="string">'suspicious.exe'</span>)
     </section>
 
     <!-- ===========================================
-         SLIDE 10: ARCHIVE SCANNING
+         SLIDE 9: SCANNING FLOW
          =========================================== -->
-    <section class="slide" id="slide-10">
+    <section class="slide" id="slide-9">
         <div class="slide-content">
-            <div class="section-num reveal">09 — Archive</div>
-            <h2 class="reveal">Cơ chế quét Archive</h2>
-            <div class="two-column">
-                <div class="reveal">
-                    <h3>Đặc điểm</h3>
+            <div class="section-num reveal">08 — Cơ chế xử lý tệp nén</div>
+            <h2 class="reveal">CƠ CHẾ XỬ LÝ TỆP NÉN (ZIP/RAR)</h2>
+
+            <article class="arch-step reveal">
+                <span class="arch-layer">Vấn đề</span>
+                <p>Một số mã độc được lưu trữ trong các <strong>tệp nén (ZIP/RAR)</strong>, làm xáo trộn cấu trúc nhị phân để qua mặt cơ chế quét YARA.</p>
+            </article>
+
+            <div class="arch-flow">
+                <article class="arch-step reveal">
+                    <span class="arch-layer">Giải pháp</span>
+                    <h3>Cơ chế Vùng cách ly</h3>
                     <ul>
-                        <li>Hỗ trợ <strong>ZIP</strong> và <strong>7z</strong></li>
-                        <li>Extract vào <strong>memory</strong> — không ghi ra disk</li>
-                        <li>Quét từng file bằng YARA rules</li>
-                        <li>Hỗ trợ nested archives (depth ≤ 3)</li>
+                        <li>Nhận diện tệp nén qua thư viện <code>zipfile</code> của Python.</li>
+                        <li>Bung nén đệ quy toàn bộ nội dung tệp tin vào vùng cách ly.</li>
+                        <li>Chuyển hướng quét YARA vào từng tệp con.</li>
+                        <li>Dọn dẹp tự động vùng cách ly sau hoàn tất để tiết kiệm bộ nhớ.</li>
                     </ul>
-                </div>
-                <div class="reveal">
-                    <h3>Bảo vệ</h3>
-                    <table>
-                        <tr><td>Archive Bomb</td><td>Ratio ≤ 100:1</td></tr>
-                        <tr><td>Nested Depth</td><td>Tối đa 3 lớp</td></tr>
-                        <tr><td>File Count</td><td>Tối đa 1000</td></tr>
-                        <tr><td>Size Limit</td><td>Tối đa 100MB</td></tr>
-                    </table>
-                </div>
+                </article>
             </div>
         </div>
     </section>
 
     <!-- ===========================================
-         SLIDE 11: DATABASE
+         SLIDE 10: THANK YOU
          =========================================== -->
-    <section class="slide" id="slide-11">
-        <div class="slide-content">
-            <div class="section-num reveal">10 — Database</div>
-            <h2 class="reveal">PostgreSQL Database</h2>
-            <p class="reveal">Cơ sở dữ liệu: <code>yara_malware_signatures</code></p>
-            <div class="two-column">
-                <div class="card reveal">
-                    <h3>Bảng malware_signatures</h3>
-                    <ul>
-                        <li>Lưu malware signatures từ API</li>
-                        <li>SHA256 hash (UNIQUE)</li>
-                        <li>MD5, SHA1, SHA3-384 hashes</li>
-                        <li>Index cho truy vấn nhanh</li>
-                    </ul>
-                </div>
-                <div class="card reveal">
-                    <h3>Bảng scan_results</h3>
-                    <ul>
-                        <li>Lịch sử quét</li>
-                        <li>Detection method: HASH_MATCH, YARA_MATCH, CLEAN</li>
-                        <li>Timestamp tự động</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="highlight reveal">
-                <p><strong>Nguồn dữ liệu:</strong> MalwareBazaar API (abuse.ch) — lấy signatures cho 14 họ malware</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- ===========================================
-         SLIDE 12: REPORTING
-         =========================================== -->
-    <section class="slide" id="slide-12">
-        <div class="slide-content">
-            <div class="section-num reveal">11 — Báo cáo</div>
-            <h2 class="reveal">Báo cáo và xuất dữ liệu</h2>
-            <div class="two-column">
-                <div class="reveal">
-                    <h3>Báo cáo Terminal</h3>
-                    <ul>
-                        <li>Tổng số file đã quét</li>
-                        <li>Phát hiện qua Database Hash</li>
-                        <li>Phát hiện qua YARA Rules</li>
-                        <li>File an toàn / File lỗi</li>
-                        <li>Thời gian quét</li>
-                    </ul>
-                </div>
-                <div class="reveal">
-                    <h3>Xuất file (logs/)</h3>
-                    <table>
-                        <tr><td><strong>TXT</strong></td><td>Báo cáo dạng text</td></tr>
-                        <tr><td><strong>JSON</strong></td><td>Structured data</td></tr>
-                        <tr><td><strong>CSV</strong></td><td>Import vào Excel</td></tr>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ===========================================
-         SLIDE 13: USAGE
-         =========================================== -->
-    <section class="slide" id="slide-13">
-        <div class="slide-content">
-            <div class="section-num reveal">12 — Sử dụng</div>
-            <h2 class="reveal">Cài đặt và sử dụng</h2>
-            <div class="code-block reveal"><span class="comment"># Cài đặt dependencies</span>
-pip install -r requirements.txt
-
-<span class="comment"># Cấu hình database (.env)</span>
-DB_HOST=localhost
-DB_NAME=yara_malware_signatures
-DB_USER=postgres
-DB_PASSWORD=your_password
-
-<span class="comment"># Khởi tạo database & Import dữ liệu</span>
-psql -U postgres -f database/01_create_database.sql
-python scripts/get_malware_data.py
-
-<span class="comment"># Chạy chương trình</span>
-python main.py --interactive</div>
-        </div>
-    </section>
-
-    <!-- ===========================================
-         SLIDE 14: CLI DEMO
-         =========================================== -->
-    <section class="slide" id="slide-14">
-        <div class="slide-content">
-            <div class="section-num reveal">13 — Sử dụng</div>
-            <h2 class="reveal">Giao diện dòng lệnh</h2>
-            <div class="code-block reveal" style="background: #0d1117; color: #c9d1d9;">
-<span style="color: #58a6ff;">$</span> python main.py --interactive
-
-==================================== HỆ THỐNG PHÁT HIỆN MÃ ĐỘC ====================================
-
-Nhập đường dẫn file hoặc thư mục cần quét: <span style="color: #7ee787;">/home/user/sample.exe</span>
-
-[!] <span style="color: #f85149;">DANGER (HASH_MATCH)</span>: sample.exe → malware.exe (Emotet)
-
-======================================== BÁO CÁO KẾT QUẢ QUÉT ========================================
-Tổng số file đã quét: <span style="color: #7ee787;">1</span>
-Phát hiện qua Database Hash: <span style="color: #f85149;">1</span>
-File an toàn: <span style="color: #8b949e;">0</span>
-Thời gian quét: <span style="color: #79c0ff;">0.05 giây</span></div>
-        </div>
-    </section>
-
-    <!-- ===========================================
-         SLIDE 15: EXCEPTIONS
-         =========================================== -->
-    <section class="slide" id="slide-15">
-        <div class="slide-content">
-            <div class="section-num reveal">14 — Chi tiết</div>
-            <h2 class="reveal">Custom Exception Hierarchy</h2>
-            <div class="code-block reveal">ScannerError (Base)
-├── DatabaseError
-│   ├── ConnectionError
-│   ├── QueryError
-│   └── SchemaError
-├── YaraError
-│   ├── RuleCompilationError
-│   ├── RuleNotFoundError
-│   └── ScanError
-├── ArchiveError
-│   ├── UnsupportedFormatError
-│   ├── ExtractionError
-│   ├── PasswordProtectedError
-│   ├── ArchiveBombError
-│   └── NestedDepthError
-├── ConfigurationError
-│   └── MissingConfigError / InvalidConfigError
-└── PermissionError
-    └── InsufficientPrivilegesError / AccessDeniedError</div>
-        </div>
-    </section>
-
-    <!-- ===========================================
-         SLIDE 16: DEPENDENCIES
-         =========================================== -->
-    <section class="slide" id="slide-16">
-        <div class="slide-content">
-            <div class="section-num reveal">15 — Chi tiết</div>
-            <h2 class="reveal">Dependencies</h2>
-            <table class="reveal">
-                <thead>
-                    <tr><th>Package</th><th>Phiên bản</th><th>Công dụng</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td><strong>yara-python</strong></td><td>≥ 4.5.0</td><td>YARA pattern matching engine</td></tr>
-                    <tr><td><strong>psycopg2-binary</strong></td><td>≥ 2.9.0</td><td>PostgreSQL database driver</td></tr>
-                    <tr><td><strong>requests</strong></td><td>≥ 2.31.0</td><td>HTTP client cho MalwareBazaar API</td></tr>
-                    <tr><td><strong>pandas</strong></td><td>≥ 2.0.0</td><td>Xử lý dữ liệu malware</td></tr>
-                    <tr><td><strong>py7zr</strong></td><td>≥ 0.20.0</td><td>Hỗ trợ định dạng 7z</td></tr>
-                    <tr><td><strong>python-dotenv</strong></td><td>≥ 1.0.0</td><td>Đọc biến môi trường từ .env</td></tr>
-                </tbody>
-            </table>
-            <p class="reveal"><strong>Yêu cầu:</strong> Python 3.8+ • PostgreSQL 12+</p>
-        </div>
-    </section>
-
-    <!-- ===========================================
-         SLIDE 17: SUMMARY
-         =========================================== -->
-    <section class="slide" id="slide-17">
-        <div class="slide-content">
-            <div class="section-num reveal">16 — Tổng kết</div>
-            <h2 class="reveal">Điểm nổi bật</h2>
-            <div class="card-grid">
-                <div class="card reveal">
-                    <h3>2 phương pháp</h3>
-                    <p>Hash-based + YARA Pattern Matching — bao phủ known và unknown threats</p>
-                </div>
-                <div class="card reveal">
-                    <h3>14 họ malware</h3>
-                    <p>Info Stealers, Banking Trojans, Ransomware, RATs</p>
-                </div>
-                <div class="card reveal">
-                    <h3>Quét archive an toàn</h3>
-                    <p>Memory-based, không extract ra disk, chống archive bomb</p>
-                </div>
-                <div class="card reveal">
-                    <h3>Báo cáo đa dạng</h3>
-                    <p>Terminal, TXT, JSON, CSV — dễ tích hợp và phân tích</p>
-                </div>
-            </div>
-            <div class="highlight reveal">
-                <p><strong>Mở rộng:</strong> GUI (Tkinter) • Real-time monitoring • VirusTotal API • ML-based detection</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- ===========================================
-         SLIDE 18: THANK YOU
-         =========================================== -->
-    <section class="slide title-slide" id="slide-18">
+    <section class="slide title-slide" id="slide-10">
         <div class="slide-content">
             <h1 class="reveal" style="border: none;">Cảm ơn!</h1>
             <div class="accent-line reveal"></div>
