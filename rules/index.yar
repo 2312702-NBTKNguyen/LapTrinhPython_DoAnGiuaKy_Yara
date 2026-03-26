@@ -1,4 +1,5 @@
 include "core/pe_analyzer.yar"
+include "core/document_script_analyzer.yar"
 include "malware_families/agent_tesla.yar"
 include "malware_families/conti.yar"
 include "malware_families/dridex.yar"

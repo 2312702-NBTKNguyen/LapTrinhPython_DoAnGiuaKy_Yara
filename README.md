@@ -51,6 +51,20 @@ DB_USER=postgres
 DB_PASSWORD=your_password_
 ```
 
+### Cấu hình tool giải nén RAR (Windows)
+
+Nếu gặp lỗi `Cannot find working tool` khi quét `.rar`, thêm biến sau vào file `.env`:
+
+```bash
+RAR_TOOL_PATH=C:\\Program Files\\WinRAR\\UnRAR.exe
+```
+
+Hoặc dùng 7-Zip:
+
+```bash
+RAR_TOOL_PATH=C:\\Program Files\\7-Zip\\7z.exe
+```
+
 ### Bước 4: Lấy và cấu hình MalwareBazaar API key
 
 1. Đăng ký/đăng nhập tài khoản tại [MalwareBazaar](https://bazaar.abuse.ch/).

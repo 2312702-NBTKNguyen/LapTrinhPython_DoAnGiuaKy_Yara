@@ -113,15 +113,21 @@ rule Crypto_RC4_Detection {
 
 rule Network_HardcodedIP {
     meta:
-        description = "Detects hardcoded IP addresses"
+        description = "Detects potential C2 hardcoded IPs with network context"
         severity = "medium"
         category = "network"
 
     strings:
         $ip1 = /[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/ ascii
+        $ctx1 = "connect" ascii wide nocase
+        $ctx2 = "sockaddr" ascii wide nocase
+        $ctx3 = "socket" ascii wide nocase
+        $ctx4 = "winsock" ascii wide nocase
+        $ctx5 = "http://" ascii wide nocase
+        $ctx6 = "https://" ascii wide nocase
 
     condition:
-        $ip1 and filesize < 5MB
+        filesize < 12MB and #ip1 >= 2 and 1 of ($ctx*)
 }
 
 rule Network_Tor_Indicators {

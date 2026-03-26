@@ -16,3 +16,6 @@ yara-python
 # Quét archive
 py7zr>=0.20.0
 rarfile>=4.0
+
+# Hỗ trợ đọc stream OLE (.doc/.xls legacy) khi quét YARA
+olefile>=0.47

@@ -1,3 +1,0 @@
-MZ - Đây là file giả mạo để test bộ quét mã độc.
-Trình quản lý hệ thống đang cố gắng kết nối tới domain: iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com
-Tiến trình mssecsvc2.0 đã được khởi động để thực thi các tệp tin.
