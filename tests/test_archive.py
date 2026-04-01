@@ -15,7 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from malware_scanner.engine import load_yara_rules
-from malware_scanner.archive import ArchiveScanner
+from malware_scanner.archive.scanner import ArchiveScanner
 from malware_scanner.exceptions import ArchiveBombError, NestedDepthError
 
 
@@ -100,10 +100,10 @@ def test_zip_scanning():
 
     if len(results) > 0:
         print("\n✅ PASS: Quét archive phát hiện malware patterns")
-        return True
+        assert True
     else:
         print("\n❌ FAIL: Không phát hiện malware patterns")
-        return False
+        assert False
 
 
 def test_nested_zip():
@@ -132,10 +132,10 @@ def test_nested_zip():
 
     if len(results) > 0:
         print("\n✅ PASS: Quét nested archive hoạt động")
-        return True
+        assert True
     else:
         print("\n❌ FAIL: Không phát hiện malware patterns trong nested archive")
-        return False
+        assert False
 
 
 def test_depth_limit():
@@ -153,13 +153,13 @@ def test_depth_limit():
         results = list(scanner.scan(zip_path))
         # Nếu đến đây với max_depth=0, nested archives sẽ bị bỏ qua
         print("✅ PASS: Xử lý giới hạn depth thành công")
-        return True
+        assert results is not None
     except NestedDepthError:
         print("✅ PASS: Exception giới hạn depth được raise đúng")
-        return True
+        assert True
     except Exception as e:
         print(f"❌ FAIL: Lỗi không mong muốn: {e}")
-        return False
+        assert False
     finally:
         os.unlink(zip_path)
 
@@ -195,10 +195,10 @@ def test_direct_file_comparison():
 
     if direct_matches and len(archive_matches) > 0:
         print("\n✅ PASS: Cả hai phương pháp đều phát hiện malware")
-        return True
+        assert True
     else:
         print("\n❌ FAIL: Không nhất quán trong phát hiện")
-        return False
+        assert False
 
 
 def test_non_pe_family_samples_in_zip():
@@ -230,10 +230,11 @@ def test_non_pe_family_samples_in_zip():
 
     if not missing:
         print("\n✅ PASS: Đã phát hiện đủ 4 family non-PE trong archive")
-        return True
+        assert True
+        return
 
     print(f"\n❌ FAIL: Thiếu phát hiện: {missing}")
-    return False
+    assert False
 
 
 def main():

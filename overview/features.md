@@ -164,17 +164,15 @@ Phát hiện các patterns mạng đáng ngờ.
 ScannerError(Exception)
 ├── DatabaseError
 │   ├── ConnectionError
-│   ├── QueryError
-│   └── SchemaError
 ├── YaraError
 │   ├── RuleCompilationError
-│   ├── RuleNotFoundError
-│   └── ScanError
+│   └── RuleNotFoundError
 ├── ArchiveError
 │   ├── UnsupportedFormatError
 │   ├── ExtractionError
 │   ├── PasswordProtectedError
-│   └── ArchiveBombError
+│   ├── ArchiveBombError
+│   └── NestedDepthError
 ├── ConfigurationError
 │   ├── MissingConfigError
 │   └── InvalidConfigError

@@ -12,10 +12,19 @@ LapTrinhPython_DoAnGiuaKy_Yara/
 │
 ├── malware_scanner/            # Core package
 │   ├── __init__.py
-│   ├── cli.py                  # CLI interface
 │   ├── service.py              # Business logic (MalwareScanner class)
-│   ├── engine.py               # Hash calculation, YARA scanning
-│   ├── archive.py              # Archive scanning (ZIP, 7z, RAR)
+│   ├── engine.py               # Compatibility facade (legacy imports)
+│   ├── detection/              # Detection internals
+│   │   ├── hashing.py          # File hash calculation
+│   │   ├── scan_variants.py    # Content variant extraction for YARA
+│   │   └── yara_engine.py      # YARA compile and scanning APIs
+│   ├── archive/                # Archive package
+│   │   ├── __init__.py         # Archive facade exports
+│   │   ├── scanner.py          # ArchiveScanner class
+│   │   ├── types.py            # ArchiveScanResult dataclass
+│   │   ├── zip_backend.py      # ZIP scanning backend
+│   │   ├── sevenz_backend.py   # 7z scanning backend
+│   │   └── rar_backend.py      # RAR scanning backend
 │   ├── db.py                   # PostgreSQL operations
 │   ├── reporting.py            # Report generation (TXT, JSON, CSV)
 │   └── exceptions.py           # Custom exceptions
@@ -32,37 +41,30 @@ LapTrinhPython_DoAnGiuaKy_Yara/
 │
 │
 ├── tests/                      # Test files
-│   ├── generate_samples.py     # Generate fake malware samples
 │   ├── test_archive.py         # Archive scanning tests
-│   └── samples/                # Fake malware for testing
+│   ├── test_rule_coverage.py   # Rule coverage regression tests
+│   └── samples/                # Test samples
 │       ├── archives/
-│       │   ├── test_malware.zip
-│       │   └── test_nested.zip
-│       ├── test_emotet.exe
-│       ├── test_wannacry.exe
-│       └── test_lockbit.exe
+│       ├── test_emotet.txt
+│       ├── test_wannacry.txt
+│       └── test_lockbit.txt
 │
 ├── database/                   # Database setup
 │   ├── 01_create_database.sql
 │   └── 02_create_tables.sql
 │
 ├── scripts/                    # Data + workflow scripts
-│   ├── get_malware_data.py
-│   ├── import_data.py
-│   ├── malware_data_filter.py
+│   ├── data_sources.py
+│   ├── db_setup.py
+│   ├── pipeline.py
+│   ├── utils.py
 │   └── workflows.py
-│
-├── samples/                    # Original test samples
-│   ├── test_emotet.txt
-│   ├── test_wannacry.txt
-│   └── test_lockbit.txt
 │
 ├── logs/                       # Scan reports (generated at runtime)
 │   └── scan_report_*.txt/json/csv
 │
 ├── main.py                     # Entry point
 ├── pyproject.toml              # Project metadata & uv dependencies
-├── uv.lock                     # Reproducible builds (uv)
 ├── requirements.txt            # Python dependencies (pip)
 ├── .env                        # Environment variables (not in git)
 ├── .gitignore
@@ -73,9 +75,9 @@ LapTrinhPython_DoAnGiuaKy_Yara/
 
 ### Entry point
 
-| File      | Purpose  | Usage                          |
-| --------- | -------- | ------------------------------ |
-| `main.py` | CLI mode | `python main.py --interactive` |
+| File      | Purpose  | Usage                   |
+| --------- | -------- | ----------------------- |
+| `main.py` | CLI mode | `python main.py --scan` |
 
 ### Core modules
 
@@ -83,7 +85,7 @@ LapTrinhPython_DoAnGiuaKy_Yara/
 | --------------- | -------------- | --------------------------------------------- |
 | `service.py`    | Business logic | `MalwareScanner`                              |
 | `engine.py`     | Scanning       | `calculate_file_hashes()`, `scan_with_yara()` |
-| `archive.py`    | Archives       | `ArchiveScanner`                              |
+| `archive/`      | Archives       | `ArchiveScanner`, backend scanners            |
 | `db.py`         | Database       | `connect_db()`, `check_hash_in_db()`          |
 | `reporting.py`  | Output         | `print_summary()`, `export_*.txt`             |
 | `exceptions.py` | Errors         | `Custom exception classes`                    |
@@ -106,3 +108,7 @@ main.py
         ├── malware_scanner.db
         └── malware_scanner.reporting
 ```
+
+## Ghi chú
+
+- `README.md` chỉ tóm tắt nhanh; tài liệu này là nguồn chuẩn về cấu trúc thư mục.

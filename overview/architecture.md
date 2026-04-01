@@ -19,7 +19,7 @@ YARA Malware Scanner là hệ thống phát hiện mã độc sử dụng kết 
 ┌─────────────────────────────────────────────────────────────────┐
 │                      LỚP TRÌNH DIỆN                             │
 │                      CLI Interface                              │
-│                    (malware_scanner/cli.py)                     │
+│                         (main.py)                               │
 └────────────────────────────┬────────────────────────────────────┘
                              │
                              ▼
@@ -35,7 +35,7 @@ YARA Malware Scanner là hệ thống phát hiện mã độc sử dụng kết 
 ┌──────────────────┐ ┌──────────────┐ ┌──────────────────┐
 │   LỚP ENGINE     │ │  LỚP ARCHIVE │ │   LỚP MEMORY     │
 │                  │ │              │ │   (Tương lai)    │
-│ engine.py        │ │ archive.py   │ │ memory.py        │
+│ engine.py        │ │ archive/     │ │ memory.py        │
 │ - Tính hash      │ │ - Quét ZIP   │ │ - Quét process   │
 │ - Quét YARA      │ │ - Quét 7z    │ │ - Memory dump    │
 │ - Quét file      │ │ - Quét RAR   │ │                  │
@@ -59,15 +59,14 @@ YARA Malware Scanner là hệ thống phát hiện mã độc sử dụng kết 
 
 ### Core modules (`malware_scanner/`)
 
-| Module          | Mô tả           | Trách nhiệm                       |
-| --------------- | --------------- | --------------------------------- |
-| `cli.py`        | CLI interface   | Tương tác người dùng, xử lý input |
-| `service.py`    | Business logic  | Điều phối quét, workflow          |
-| `engine.py`     | Engine quét     | Tính hash, quét YARA              |
-| `archive.py`    | Hỗ trợ archive  | Quét ZIP/7z/RAR                   |
-| `db.py`         | Lưu trữ dữ liệu | Thao tác PostgreSQL               |
-| `reporting.py`  | Đầu ra          | Tạo báo cáo                       |
-| `exceptions.py` | Xử lý lỗi       | Custom exception classes          |
+| Module          | Mô tả           | Trách nhiệm                         |
+| --------------- | --------------- | ----------------------------------- |
+| `service.py`    | Business logic  | Điều phối quét, workflow            |
+| `engine.py`     | Engine quét     | Tính hash, quét YARA                |
+| `archive/`      | Hỗ trợ archive  | Quét ZIP/7z/RAR qua backend modules |
+| `db.py`         | Lưu trữ dữ liệu | Thao tác PostgreSQL                 |
+| `reporting.py`  | Đầu ra          | Tạo báo cáo                         |
+| `exceptions.py` | Xử lý lỗi       | Custom exception classes            |
 
 ### Luồng dữ liệu
 
@@ -124,14 +123,15 @@ Lớp Dịch vụ (MalwareScanner)
 Exception Hierarchy:
     ScannerError (base)
     ├── DatabaseError
-    │   ├── ConnectionError
-    │   └── QueryError
+    │   └── ConnectionError
     ├── YaraError
-    │   ├── RuleCompilationError
-    │   └── ScanError
+    │   └── RuleCompilationError
     ├── ArchiveError
+    │   ├── UnsupportedFormatError
     │   ├── ExtractionError
-    │   └── UnsupportedFormatError
+    │   ├── PasswordProtectedError
+    │   ├── ArchiveBombError
+    │   └── NestedDepthError
     └── ConfigurationError
 ```
 

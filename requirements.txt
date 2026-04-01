@@ -19,3 +19,7 @@ rarfile>=4.0
 
 # Hỗ trợ đọc stream OLE (.doc/.xls legacy) khi quét YARA
 olefile>=0.47
+
+# Testing
+pytest>=8.2.0
+pytest-cov>=5.0.0

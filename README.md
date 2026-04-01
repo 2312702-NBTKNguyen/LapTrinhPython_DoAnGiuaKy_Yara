@@ -101,7 +101,7 @@ python main.py --update
 ```bash
 python main.py --run
 python main.py --update
-python main.py --interactive
+python main.py --scan
 
 # Quét ngầm một file/thư mục rồi thoát
 python main.py --scan /path/to/file_or_folder
@@ -120,49 +120,17 @@ python main.py --scan /path/to/file_or_folder
 
 Báo cáo sẽ được hiển thị trên terminal và lưu vào thư mục `logs/`.
 
-## Cấu trúc dự án
+## Tài liệu kiến trúc và cấu trúc
 
-```
-├── malware_scanner/        # Core package
-│   ├── cli.py              # CLI interface
-│   ├── service.py          # Business logic
-│   ├── engine.py           # YARA scanning engine
-│   ├── archive.py          # Archive scanning
-│   ├── db.py               # PostgreSQL operations
-│   ├── reporting.py        # Report generation
-│   └── exceptions.py       # Custom exceptions
-├── rules/                  # YARA rules
-│   ├── index.yar           # Master rule file
-│   └── families/           # Malware family rules
-├── tests/                  # Test files
-├── database/               # Database setup scripts
-├── scripts/                # Data + workflow scripts
-├── main.py                 # CLI entry point chính
-└── pyproject.toml          # Project metadata
-```
+- Cấu trúc thư mục chuẩn: `overview/file-structure.md`
+- Kiến trúc hệ thống và luồng dữ liệu: `overview/architecture.md`
+- Đặc tả tính năng: `overview/features.md`
 
-## Phát hiện malware
+## Cách phát hiện malware
 
-### Layer 1: Hash-based Detection
+Hệ thống sử dụng chuỗi phát hiện theo thứ tự: hash database -> YARA pattern matching -> archive scanning in-memory.
 
-- Tính SHA256 hash của file
-- Kiểm tra trong PostgreSQL database
-- Thời gian: O(1)
-- Độ tin cậy: Cao (khớp chính xác)
-
-### Layer 2: YARA Pattern Matching
-
-- Compile YARA rules vào RAM
-- Quét file bằng pattern matching
-- Phát hiện malware variants và families
-- Thời gian: Tùy thuộc kích thước file
-
-### Layer 3: Archive Scanning
-
-- Giải nén archive contents vào memory
-- Quét từng file bên trong archive
-- Hỗ trợ nested archives (giới hạn depth)
-- Không giải nén file ra disk (bảo mật)
+Chi tiết triển khai, giới hạn bảo vệ archive, và quy tắc xử lý lỗi được mô tả trong `overview/architecture.md` và `overview/features.md`.
 
 ## Các họ Malware (14)
 
@@ -176,5 +144,5 @@ Báo cáo sẽ được hiển thị trên terminal và lưu vào thư mục `lo
 Chạy test suite:
 
 ```bash
-python tests/test_archive.py
+pytest
 ```
