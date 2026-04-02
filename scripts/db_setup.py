@@ -6,13 +6,23 @@ from pathlib import Path
 import psycopg2
 
 from scripts.utils import (
-    DEFAULT_DB_NAME,
-    get_db_connection_kwargs,
     log_info,
     log_success,
     log_warn,
 )
 
+def get_db_connection(db_name: str | None = None, *, admin: bool = False) -> dict[str, str | None]:
+    selected_db = db_name or os.getenv("DB_NAME")
+    if admin:
+        selected_db = os.getenv("DB_ADMIN_DB", "postgres")
+
+    return {
+        "host": os.getenv("DB_HOST", "localhost"),
+        "port": os.getenv("DB_PORT", "5432"),
+        "database": selected_db,
+        "user": os.getenv("DB_USER"),
+        "password": os.getenv("DB_PASSWORD"),
+    }
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 SQL_CREATE_DB_FILE = ROOT_DIR / "database" / "01_create_database.sql"
@@ -27,7 +37,7 @@ def _ensure_sql_files_exist() -> None:
 
 def _create_database_if_missing() -> None:
     db_user = os.getenv("DB_USER")
-    db_name = os.getenv("DB_NAME", DEFAULT_DB_NAME)
+    db_name = os.getenv("DB_NAME")
 
     if not db_user:
         raise ValueError("Thiếu DB_USER trong .env hoặc biến môi trường")
@@ -39,7 +49,7 @@ def _create_database_if_missing() -> None:
     if create_db_sql:
         log_info("Thực thi logic tạo database dựa trên nội dung script SQL...")
 
-    conn = psycopg2.connect(**get_db_connection_kwargs(admin=True))
+    conn = psycopg2.connect(**get_db_connection(admin=True))
     conn.autocommit = True
 
     try:
@@ -71,7 +81,7 @@ def _create_tables_if_missing() -> None:
 
     log_info(f"Đọc script: {SQL_CREATE_TABLES_FILE}")
 
-    conn = psycopg2.connect(**get_db_connection_kwargs())
+    conn = psycopg2.connect(**get_db_connection())
     try:
         with conn.cursor() as cursor:
             cursor.execute(create_tables_sql)

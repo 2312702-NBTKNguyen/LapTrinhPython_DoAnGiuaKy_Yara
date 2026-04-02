@@ -1,9 +1,4 @@
-from __future__ import annotations
-
 import os
-
-
-DEFAULT_DB_NAME = "yara_malware_signatures"
 
 
 def log_info(message: str) -> None:
@@ -22,8 +17,8 @@ def log_error(message: str) -> None:
     print(f"[ERROR] {message}")
 
 
-def get_db_connection_kwargs(db_name: str | None = None, *, admin: bool = False) -> dict[str, str | None]:
-    selected_db = db_name or os.getenv("DB_NAME") or DEFAULT_DB_NAME
+def get_db_connection(db_name: str | None = None, *, admin: bool = False) -> dict[str, str | None]:
+    selected_db = db_name or os.getenv("DB_NAME")
     if admin:
         selected_db = os.getenv("DB_ADMIN_DB", "postgres")
 

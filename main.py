@@ -3,7 +3,7 @@ import os
 import sys
 
 from malware_scanner.ui import DISPLAY_WIDTH, center_text
-from scripts.workflows import (
+from scripts.app import (
     run_first_startup,
     run_scan_once,
     run_update_pipeline,
