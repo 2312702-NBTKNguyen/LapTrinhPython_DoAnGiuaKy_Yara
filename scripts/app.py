@@ -14,12 +14,12 @@ from scripts.pipeline import import_signatures
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
-JSON_OUTPUT_FILE = ROOT_DIR / "data" / "malware_signatures.json"
-RULES_INDEX_FILE = ROOT_DIR / "rules" / "index.yar"
+JSON_OUTPUT = ROOT_DIR / "data" / "malware_signatures.json"
+RULES_INDEX = ROOT_DIR / "rules" / "index.yar"
 
 
 def init_system() -> int:
-    print_section("MALWARE SCANNER - CHẾ ĐỘ KHỞI CHẠY LẦN ĐẦU")
+    print_section("CHẾ ĐỘ KHỞI CHẠY LẦN ĐẦU")
 
     try:
         load_dotenv()
@@ -29,41 +29,41 @@ def init_system() -> int:
         setup_database()
 
         print_section("XỬ LÝ DỮ LIỆU")
-        import_signatures(JSON_OUTPUT_FILE)
+        import_signatures(JSON_OUTPUT)
 
         print_section("HOÀN TẤT KHỞI CHẠY")
-        log_success("Hệ thống đã khởi tạo thành công cho lần chạy đầu tiên.")
+        log_success("Hệ thống đã khởi tạo thành công.")
         return 0
 
     except Exception as exc:
-        print_section("KHỞI CHẠY THẤT BẠI")
+        print('-' * 100)
         log_error(f"Khởi chạy thất bại: {exc}")
         return 1
 
 
 def update_signatures() -> int:
-    print_section("MALWARE SCANNER - CHẾ ĐỘ CẬP NHẬT")
+    print_section("CHẾ ĐỘ CẬP NHẬT")
 
     try:
         load_dotenv()
         os.environ.setdefault("DB_NAME", "")
 
         print_section("XỬ LÝ DỮ LIỆU")
-        import_signatures(JSON_OUTPUT_FILE)
+        import_signatures(JSON_OUTPUT)
 
         print_section("HOÀN TẤT UPDATE")
         log_success("Đã cập nhật dữ liệu signatures.")
         return 0
 
     except Exception as exc:
-        print_section("UPDATE THẤT BẠI")
+        print('-' * 100)
         log_error(f"Cập nhật thất bại: {exc}")
         return 1
 
 
 def scan_target(target_path: str | None = None) -> int:
     if not target_path:
-        print_section("MALWARE SCANNER - CHẾ ĐỘ QUÉT")
+        print_section("CHẾ ĐỘ QUÉT")
         target_path = input("Nhập đường dẫn file hoặc thư mục cần quét: ").strip().strip('"\'')
 
     if not target_path:
@@ -76,7 +76,7 @@ def scan_target(target_path: str | None = None) -> int:
         log_error(f"Đường dẫn không tồn tại: {resolved_target}")
         return 1
 
-    scanner = MalwareScanner(rules_path=str(RULES_INDEX_FILE))
+    scanner = MalwareScanner(rules_path=str(RULES_INDEX))
 
     try:
         print_section("MALWARE SCANNER - CHẾ ĐỘ QUÉT")

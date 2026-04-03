@@ -1,27 +1,10 @@
 import os, psycopg2
 
 from pathlib import Path
-from common.utils import log_info, log_success, log_warn, get_db_connection
+from common.utils import log_info, log_success, log_warn, create_db_connection
 
 def connect_db() -> psycopg2.extensions.connection:
-    db_config = get_db_connection()
-    host = db_config.get("host")
-    port = db_config.get("port")
-    dbname = db_config.get("database")
-    user = db_config.get("user")
-    password = db_config.get("password")
-
-    if not all([host, port, dbname, user, password]):
-        raise ValueError("Thiếu cấu hình kết nối database trong .env hoặc biến môi trường")
-
-    return psycopg2.connect(
-        host=host,
-        port=port,
-        dbname=dbname,
-        user=user,
-        password=password,
-    )
-
+    return create_db_connection()
 
 def check_sql_files() -> None:
     root_dir = Path(__file__).resolve().parent.parent
@@ -34,7 +17,6 @@ def check_sql_files() -> None:
     for file in sql_files:
         if not file.exists():
             raise FileNotFoundError(f"Không tìm thấy file SQL: {file}")
-
 
 def create_database_if_missing() -> None:
     root_dir = Path(__file__).resolve().parent.parent
@@ -67,7 +49,6 @@ def create_database_if_missing() -> None:
     finally:
         conn.close()
 
-
 def create_tables_if_missing() -> None:
     root_dir = Path(__file__).resolve().parent.parent
     sql_create_table = root_dir / "database" / "02_create_tables.sql"
@@ -85,7 +66,6 @@ def create_tables_if_missing() -> None:
         log_success("Đã cập nhật schema/table thành công.")
     finally:
         conn.close()
-
 
 def setup_database() -> None:
     check_sql_files()

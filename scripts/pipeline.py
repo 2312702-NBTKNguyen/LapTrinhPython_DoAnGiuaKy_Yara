@@ -1,9 +1,8 @@
-import json, os
+import json, os, psycopg2, requests
 import pandas as pd
-import psycopg2, requests
 
 from pathlib import Path
-from common.utils import log_info, log_success, log_error, log_warn, get_db_connection
+from common.utils import log_info, log_success, log_error, log_warn, create_db_connection
 from dotenv import load_dotenv
 from psycopg2.extras import execute_values
 
@@ -50,9 +49,7 @@ def fetch_malware_signatures(output_file: str = "./data/malware_signatures.json"
             query_status = json_data.get("query_status")
             if query_status == "ok":
                 signature_records = json_data.get("data", [])
-                log_success(
-                    f"Signature {sig}: nhận {len(signature_records)} records."
-                )
+                log_success(f"Signature {sig}: nhận {len(signature_records)} records.")                
                 all_malware.extend(signature_records)
                 successful_requests += 1
                 continue
@@ -85,13 +82,10 @@ def fetch_malware_signatures(output_file: str = "./data/malware_signatures.json"
 
         log_success(f"Đã lưu {len(unique_malware)} bản ghi vào '{output_file}'.")
         log_info(f"Đã lọc {len(all_malware) - len(unique_malware)} bản ghi trùng lặp.")
-        log_info(
-            f"Tổng kết: {successful_requests} request thành công, " f"{failed_requests} request lỗi."
-        )
+        log_info(f"Tổng kết: {successful_requests} request thành công, " f"{failed_requests} request lỗi.")
 
     except requests.exceptions.RequestException as exc:
         log_error(f"Lỗi kết nối: {exc}")
-
 
 def fetch_signature(sig: str, url: str, headers: dict[str, str]) -> dict | None:
     payload = {
@@ -122,7 +116,6 @@ def filter_malware_data(input_file: str) -> pd.DataFrame | None:
 
     try:
         dataframe = pd.read_json(input_file)
-
         if dataframe.empty:
             log_warn("File input rỗng, không có dữ liệu để xử lý.")
             return None
@@ -153,31 +146,16 @@ def filter_malware_data(input_file: str) -> pd.DataFrame | None:
 
     return None
 
-
-def import_dataframe_to_db(dataframe: pd.DataFrame) -> None:
+def import_data_to_db(dataframe: pd.DataFrame) -> None:
     log_info("Bắt đầu nhập dữ liệu vào PostgreSQL...")
 
     try:
-        db_config = get_db_connection()
-        host = db_config.get("host")
-        port = db_config.get("port")
-        dbname = db_config.get("database")
-        user = db_config.get("user")
-        password = db_config.get("password")
-
-        if not all([host, port, dbname, user, password]):
-            log_error("Thiếu cấu hình kết nối database trong biến môi trường.")
-            return
-
-        conn = psycopg2.connect(
-            host=host,
-            port=port,
-            dbname=dbname,
-            user=user,
-            password=password,
-        )
+        conn = create_db_connection()
         cursor = conn.cursor()
         log_success("Kết nối Database thành công.")
+    except ValueError as exc:
+        log_error(str(exc))
+        return
     except Exception as exc:
         log_error(f"Lỗi kết nối Database: {exc}")
         return
@@ -186,10 +164,7 @@ def import_dataframe_to_db(dataframe: pd.DataFrame) -> None:
     for row in dataframe.to_dict(orient="records"):
         first_seen = row["first_seen"] if row["first_seen"] != "Unknown" else None
         records_to_insert.append(
-            (
-                row["file_name"], row["signature"], row["file_type"], first_seen, row["file_type_mime"], 
-                row["md5_hash"], row["sha1_hash"], row["sha256_hash"], row["sha3_384_hash"],
-            )
+            (row["file_name"], row["signature"], row["file_type"], first_seen, row["file_type_mime"], row["md5_hash"], row["sha1_hash"], row["sha256_hash"], row["sha3_384_hash"])
         )
 
     if not records_to_insert:
@@ -233,7 +208,6 @@ def refresh_signatures(json_output_file: Path) -> None:
     log_success(f"Dữ liệu signatures được lưu tại: {json_output_file}")
     print("-" * 100)
 
-
 def filter_and_import_signatures(json_output_file: Path) -> None:
     log_info("Bắt đầu lọc dữ liệu JSON.")
     cleaned_dataframe = filter_malware_data(str(json_output_file))
@@ -243,9 +217,8 @@ def filter_and_import_signatures(json_output_file: Path) -> None:
         )
 
     log_success(f"Đã tạo DataFrame với {len(cleaned_dataframe)} bản ghi.")
-    import_dataframe_to_db(cleaned_dataframe)
+    import_data_to_db(cleaned_dataframe)
     log_success("Hoàn tất nhập dữ liệu vào PostgreSQL.")
-
 
 def import_signatures(json_output_file: Path) -> None:
     refresh_signatures(json_output_file)
