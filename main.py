@@ -1,31 +1,20 @@
-import argparse
-import os
-import sys
+import os, sys, argparse
 
-from malware_scanner.ui import DISPLAY_WIDTH, center_text
-from scripts.app import (
-    run_first_startup,
-    run_scan_once,
-    run_update_pipeline,
-)
-
+from common.utils import center_text
+from scripts.app import init_system, update_signatures, scan_target
 
 def clear_screen() -> None:
     os.system("cls" if os.name == "nt" else "clear")
 
-
 def print_project_info() -> None:
-    bar = "=" * DISPLAY_WIDTH
+    bar = "=" * 100
 
     print(f"\n{bar}")
-    print(center_text("LẬP TRÌNH PYTHON - MALWARE SCANNER", width=DISPLAY_WIDTH))
+    print(center_text("LẬP TRÌNH PYTHON - MALWARE SCANNER", width=100))
     print(bar)
-    print("Dự án quét mã độc theo 2 lớp phát hiện:")
-    print("- Hash-based Detection: đối chiếu SHA256 với cơ sở dữ liệu mẫu độc hại")
-    print("- YARA Pattern Matching: phát hiện hành vi/mẫu malware theo rule")
 
     print(f"\n{bar}")
-    print(center_text("CÁC LỆNH KHẢ DỤNG", width=DISPLAY_WIDTH))
+    print(center_text("CÁC LỆNH KHẢ DỤNG", width=100))
     print(bar)
     print("1. Khởi chạy lần đầu: 'python main.py --run'")
     print("2. Cập nhật dữ liệu: 'python main.py --update'")
@@ -84,13 +73,13 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.run:
-        return run_first_startup()
+        return init_system()
 
     if args.update:
-        return run_update_pipeline()
+        return update_signatures()
 
     if args.scan:
-        return run_scan_once()
+        return scan_target()
 
     parser.print_help()
     return 1

@@ -1,40 +1,35 @@
 import os
+
 from datetime import datetime
 from pathlib import Path
-
 from dotenv import load_dotenv
+from common.utils import print_section, log_error, log_info, log_success
 
 from malware_scanner.reporting import finalize_scan_reports, print_summary
 from malware_scanner.service import MalwareScanner
-from malware_scanner.ui import print_section
-from scripts.db_setup import setup_database_from_sql
-from scripts.pipeline import run_data_pipeline
-from scripts.utils import (
-    DEFAULT_DB_NAME,
-    log_error,
-    log_info,
-    log_success,
-)
+
+from scripts.db_setup import setup_database
+from scripts.pipeline import import_signatures
+
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 JSON_OUTPUT_FILE = ROOT_DIR / "data" / "malware_signatures.json"
-CSV_OUTPUT_FILE = ROOT_DIR / "data" / "malware_signatures.csv"
 RULES_INDEX_FILE = ROOT_DIR / "rules" / "index.yar"
 
 
-def run_first_startup() -> int:
+def init_system() -> int:
     print_section("MALWARE SCANNER - CHẾ ĐỘ KHỞI CHẠY LẦN ĐẦU")
 
     try:
         load_dotenv()
-        os.environ.setdefault("DB_NAME", DEFAULT_DB_NAME)
+        os.environ.setdefault("DB_NAME", "")
 
-        print_section("THIẾT LẬP DATABASE")
-        setup_database_from_sql()
+        print_section("THIẾT LẬP CƠ SỞ DỮ LIỆU")
+        setup_database()
 
-        print_section("TẢI/LỌC/IMPORT DỮ LIỆU")
-        run_data_pipeline(JSON_OUTPUT_FILE, CSV_OUTPUT_FILE)
+        print_section("XỬ LÝ DỮ LIỆU")
+        import_signatures(JSON_OUTPUT_FILE)
 
         print_section("HOÀN TẤT KHỞI CHẠY")
         log_success("Hệ thống đã khởi tạo thành công cho lần chạy đầu tiên.")
@@ -46,15 +41,15 @@ def run_first_startup() -> int:
         return 1
 
 
-def run_update_pipeline() -> int:
+def update_signatures() -> int:
     print_section("MALWARE SCANNER - CHẾ ĐỘ CẬP NHẬT")
 
     try:
         load_dotenv()
-        os.environ.setdefault("DB_NAME", DEFAULT_DB_NAME)
+        os.environ.setdefault("DB_NAME", "")
 
-        print_section("TẢI/LỌC/IMPORT DỮ LIỆU")
-        run_data_pipeline(JSON_OUTPUT_FILE, CSV_OUTPUT_FILE)
+        print_section("XỬ LÝ DỮ LIỆU")
+        import_signatures(JSON_OUTPUT_FILE)
 
         print_section("HOÀN TẤT UPDATE")
         log_success("Đã cập nhật dữ liệu signatures.")
@@ -66,7 +61,7 @@ def run_update_pipeline() -> int:
         return 1
 
 
-def run_scan_once(target_path: str | None = None) -> int:
+def scan_target(target_path: str | None = None) -> int:
     if not target_path:
         print_section("MALWARE SCANNER - CHẾ ĐỘ QUÉT")
         target_path = input("Nhập đường dẫn file hoặc thư mục cần quét: ").strip().strip('"\'')

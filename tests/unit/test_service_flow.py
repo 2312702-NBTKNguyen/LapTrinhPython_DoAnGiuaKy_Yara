@@ -84,7 +84,7 @@ def test_scan_target_falls_back_to_hash_when_archive_unsupported(monkeypatch) ->
     scanner.archive_scanner.supported = True
     scanner.archive_scanner.error = UnsupportedFormatError("skip")
 
-    scanner.scan_target("payload.7z")
+    scanner.scan_target("payload.zip")
 
     assert scanner.stats["archive_skipped"] == 1
     assert scanner.stats["hash_match"] == 1

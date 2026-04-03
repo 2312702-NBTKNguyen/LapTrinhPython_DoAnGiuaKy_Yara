@@ -1,17 +1,11 @@
-from inspect import signature
-from pathlib import Path
-
-import csv
-import json
-import os
-
+import json, os
 import pandas as pd
-import psycopg2
-import requests
+import psycopg2, requests
 
+from pathlib import Path
+from common.utils import log_info, log_success, log_error, log_warn, get_db_connection
 from dotenv import load_dotenv
-
-from scripts.utils import log_info, log_success, log_error, log_warn, get_db_connection
+from psycopg2.extras import execute_values
 
 load_dotenv()
 
@@ -42,70 +36,44 @@ def fetch_malware_signatures(output_file: str = "./data/malware_signatures.json"
 
     log_info(f"Gửi request đến MalwareBazaar API với {len(signatures)} signatures...")
     log_info(f"Danh sách các signatures: {', '.join(signatures)}")
-    print("-" * 100)
-
     try:
         all_malware = []
         successful_requests = 0
         failed_requests = 0
 
-        for signature in signatures:
-            payload = {
-                "query": "get_siginfo",
-                "signature": signature,
-                "limit": 500,
-            }
-
-            log_info(f"Lấy dữ liệu cho signature: {signature}")
-            try:
-                response = requests.post(url, data=payload, headers=headers, timeout=60)
-            except requests.exceptions.RequestException as exc:
-                log_error(f"Signature {signature}: lỗi kết nối ({exc}), bỏ qua.")
+        for sig in signatures:
+            json_data = fetch_signature(sig, url, headers)
+            if json_data is None:
                 failed_requests += 1
-                continue
-
-            try:
-                response.raise_for_status()
-            except requests.exceptions.RequestException as exc:
-                log_error(f"Signature {signature}: lỗi HTTP ({exc}), bỏ qua.")
-                failed_requests += 1
-                continue
-
-            try:
-                json_data = response.json()
-            except ValueError:
-                log_warn(
-                    f"Signature {signature}: API trả về dữ liệu không phải JSON, bỏ qua."
-                )
                 continue
 
             query_status = json_data.get("query_status")
             if query_status == "ok":
                 signature_records = json_data.get("data", [])
                 log_success(
-                    f"Signature {signature}: nhận {len(signature_records)} records."
+                    f"Signature {sig}: nhận {len(signature_records)} records."
                 )
                 all_malware.extend(signature_records)
                 successful_requests += 1
                 continue
 
             if query_status in ("no_results", "sig_not_found", "signature_not_found"):
-                log_warn(f"Signature {signature}: không có dữ liệu ({query_status}).")
+                log_warn(f"Signature {sig}: không có dữ liệu ({query_status}).")
                 successful_requests += 1
                 continue
 
-            log_error(f"Signature {signature}: lỗi từ API ({query_status}).")
+            log_error(f"Signature {sig}: lỗi từ API ({query_status}).")
             failed_requests += 1
 
         if successful_requests == 0:
-            log_error("Không có request nào thành công, không ghi đè file output.")
+            log_error("Không có request nào thành công.")
             return
 
         unique_malware = []
         seen_hashes = set()
         for record in all_malware:
             sha256_hash = record.get("sha256_hash")
-            if sha256_hash and sha256_hash in seen_hashes:
+            if sha256_hash in seen_hashes:
                 continue
 
             if sha256_hash:
@@ -115,19 +83,41 @@ def fetch_malware_signatures(output_file: str = "./data/malware_signatures.json"
         with open(output_file, "w", encoding="utf-8") as file_obj:
             json.dump(unique_malware, file_obj, indent=4)
 
-        duplicate_count = len(all_malware) - len(unique_malware)
-        log_success(f"Đã lưu {len(unique_malware)} records vào '{output_file}'.")
-        log_info(f"Đã lọc {duplicate_count} records trùng lặp.")
+        log_success(f"Đã lưu {len(unique_malware)} bản ghi vào '{output_file}'.")
+        log_info(f"Đã lọc {len(all_malware) - len(unique_malware)} bản ghi trùng lặp.")
         log_info(
-            f"Tổng kết: {successful_requests} request thành công, "
-            f"{failed_requests} request lỗi."
+            f"Tổng kết: {successful_requests} request thành công, " f"{failed_requests} request lỗi."
         )
 
     except requests.exceptions.RequestException as exc:
         log_error(f"Lỗi kết nối: {exc}")
 
 
-def filter_malware_data(input_file: str, output_file: str) -> None:
+def fetch_signature(sig: str, url: str, headers: dict[str, str]) -> dict | None:
+    payload = {
+        "query": "get_siginfo",
+        "signature": sig,
+        "limit": 500,
+    }
+
+    log_info(f"Lấy dữ liệu signature: {sig}")
+    try:
+        response = requests.post(url, data=payload, headers=headers, timeout=60)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.HTTPError as exc:
+        status_code = exc.response.status_code if exc.response else "unknown"
+        log_error(f"Signature {sig}: lỗi HTTP {status_code} ({exc}), bỏ qua.")
+    except requests.exceptions.RequestException as exc:
+        log_error(f"Signature {sig}: lỗi kết nối ({exc}), bỏ qua.")
+    except ValueError:
+        log_warn(
+            f"Signature {sig}: API trả về dữ liệu không phải JSON, bỏ qua."
+        )
+
+    return None
+
+def filter_malware_data(input_file: str) -> pd.DataFrame | None:
     log_info(f"Đọc dữ liệu từ file: {input_file}")
 
     try:
@@ -135,28 +125,24 @@ def filter_malware_data(input_file: str, output_file: str) -> None:
 
         if dataframe.empty:
             log_warn("File input rỗng, không có dữ liệu để xử lý.")
-            return
+            return None
 
-        log_info(f"Dữ liệu gốc: {len(dataframe)} dòng.")
-        columns_to_keep = [
+        columns = [
             "file_name", "signature", "file_type", "first_seen", "file_type_mime",
             "md5_hash", "sha1_hash", "sha256_hash", "sha3_384_hash"
         ]
 
         selected_data = {}
-        for column in columns_to_keep:
-            if column in dataframe.columns:
-                selected_data[column] = dataframe[column]
+        for col in columns:
+            if col in dataframe.columns:
+                selected_data[col] = dataframe[col]
             else:
-                selected_data[column] = "Unknown"
+                selected_data[col] = "Unknown"
 
-        cleaned = pd.DataFrame(selected_data, columns=columns_to_keep)
+        cleaned = pd.DataFrame(selected_data, columns=columns)
         cleaned.fillna("Unknown", inplace=True)
-        cleaned.to_csv(output_file, index=False, encoding="utf-8")
-
-        log_success(f"Lưu dữ liệu đã lọc vào file: {output_file}")
-        log_info("Các cột hiện tại trong bộ dữ liệu:")
-        print(str(cleaned.columns.tolist()))
+        log_success("Đã chuẩn hóa dữ liệu JSON.")
+        return cleaned
 
     except ValueError as exc:
         log_error(f"Lỗi khi đọc file JSON: {exc}")
@@ -165,12 +151,31 @@ def filter_malware_data(input_file: str, output_file: str) -> None:
     except Exception as exc:
         log_error(f"Đã xảy ra lỗi: {exc}")
 
+    return None
 
-def import_csv_to_db(csv_file_path: str) -> None:
-    log_info(f"Bắt đầu import dữ liệu từ {csv_file_path} vào PostgreSQL...")
+
+def import_dataframe_to_db(dataframe: pd.DataFrame) -> None:
+    log_info("Bắt đầu nhập dữ liệu vào PostgreSQL...")
 
     try:
-        conn = psycopg2.connect(**get_db_connection())
+        db_config = get_db_connection()
+        host = db_config.get("host")
+        port = db_config.get("port")
+        dbname = db_config.get("database")
+        user = db_config.get("user")
+        password = db_config.get("password")
+
+        if not all([host, port, dbname, user, password]):
+            log_error("Thiếu cấu hình kết nối database trong biến môi trường.")
+            return
+
+        conn = psycopg2.connect(
+            host=host,
+            port=port,
+            dbname=dbname,
+            user=user,
+            password=password,
+        )
         cursor = conn.cursor()
         log_success("Kết nối Database thành công.")
     except Exception as exc:
@@ -178,83 +183,70 @@ def import_csv_to_db(csv_file_path: str) -> None:
         return
 
     records_to_insert = []
-    try:
-        with open(csv_file_path, "r", encoding="utf-8") as file_obj:
-            reader = csv.DictReader(file_obj)
-            for row in reader:
-                first_seen = row["first_seen"] if row["first_seen"] != "Unknown" else None
-                records_to_insert.append(
-                    (
-                        row["file_name"],
-                        row["signature"],
-                        row["file_type"],
-                        first_seen,
-                        row["file_type_mime"],
-                        row["md5_hash"],
-                        row["sha1_hash"],
-                        row["sha256_hash"],
-                        row["sha3_384_hash"],
-                    )
-                )
-    except FileNotFoundError:
-        log_error(f"Không tìm thấy file {csv_file_path}.")
+    for row in dataframe.to_dict(orient="records"):
+        first_seen = row["first_seen"] if row["first_seen"] != "Unknown" else None
+        records_to_insert.append(
+            (
+                row["file_name"], row["signature"], row["file_type"], first_seen, row["file_type_mime"], 
+                row["md5_hash"], row["sha1_hash"], row["sha256_hash"], row["sha3_384_hash"],
+            )
+        )
+
+    if not records_to_insert:
+        log_warn("Không có bản ghi nào để thêm vào database.")
+        cursor.close()
+        conn.close()
+        log_info("Đóng kết nối Database.")
         return
 
-    if records_to_insert:
-        insert_query = """
-            INSERT INTO malware_signatures (
-                file_name, signature, file_type, first_seen, file_type_mime,
-                md5_hash, sha1_hash, sha256_hash, sha3_384_hash
-            ) VALUES %s
-            ON CONFLICT (sha256_hash) DO NOTHING;
-        """
-        try:
-            execute_values(cursor, insert_query, records_to_insert)
-            conn.commit()
-            log_success(f"Đã thêm {len(records_to_insert)} records vào database.")
-        except Exception as exc:
-            conn.rollback()
-            log_error(f"Lỗi khi thực hiện insert: {exc}")
-        finally:
-            cursor.close()
-            conn.close()
-            log_info("Đóng kết nối Database.")
-    else:
-        log_warn("Không có records nào để thêm vào database.")
+    insert_query = """
+        INSERT INTO malware_signatures (
+            file_name, signature, file_type, first_seen, file_type_mime,
+            md5_hash, sha1_hash, sha256_hash, sha3_384_hash
+        ) VALUES %s
+        ON CONFLICT (sha256_hash) DO NOTHING;
+    """
 
-def refresh_signature_files(json_output_file: Path, csv_output_file: Path) -> None:
-    log_info("Bắt đầu tải dữ liệu signatures từ API...")
+    try:
+        execute_values(cursor, insert_query, records_to_insert)
+        conn.commit()
+        log_success(f"Đã thêm {len(records_to_insert)} bản ghi vào database.")
+    except Exception as exc:
+        conn.rollback()
+        log_error(f"Lỗi khi thực hiện insert: {exc}")
+    finally:
+        cursor.close()
+        conn.close()
+        log_info("Đóng kết nối Database.")
 
+def refresh_signatures(json_output_file: Path) -> None:
     if json_output_file.exists():
         log_info(f"Xóa file cũ: {json_output_file}")
         json_output_file.unlink()
-    if csv_output_file.exists():
-        log_info(f"Xóa file cũ: {csv_output_file}")
-        csv_output_file.unlink()
 
     fetch_malware_signatures(output_file=str(json_output_file))
     if not json_output_file.exists():
         raise RuntimeError(
-            f"Không tìm thấy file JSON output sau khi fetch: {json_output_file}"
+            f"Không tìm thấy file JSON sau khi fetch: {json_output_file}"
         )
 
-    log_success(f"Đã tải dữ liệu signatures: {json_output_file}")
+    log_success(f"Dữ liệu signatures được lưu tại: {json_output_file}")
+    print("-" * 100)
 
 
-def filter_and_import_signatures(json_output_file: Path, csv_output_file: Path) -> None:
-    log_info("Bắt đầu lọc dữ liệu JSON sang CSV...")
-    filter_malware_data(str(json_output_file), str(csv_output_file))
-    if not csv_output_file.exists():
+def filter_and_import_signatures(json_output_file: Path) -> None:
+    log_info("Bắt đầu lọc dữ liệu JSON.")
+    cleaned_dataframe = filter_malware_data(str(json_output_file))
+    if cleaned_dataframe is None or cleaned_dataframe.empty:
         raise RuntimeError(
-            f"Không tìm thấy file CSV output sau khi filter: {csv_output_file}"
+            f"Không tạo được DataFrame hợp lệ từ file JSON: {json_output_file}"
         )
 
-    log_success(f"Đã tạo file CSV: {csv_output_file}")
-    log_info("Bắt đầu import dữ liệu CSV vào PostgreSQL...")
-    import_csv_to_db(str(csv_output_file))
-    log_success("Hoàn tất import dữ liệu vào PostgreSQL.")
+    log_success(f"Đã tạo DataFrame với {len(cleaned_dataframe)} bản ghi.")
+    import_dataframe_to_db(cleaned_dataframe)
+    log_success("Hoàn tất nhập dữ liệu vào PostgreSQL.")
 
 
-def run_data_pipeline(json_output_file: Path, csv_output_file: Path) -> None:
-    refresh_signature_files(json_output_file, csv_output_file)
-    filter_and_import_signatures(json_output_file, csv_output_file)
+def import_signatures(json_output_file: Path) -> None:
+    refresh_signatures(json_output_file)
+    filter_and_import_signatures(json_output_file)

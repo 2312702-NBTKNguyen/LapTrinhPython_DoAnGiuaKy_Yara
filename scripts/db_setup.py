@@ -1,55 +1,53 @@
-from __future__ import annotations
+import os, psycopg2
 
-import os
 from pathlib import Path
+from common.utils import log_info, log_success, log_warn, get_db_connection
 
-import psycopg2
+def connect_db() -> psycopg2.extensions.connection:
+    db_config = get_db_connection()
+    host = db_config.get("host")
+    port = db_config.get("port")
+    dbname = db_config.get("database")
+    user = db_config.get("user")
+    password = db_config.get("password")
 
-from scripts.utils import (
-    log_info,
-    log_success,
-    log_warn,
-)
+    if not all([host, port, dbname, user, password]):
+        raise ValueError("Thiếu cấu hình kết nối database trong .env hoặc biến môi trường")
 
-def get_db_connection(db_name: str | None = None, *, admin: bool = False) -> dict[str, str | None]:
-    selected_db = db_name or os.getenv("DB_NAME")
-    if admin:
-        selected_db = os.getenv("DB_ADMIN_DB", "postgres")
-
-    return {
-        "host": os.getenv("DB_HOST", "localhost"),
-        "port": os.getenv("DB_PORT", "5432"),
-        "database": selected_db,
-        "user": os.getenv("DB_USER"),
-        "password": os.getenv("DB_PASSWORD"),
-    }
-
-ROOT_DIR = Path(__file__).resolve().parent.parent
-SQL_CREATE_DB_FILE = ROOT_DIR / "database" / "01_create_database.sql"
-SQL_CREATE_TABLES_FILE = ROOT_DIR / "database" / "02_create_tables.sql"
+    return psycopg2.connect(
+        host=host,
+        port=port,
+        dbname=dbname,
+        user=user,
+        password=password,
+    )
 
 
-def _ensure_sql_files_exist() -> None:
-    for sql_file in (SQL_CREATE_DB_FILE, SQL_CREATE_TABLES_FILE):
-        if not sql_file.exists():
-            raise FileNotFoundError(f"Không tìm thấy file SQL: {sql_file}")
+def check_sql_files() -> None:
+    root_dir = Path(__file__).resolve().parent.parent
+
+    sql_files = [
+        root_dir / "database" / "01_create_database.sql",
+        root_dir / "database" / "02_create_tables.sql",
+    ]
+
+    for file in sql_files:
+        if not file.exists():
+            raise FileNotFoundError(f"Không tìm thấy file SQL: {file}")
 
 
-def _create_database_if_missing() -> None:
-    db_user = os.getenv("DB_USER")
-    db_name = os.getenv("DB_NAME")
+def create_database_if_missing() -> None:
+    root_dir = Path(__file__).resolve().parent.parent
+    sql_create_db = root_dir / "database" / "01_create_database.sql"
 
-    if not db_user:
-        raise ValueError("Thiếu DB_USER trong .env hoặc biến môi trường")
-
-    with open(SQL_CREATE_DB_FILE, "r", encoding="utf-8") as file_obj:
+    with open(sql_create_db, "r", encoding="utf-8") as file_obj:
         create_db_sql = file_obj.read().strip()
 
-    log_info(f"Đọc script: {SQL_CREATE_DB_FILE}")
+    log_info(f"Đọc script: {sql_create_db}")
     if create_db_sql:
         log_info("Thực thi logic tạo database dựa trên nội dung script SQL...")
 
-    conn = psycopg2.connect(**get_db_connection(admin=True))
+    conn = connect_db()
     conn.autocommit = True
 
     try:
@@ -63,25 +61,23 @@ def _create_database_if_missing() -> None:
 
             if create_stmt_row and create_stmt_row[0]:
                 cursor.execute(create_stmt_row[0])
-                log_success(f"Đã tạo database '{db_name}' thành công.")
+                log_success(f"Đã tạo database '{os.getenv('DB_NAME')}' thành công.")
             else:
-                log_warn(f"Database '{db_name}' đã tồn tại. Bỏ qua tạo mới.")
+                log_warn(f"Database '{os.getenv('DB_NAME')}' đã tồn tại. Bỏ qua tạo mới.")
     finally:
         conn.close()
 
 
-def _create_tables_if_missing() -> None:
-    db_user = os.getenv("DB_USER")
+def create_tables_if_missing() -> None:
+    root_dir = Path(__file__).resolve().parent.parent
+    sql_create_table = root_dir / "database" / "02_create_tables.sql"
 
-    if not db_user:
-        raise ValueError("Thiếu DB_USER trong .env hoặc biến môi trường")
-
-    with open(SQL_CREATE_TABLES_FILE, "r", encoding="utf-8") as file_obj:
+    with open(sql_create_table, "r", encoding="utf-8") as file_obj:
         create_tables_sql = file_obj.read().strip()
 
-    log_info(f"Đọc script: {SQL_CREATE_TABLES_FILE}")
+    log_info(f"Đọc script: {sql_create_table}")
 
-    conn = psycopg2.connect(**get_db_connection())
+    conn = connect_db()
     try:
         with conn.cursor() as cursor:
             cursor.execute(create_tables_sql)
@@ -91,7 +87,7 @@ def _create_tables_if_missing() -> None:
         conn.close()
 
 
-def setup_database_from_sql() -> None:
-    _ensure_sql_files_exist()
-    _create_database_if_missing()
-    _create_tables_if_missing()
+def setup_database() -> None:
+    check_sql_files()
+    create_database_if_missing()
+    create_tables_if_missing()

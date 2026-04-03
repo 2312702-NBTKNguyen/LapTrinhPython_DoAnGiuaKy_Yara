@@ -6,7 +6,7 @@ Hệ thống phát hiện mã độc sử dụng kết hợp hai phương pháp:
 
 - **Quét file bằng YARA rules**: Phát hiện malware patterns trong file
 - **Kiểm tra hash database**: So sánh SHA256 hash với database malware đã biết
-- **Quét archive**: Hỗ trợ quét malware bên trong file ZIP, 7z và RAR mà không cần extract
+- **Quét archive**: Hỗ trợ quét malware bên trong file ZIP và RAR mà không cần extract
 - **Báo cáo chi tiết**: Xuất báo cáo ra terminal và file .txt
 
 ## Cài đặt
