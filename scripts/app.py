@@ -11,12 +11,9 @@ from malware_scanner.service import MalwareScanner
 from scripts.db_setup import setup_database
 from scripts.pipeline import import_signatures
 
-
-
 ROOT_DIR = Path(__file__).resolve().parent.parent
 JSON_OUTPUT = ROOT_DIR / "data" / "malware_signatures.json"
 RULES_INDEX = ROOT_DIR / "rules" / "index.yar"
-
 
 def init_system() -> int:
     print_section("CHẾ ĐỘ KHỞI CHẠY LẦN ĐẦU")
@@ -40,7 +37,6 @@ def init_system() -> int:
         log_error(f"Khởi chạy thất bại: {exc}")
         return 1
 
-
 def update_signatures() -> int:
     print_section("CHẾ ĐỘ CẬP NHẬT")
 
@@ -59,7 +55,6 @@ def update_signatures() -> int:
         print('-' * 100)
         log_error(f"Cập nhật thất bại: {exc}")
         return 1
-
 
 def scan_target(target_path: str | None = None) -> int:
     if not target_path:

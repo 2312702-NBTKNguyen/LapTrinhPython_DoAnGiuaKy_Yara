@@ -14,7 +14,7 @@ from pathlib import Path
 # Thêm thư mục cha vào path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from malware_scanner.engine import load_yara_rules
+from malware_scanner.detection.yara_engine import load_yara_rules
 from malware_scanner.archive.scanner import ArchiveScanner
 from malware_scanner.exceptions import ArchiveBombError, NestedDepthError
 
@@ -170,7 +170,7 @@ def test_direct_file_comparison():
     print("TEST: So sánh Archive vs File Trực Tiếp")
     print("=" * 60)
 
-    from malware_scanner.engine import scan_with_yara
+    from malware_scanner.detection.yara_engine import scan_with_yara
 
     rules = load_yara_rules("rules/index.yar")
     scanner = ArchiveScanner(rules)
