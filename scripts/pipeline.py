@@ -1,20 +1,18 @@
-import json, os, psycopg2, requests
+import json, os, requests
 import pandas as pd
 
 from pathlib import Path
-from common.utils import log_info, log_success, log_error, log_warn, create_db_connection
-from dotenv import load_dotenv
+from common.utils import create_db_connection, initialize_environment, log_error, log_info, log_success, log_warn
 from psycopg2.extras import execute_values
-
-load_dotenv()
 
 def fetch_malware_signatures(output_file: str = "./data/malware_signatures.json") -> None:
     url = "https://mb-api.abuse.ch/api/v1/"
     auth_key = os.getenv("MB_AUTH_KEY")
 
     if not auth_key:
-        log_error("Chưa có API key trong file .env hoặc biến môi trường hệ thống.")
-        return
+        message = "Chưa có API key trong file .env hoặc biến môi trường hệ thống."
+        log_error(message)
+        raise RuntimeError(message)
 
     headers = {
         "Auth-Key": auth_key,
@@ -63,8 +61,9 @@ def fetch_malware_signatures(output_file: str = "./data/malware_signatures.json"
             failed_requests += 1
 
         if successful_requests == 0:
-            log_error("Không có request nào thành công.")
-            return
+            message = "Không có request nào thành công."
+            log_error(message)
+            raise RuntimeError(message)
 
         unique_malware = []
         seen_hashes = set()
@@ -85,7 +84,9 @@ def fetch_malware_signatures(output_file: str = "./data/malware_signatures.json"
         log_info(f"Tổng kết: {successful_requests} request thành công, " f"{failed_requests} request lỗi.")
 
     except requests.exceptions.RequestException as exc:
-        log_error(f"Lỗi kết nối: {exc}")
+        message = f"Lỗi kết nối MalwareBazaar API: {exc}"
+        log_error(message)
+        raise RuntimeError(message) from exc
 
 def fetch_signature(sig: str, url: str, headers: dict[str, str]) -> dict | None:
     payload = {
@@ -154,11 +155,13 @@ def import_data_to_db(dataframe: pd.DataFrame) -> None:
         cursor = conn.cursor()
         log_success("Kết nối Database thành công.")
     except ValueError as exc:
-        log_error(str(exc))
-        return
+        message = str(exc)
+        log_error(message)
+        raise RuntimeError(message) from exc
     except Exception as exc:
-        log_error(f"Lỗi kết nối Database: {exc}")
-        return
+        message = f"Lỗi kết nối Database: {exc}"
+        log_error(message)
+        raise RuntimeError(message) from exc
 
     records_to_insert = []
     for row in dataframe.to_dict(orient="records"):
@@ -188,7 +191,9 @@ def import_data_to_db(dataframe: pd.DataFrame) -> None:
         log_success(f"Đã thêm {len(records_to_insert)} bản ghi vào database.")
     except Exception as exc:
         conn.rollback()
-        log_error(f"Lỗi khi thực hiện insert: {exc}")
+        message = f"Lỗi khi thực hiện insert: {exc}"
+        log_error(message)
+        raise RuntimeError(message) from exc
     finally:
         cursor.close()
         conn.close()
@@ -206,7 +211,7 @@ def refresh_signatures(json_output_file: Path) -> None:
         )
 
     log_success(f"Dữ liệu signatures được lưu tại: {json_output_file}")
-    print("-" * 100)
+    log_info("-" * 100)
 
 def filter_and_import_signatures(json_output_file: Path) -> None:
     log_info("Bắt đầu lọc dữ liệu JSON.")
@@ -221,5 +226,6 @@ def filter_and_import_signatures(json_output_file: Path) -> None:
     log_success("Hoàn tất nhập dữ liệu vào PostgreSQL.")
 
 def import_signatures(json_output_file: Path) -> None:
+    initialize_environment()
     refresh_signatures(json_output_file)
     filter_and_import_signatures(json_output_file)

@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from types import SimpleNamespace
+from typing import Any, cast
 
 import malware_scanner.service as service_module
-from malware_scanner.exceptions import ArchiveError, UnsupportedFormatError
+from malware_scanner.exceptions import ArchiveError, DatabaseError, UnsupportedFormatError, YaraScanError
 
 
 @dataclass
@@ -46,7 +47,7 @@ def _build_scanner(monkeypatch):
     monkeypatch.setattr(service_module, "load_yara_rules", lambda _path: object())
     monkeypatch.setattr(service_module, "ArchiveScanner", _ArchiveScannerStub)
     monkeypatch.setattr(service_module, "log_scan_result", lambda *args, **kwargs: None)
-    monkeypatch.setattr(service_module, "insert_malware_variant", lambda *args, **kwargs: None)
+    monkeypatch.setattr(service_module, "create_malware_signature", lambda *args, **kwargs: None)
     return service_module.MalwareScanner(), conn
 
 
@@ -66,8 +67,9 @@ def test_scan_target_short_circuits_on_archive_match(monkeypatch) -> None:
     monkeypatch.setattr(service_module, "check_hash_in_db", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(service_module, "scan_with_yara", lambda *_args, **_kwargs: None)
 
-    scanner.archive_scanner.supported = True
-    scanner.archive_scanner.results = [SimpleNamespace(rule_name="RuleA")]
+    archive_scanner = cast(Any, scanner.archive_scanner)
+    archive_scanner.supported = True
+    archive_scanner.results = [SimpleNamespace(rule_name="RuleA")]
 
     scanner.scan_target("payload.zip")
 
@@ -81,8 +83,9 @@ def test_scan_target_falls_back_to_hash_when_archive_unsupported(monkeypatch) ->
     monkeypatch.setattr(service_module, "calculate_file_hashes", lambda _path: _default_hashes())
     monkeypatch.setattr(service_module, "check_hash_in_db", lambda *_args, **_kwargs: "KnownFamily")
 
-    scanner.archive_scanner.supported = True
-    scanner.archive_scanner.error = UnsupportedFormatError("skip")
+    archive_scanner = cast(Any, scanner.archive_scanner)
+    archive_scanner.supported = True
+    archive_scanner.error = UnsupportedFormatError("skip")
 
     scanner.scan_target("payload.zip")
 
@@ -94,12 +97,32 @@ def test_scan_target_marks_error_when_yara_scan_fails(monkeypatch) -> None:
     scanner, _ = _build_scanner(monkeypatch)
     monkeypatch.setattr(service_module, "calculate_file_hashes", lambda _path: _default_hashes())
     monkeypatch.setattr(service_module, "check_hash_in_db", lambda *_args, **_kwargs: None)
-    monkeypatch.setattr(service_module, "scan_with_yara", lambda *_args, **_kwargs: "__SCAN_ERROR__")
+    monkeypatch.setattr(
+        service_module,
+        "scan_with_yara",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(YaraScanError("yara failed")),
+    )
 
     scanner.scan_target("payload.bin")
 
     assert scanner.stats["errors"] == 1
     assert scanner.stats["clean"] == 0
+
+
+def test_scan_target_increments_error_when_db_lookup_fails(monkeypatch) -> None:
+    scanner, _ = _build_scanner(monkeypatch)
+    monkeypatch.setattr(service_module, "calculate_file_hashes", lambda _path: _default_hashes())
+    monkeypatch.setattr(
+        service_module,
+        "check_hash_in_db",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(DatabaseError("db failed")),
+    )
+    monkeypatch.setattr(service_module, "scan_with_yara", lambda *_args, **_kwargs: None)
+
+    scanner.scan_target("payload.bin")
+
+    assert scanner.stats["errors"] == 1
+    assert scanner.stats["clean"] == 1
 
 
 def test_scan_target_marks_clean_when_no_detection(monkeypatch) -> None:
@@ -120,3 +143,59 @@ def test_scanner_close_closes_database_connection(monkeypatch) -> None:
     scanner.close()
 
     assert conn.closed is True
+
+
+def test_stage_timings_for_clean_path(monkeypatch) -> None:
+    scanner, _ = _build_scanner(monkeypatch)
+    monkeypatch.setattr(service_module, "calculate_file_hashes", lambda _path: _default_hashes())
+    monkeypatch.setattr(service_module, "check_hash_in_db", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(service_module, "scan_with_yara", lambda *_args, **_kwargs: None)
+
+    scanner.scan_target("payload.bin")
+
+    assert set(scanner.last_stage_timings) == {
+        "hash_calculation",
+        "archive_scan",
+        "db_hash_lookup",
+        "file_yara_scan",
+        "mark_clean",
+    }
+
+
+def test_stage_timings_short_circuit_on_archive_detection(monkeypatch) -> None:
+    scanner, _ = _build_scanner(monkeypatch)
+    monkeypatch.setattr(service_module, "calculate_file_hashes", lambda _path: _default_hashes())
+    monkeypatch.setattr(service_module, "check_hash_in_db", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(service_module, "scan_with_yara", lambda *_args, **_kwargs: None)
+
+    archive_scanner = cast(Any, scanner.archive_scanner)
+    archive_scanner.supported = True
+    archive_scanner.results = [SimpleNamespace(rule_name="ArchiveRule")]
+
+    scanner.scan_target("payload.zip")
+
+    assert set(scanner.last_stage_timings) == {"hash_calculation", "archive_scan"}
+
+
+def test_stage_timings_reset_between_scans(monkeypatch) -> None:
+    scanner, _ = _build_scanner(monkeypatch)
+    monkeypatch.setattr(service_module, "calculate_file_hashes", lambda _path: None)
+
+    scanner.scan_target("first.bin")
+    first_keys = set(scanner.last_stage_timings)
+
+    monkeypatch.setattr(service_module, "calculate_file_hashes", lambda _path: _default_hashes())
+    monkeypatch.setattr(service_module, "check_hash_in_db", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(service_module, "scan_with_yara", lambda *_args, **_kwargs: None)
+
+    scanner.scan_target("second.bin")
+    second_keys = set(scanner.last_stage_timings)
+
+    assert first_keys == {"hash_calculation"}
+    assert second_keys == {
+        "hash_calculation",
+        "archive_scan",
+        "db_hash_lookup",
+        "file_yara_scan",
+        "mark_clean",
+    }

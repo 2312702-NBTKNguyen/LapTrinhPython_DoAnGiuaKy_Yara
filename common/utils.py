@@ -1,5 +1,6 @@
 import os
 import psycopg2
+from dotenv import load_dotenv
 
 
 def log_info(message: str) -> None:
@@ -57,3 +58,8 @@ def print_section(title: str, width: int = 100) -> None:
     print(f"\n{bar}")
     print(center_text(title, width=width))
     print(bar)
+
+
+def initialize_environment(default_db_name: str = "") -> None:
+    load_dotenv()
+    os.environ.setdefault("DB_NAME", default_db_name)

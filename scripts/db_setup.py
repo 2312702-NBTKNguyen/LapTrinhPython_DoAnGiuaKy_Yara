@@ -1,10 +1,7 @@
 import os, psycopg2
 
 from pathlib import Path
-from common.utils import log_info, log_success, log_warn, create_db_connection
-
-def connect_db() -> psycopg2.extensions.connection:
-    return create_db_connection()
+from common.utils import create_db_connection, log_error, log_info, log_success, log_warn
 
 def check_sql_files() -> None:
     root_dir = Path(__file__).resolve().parent.parent
@@ -29,7 +26,7 @@ def create_database_if_missing() -> None:
     if create_db_sql:
         log_info("Thực thi logic tạo database dựa trên nội dung script SQL...")
 
-    conn = connect_db()
+    conn = create_db_connection()
     conn.autocommit = True
 
     try:
@@ -58,7 +55,7 @@ def create_tables_if_missing() -> None:
 
     log_info(f"Đọc script: {sql_create_table}")
 
-    conn = connect_db()
+    conn = create_db_connection()
     try:
         with conn.cursor() as cursor:
             cursor.execute(create_tables_sql)
@@ -68,6 +65,10 @@ def create_tables_if_missing() -> None:
         conn.close()
 
 def setup_database() -> None:
-    check_sql_files()
-    create_database_if_missing()
-    create_tables_if_missing()
+    try:
+        check_sql_files()
+        create_database_if_missing()
+        create_tables_if_missing()
+    except Exception as exc:
+        log_error(f"Thiết lập cơ sở dữ liệu thất bại: {exc}")
+        raise

@@ -1,9 +1,6 @@
-import os
-
 from datetime import datetime
 from pathlib import Path
-from dotenv import load_dotenv
-from common.utils import print_section, log_error, log_info, log_success
+from common.utils import initialize_environment, log_error, log_info, log_success, print_section
 
 from malware_scanner.reporting import finalize_scan_reports, print_summary
 from malware_scanner.service import MalwareScanner
@@ -19,8 +16,7 @@ def init_system() -> int:
     print_section("CHẾ ĐỘ KHỞI CHẠY LẦN ĐẦU")
 
     try:
-        load_dotenv()
-        os.environ.setdefault("DB_NAME", "")
+        initialize_environment()
 
         print_section("THIẾT LẬP CƠ SỞ DỮ LIỆU")
         setup_database()
@@ -41,8 +37,7 @@ def update_signatures() -> int:
     print_section("CHẾ ĐỘ CẬP NHẬT")
 
     try:
-        load_dotenv()
-        os.environ.setdefault("DB_NAME", "")
+        initialize_environment()
 
         print_section("XỬ LÝ DỮ LIỆU")
         import_signatures(JSON_OUTPUT)
