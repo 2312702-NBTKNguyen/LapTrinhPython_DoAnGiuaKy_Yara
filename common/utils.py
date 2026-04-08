@@ -3,23 +3,23 @@ import psycopg2
 from dotenv import load_dotenv
 
 
-def log_info(message: str) -> None:
-    print(f"[INFO] {message}")
+def ghiLogInfo(thongDiep: str) -> None:
+    print(f"[INFO] {thongDiep}")
 
 
-def log_success(message: str) -> None:
-    print(f"[SUCCESS] {message}")
+def ghiLogThanhCong(thongDiep: str) -> None:
+    print(f"[SUCCESS] {thongDiep}")
 
 
-def log_warn(message: str) -> None:
-    print(f"[WARNING] {message}")
+def ghiLogCanhBao(thongDiep: str) -> None:
+    print(f"[WARNING] {thongDiep}")
 
 
-def log_error(message: str) -> None:
-    print(f"[ERROR] {message}")
+def ghiLogLoi(thongDiep: str) -> None:
+    print(f"[ERROR] {thongDiep}")
 
 
-def get_db_connection() -> dict[str, str | None]:
+def layCauHinhKetNoiDb() -> dict[str, str | None]:
     return {
         "host": os.getenv("DB_HOST", "localhost"),
         "port": os.getenv("DB_PORT", "5432"),
@@ -29,37 +29,37 @@ def get_db_connection() -> dict[str, str | None]:
     }
 
 
-def create_db_connection() -> psycopg2.extensions.connection:
-    db_config = get_db_connection()
-    host = db_config.get("host")
-    port = db_config.get("port")
-    dbname = db_config.get("database")
-    user = db_config.get("user")
-    password = db_config.get("password")
+def taoKetNoiDb() -> psycopg2.extensions.connection:
+    cauHinhDb = layCauHinhKetNoiDb()
+    host = cauHinhDb.get("host")
+    port = cauHinhDb.get("port")
+    tenDb = cauHinhDb.get("database")
+    user = cauHinhDb.get("user")
+    password = cauHinhDb.get("password")
 
-    if not all([host, port, dbname, user, password]):
+    if not all([host, port, tenDb, user, password]):
         raise ValueError("Thiếu cấu hình kết nối database trong .env hoặc biến môi trường")
 
     return psycopg2.connect(
         host=host,
         port=port,
-        dbname=dbname,
+        dbname=tenDb,
         user=user,
         password=password,
     )
 
 
-def center_text(text: str, width: int = 100, fill_char: str = " ") -> str:
-    return text.center(width, fill_char)
+def canGiuaText(noiDung: str, doRong: int = 100, kyTuDem: str = " ") -> str:
+    return noiDung.center(doRong, kyTuDem)
 
 
-def print_section(title: str, width: int = 100) -> None:
-    bar = "=" * width
-    print(f"\n{bar}")
-    print(center_text(title, width=width))
-    print(bar)
+def inMuc(tieuDe: str, doRong: int = 100) -> None:
+    thanhNgang = "=" * doRong
+    print(f"\n{thanhNgang}")
+    print(canGiuaText(tieuDe, doRong=doRong))
+    print(thanhNgang)
 
 
-def initialize_environment(default_db_name: str = "") -> None:
+def khoiTaoMoiTruong(tenDbMacDinh: str = "") -> None:
     load_dotenv()
-    os.environ.setdefault("DB_NAME", default_db_name)
+    os.environ.setdefault("DB_NAME", tenDbMacDinh)

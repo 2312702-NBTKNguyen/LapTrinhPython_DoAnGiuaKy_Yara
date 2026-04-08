@@ -4,31 +4,31 @@ from dataclasses import dataclass
 from types import SimpleNamespace
 from typing import Any, cast
 
-import malware_scanner.service as service_module
+import malware_scanner.service as moduleDichVu
 
 
 @dataclass
-class _DummyConn:
+class _KetNoiDbGia:
     closed: bool = False
 
     def close(self) -> None:
         self.closed = True
 
 
-class _ArchiveScannerStub:
+class _MayQuetArchiveGia:
     def __init__(self, _rules: object):
-        self.supported = False
-        self.results = []
+        self.duocHoTro = False
+        self.ketQua = []
 
-    def is_supported(self, _filepath: str) -> bool:
-        return self.supported
+    def hoTroDinhDang(self, _duongDanFile: str) -> bool:
+        return self.duocHoTro
 
-    def scan(self, _filepath: str):
-        for result in self.results:
-            yield result
+    def quet(self, _duongDanFile: str):
+        for ketQua in self.ketQua:
+            yield ketQua
 
 
-def _default_hashes() -> dict[str, str]:
+def _hashMacDinh() -> dict[str, str]:
     return {
         "md5_hash": "m",
         "sha1_hash": "s1",
@@ -37,74 +37,74 @@ def _default_hashes() -> dict[str, str]:
     }
 
 
-def _build_scanner(monkeypatch):
-    conn = _DummyConn()
-    monkeypatch.setattr(service_module, "connect_db", lambda: conn)
-    monkeypatch.setattr(service_module, "load_yara_rules", lambda _path: object())
-    monkeypatch.setattr(service_module, "ArchiveScanner", _ArchiveScannerStub)
-    monkeypatch.setattr(service_module, "log_scan_result", lambda *args, **kwargs: None)
-    monkeypatch.setattr(service_module, "create_malware_signature", lambda *args, **kwargs: None)
-    return service_module.MalwareScanner(), conn
+def _taoMayQuet(monkeypatch):
+    ketNoi = _KetNoiDbGia()
+    monkeypatch.setattr(moduleDichVu, "ketNoiDb", lambda: ketNoi)
+    monkeypatch.setattr(moduleDichVu, "napYaraRules", lambda _duongDan: object())
+    monkeypatch.setattr(moduleDichVu, "mayQuetArchive", _MayQuetArchiveGia)
+    monkeypatch.setattr(moduleDichVu, "ghiNhanKetQuaQuet", lambda *args, **kwargs: None)
+    monkeypatch.setattr(moduleDichVu, "taoMalwareSignature", lambda *args, **kwargs: None)
+    return moduleDichVu.mayQuetMalware(), ketNoi
 
 
-def test_scan_flow_archive_detection_short_circuits_hash_and_file_yara(monkeypatch) -> None:
-    scanner, _ = _build_scanner(monkeypatch)
-    monkeypatch.setattr(service_module, "calculate_file_hashes", lambda _path: _default_hashes())
-    monkeypatch.setattr(service_module, "check_hash_in_db", lambda *_args, **_kwargs: None)
-    monkeypatch.setattr(service_module, "scan_with_yara", lambda *_args, **_kwargs: None)
+def testQuetArchivePhatHienBoQuaHashVaYaraFile(monkeypatch) -> None:
+    mayQuet, _ = _taoMayQuet(monkeypatch)
+    monkeypatch.setattr(moduleDichVu, "tinhHashFile", lambda _duongDan: _hashMacDinh())
+    monkeypatch.setattr(moduleDichVu, "kiemTraHashTrongDb", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(moduleDichVu, "quetBangYara", lambda *_args, **_kwargs: None)
 
-    archive_scanner = cast(Any, scanner.archive_scanner)
-    archive_scanner.supported = True
-    archive_scanner.results = [SimpleNamespace(rule_name="RuleArchive")]
+    mayQuetArchive = cast(Any, mayQuet.mayQuetArchive)
+    mayQuetArchive.duocHoTro = True
+    mayQuetArchive.ketQua = [SimpleNamespace(tenRule="RuleArchive")]
 
-    scanner.scan_target("payload.zip")
+    mayQuet.quetMucTieu("payload.zip")
 
-    assert scanner.stats[service_module.SERVICE_STAT_SCANNED] == 1
-    assert scanner.stats[service_module.SERVICE_STAT_YARA_MATCH] == 1
-    assert scanner.stats[service_module.SERVICE_STAT_HASH_MATCH] == 0
-    assert set(scanner.last_stage_timings) == {
-        service_module.SERVICE_STAGE_HASH_CALCULATION,
-        service_module.SERVICE_STAGE_ARCHIVE_SCAN,
+    assert mayQuet.thongKeQuet[moduleDichVu.thongKeDaQuet] == 1
+    assert mayQuet.thongKeQuet[moduleDichVu.thongKeYaraMatch] == 1
+    assert mayQuet.thongKeQuet[moduleDichVu.thongKeHashMatch] == 0
+    assert set(mayQuet.thoiGianGiaiDoanCuoi) == {
+        moduleDichVu.giaiDoanTinhHash,
+        moduleDichVu.giaiDoanQuetArchive,
     }
 
 
-def test_scan_flow_uses_hash_stage_when_archive_has_no_detection(monkeypatch) -> None:
-    scanner, _ = _build_scanner(monkeypatch)
-    monkeypatch.setattr(service_module, "calculate_file_hashes", lambda _path: _default_hashes())
-    monkeypatch.setattr(service_module, "check_hash_in_db", lambda *_args, **_kwargs: "KnownFamily")
-    monkeypatch.setattr(service_module, "scan_with_yara", lambda *_args, **_kwargs: None)
+def testQuetSuDungGiaiDoanHashKhiArchiveKhongPhatHien(monkeypatch) -> None:
+    mayQuet, _ = _taoMayQuet(monkeypatch)
+    monkeypatch.setattr(moduleDichVu, "tinhHashFile", lambda _duongDan: _hashMacDinh())
+    monkeypatch.setattr(moduleDichVu, "kiemTraHashTrongDb", lambda *_args, **_kwargs: "KnownFamily")
+    monkeypatch.setattr(moduleDichVu, "quetBangYara", lambda *_args, **_kwargs: None)
 
-    scanner.scan_target("payload.bin")
+    mayQuet.quetMucTieu("payload.bin")
 
-    assert scanner.stats[service_module.SERVICE_STAT_HASH_MATCH] == 1
-    assert scanner.stats[service_module.SERVICE_STAT_YARA_MATCH] == 0
-
-
-def test_scan_flow_marks_clean_when_archive_hash_and_yara_all_miss(monkeypatch) -> None:
-    scanner, _ = _build_scanner(monkeypatch)
-    monkeypatch.setattr(service_module, "calculate_file_hashes", lambda _path: _default_hashes())
-    monkeypatch.setattr(service_module, "check_hash_in_db", lambda *_args, **_kwargs: None)
-    monkeypatch.setattr(service_module, "scan_with_yara", lambda *_args, **_kwargs: None)
-
-    scanner.scan_target("clean.txt")
-
-    assert scanner.stats[service_module.SERVICE_STAT_CLEAN] == 1
-    assert scanner.stats[service_module.SERVICE_STAT_ERRORS] == 0
+    assert mayQuet.thongKeQuet[moduleDichVu.thongKeHashMatch] == 1
+    assert mayQuet.thongKeQuet[moduleDichVu.thongKeYaraMatch] == 0
 
 
-def test_scan_flow_counts_error_when_hash_calculation_fails(monkeypatch) -> None:
-    scanner, _ = _build_scanner(monkeypatch)
-    monkeypatch.setattr(service_module, "calculate_file_hashes", lambda _path: None)
+def testQuetDanhDauSachKhiArchiveHashYaraKhongKhop(monkeypatch) -> None:
+    mayQuet, _ = _taoMayQuet(monkeypatch)
+    monkeypatch.setattr(moduleDichVu, "tinhHashFile", lambda _duongDan: _hashMacDinh())
+    monkeypatch.setattr(moduleDichVu, "kiemTraHashTrongDb", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(moduleDichVu, "quetBangYara", lambda *_args, **_kwargs: None)
 
-    scanner.scan_target("broken.bin")
+    mayQuet.quetMucTieu("clean.txt")
 
-    assert scanner.stats[service_module.SERVICE_STAT_SCANNED] == 1
-    assert scanner.stats[service_module.SERVICE_STAT_ERRORS] == 1
+    assert mayQuet.thongKeQuet[moduleDichVu.thongKeSach] == 1
+    assert mayQuet.thongKeQuet[moduleDichVu.thongKeLoi] == 0
 
 
-def test_scan_flow_close_releases_db_connection(monkeypatch) -> None:
-    scanner, conn = _build_scanner(monkeypatch)
+def testQuetDemLoiKhiTinhHashThatBai(monkeypatch) -> None:
+    mayQuet, _ = _taoMayQuet(monkeypatch)
+    monkeypatch.setattr(moduleDichVu, "tinhHashFile", lambda _duongDan: None)
 
-    scanner.close()
+    mayQuet.quetMucTieu("broken.bin")
 
-    assert conn.closed is True
+    assert mayQuet.thongKeQuet[moduleDichVu.thongKeDaQuet] == 1
+    assert mayQuet.thongKeQuet[moduleDichVu.thongKeLoi] == 1
+
+
+def testDongKetNoiGiaiPhongKetNoiDb(monkeypatch) -> None:
+    mayQuet, ketNoi = _taoMayQuet(monkeypatch)
+
+    mayQuet.dongKetNoi()
+
+    assert ketNoi.closed is True

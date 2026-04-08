@@ -3,21 +3,21 @@ import pandas as pd
 import psycopg2
 
 from pathlib import Path
-from common.utils import create_db_connection, initialize_environment, log_error, log_info, log_success, log_warn
+from common.utils import taoKetNoiDb, khoiTaoMoiTruong, ghiLogLoi, ghiLogInfo, ghiLogThanhCong, ghiLogCanhBao
 from psycopg2.extras import execute_values
 
 
-def fetch_malware_signatures(output_file: str = "./data/malware_signatures.json") -> None:
+def layMalwareSignatures(outputFile: str = "./data/malware_signatures.json") -> None:
     url = "https://mb-api.abuse.ch/api/v1/"
-    auth_key = os.getenv("MB_AUTH_KEY")
+    authKey = os.getenv("MB_AUTH_KEY")
 
-    if not auth_key:
-        message = "Chưa có API key trong file .env hoặc biến môi trường hệ thống."
-        log_error(message)
-        raise RuntimeError(message)
+    if not authKey:
+        thongDiep = "Chưa có API key trong file .env hoặc biến môi trường hệ thống."
+        ghiLogLoi(thongDiep)
+        raise RuntimeError(thongDiep)
 
     headers = {
-        "Auth-Key": auth_key,
+        "Auth-Key": authKey,
         "User-Agent": "Python-MalwareBazaar-Client/1.0",
     }
 
@@ -26,101 +26,101 @@ def fetch_malware_signatures(output_file: str = "./data/malware_signatures.json"
         # Nhóm Info Stealers (Mã độc đánh cắp thông tin)
         "RedLineStealer", "LokiBot", "AgentTesla", "Formbook",
         # Nhóm Banking Trojans & Botnets
-        "Emotet", "TrickBot", "Mirai", "Dridex", 
+        "Emotet", "TrickBot", "Dridex", "Mirai",
         # Nhóm Ransomware (Mã độc tống tiền)
         "WannaCry", "LockBit", "Conti", "Ryuk",
         # Nhóm RATs (Remote Access Trojans - Trojan điều khiển từ xa)
         "RemcosRAT", "njRAT"
     ]    
 
-    log_info(f"Gửi request đến MalwareBazaar API với {len(signatures)} signatures...")
-    log_info(f"Danh sách các signatures: {', '.join(signatures)}")
-    all_malware = []
-    successful_requests = 0
-    failed_requests = 0
+    ghiLogInfo(f"Gửi request đến MalwareBazaar API với {len(signatures)} signatures...")
+    ghiLogInfo(f"Danh sách các signatures: {', '.join(signatures)}")
+    tatCaMalware = []
+    soRequestThanhCong = 0
+    soRequestLoi = 0
 
     for sig in signatures:
-        json_data = fetch_signature(sig, url, headers)
-        if json_data is None:
-            failed_requests += 1
+        duLieuJson = laySignature(sig, url, headers)
+        if duLieuJson is None:
+            soRequestLoi += 1
             continue
 
-        query_status = json_data.get("query_status")
-        if query_status == "ok":
-            signature_records = json_data.get("data", [])
-            log_success(f"Signature {sig}: nhận {len(signature_records)} records.")
-            all_malware.extend(signature_records)
-            successful_requests += 1
+        trangThaiQuery = duLieuJson.get("query_status")
+        if trangThaiQuery == "ok":
+            danhSachRecordSignature = duLieuJson.get("data", [])
+            ghiLogThanhCong(f"Signature {sig}: nhận {len(danhSachRecordSignature)} records.")
+            tatCaMalware.extend(danhSachRecordSignature)
+            soRequestThanhCong += 1
             continue
 
-        if query_status in ("no_results", "sig_not_found", "signature_not_found"):
-            log_warn(f"Signature {sig}: không có dữ liệu ({query_status}).")
-            successful_requests += 1
+        if trangThaiQuery in ("no_results", "sig_not_found", "signature_not_found"):
+            ghiLogCanhBao(f"Signature {sig}: không có dữ liệu ({trangThaiQuery}).")
+            soRequestThanhCong += 1
             continue
 
-        log_error(f"Signature {sig}: lỗi từ API ({query_status}).")
-        failed_requests += 1
+        ghiLogLoi(f"Signature {sig}: lỗi từ API ({trangThaiQuery}).")
+        soRequestLoi += 1
 
-    if successful_requests == 0:
-        message = "Không có request nào thành công."
-        log_error(message)
-        raise RuntimeError(message)
+    if soRequestThanhCong == 0:
+        thongDiep = "Không có request nào thành công."
+        ghiLogLoi(thongDiep)
+        raise RuntimeError(thongDiep)
 
-    unique_malware = []
-    seen_hashes = set()
-    for record in all_malware:
-        sha256_hash = record.get("sha256_hash")
-        if sha256_hash in seen_hashes:
+    malwareKhongTrungLap = []
+    hashDaThay = set()
+    for banGhi in tatCaMalware:
+        sha256Hash = banGhi.get("sha256_hash")
+        if sha256Hash in hashDaThay:
             continue
 
-        if sha256_hash:
-            seen_hashes.add(sha256_hash)
-        unique_malware.append(record)
+        if sha256Hash:
+            hashDaThay.add(sha256Hash)
+        malwareKhongTrungLap.append(banGhi)
 
-    with open(output_file, "w", encoding="utf-8") as file_obj:
-        json.dump(unique_malware, file_obj, indent=4)
+    with open(outputFile, "w", encoding="utf-8") as fileObj:
+        json.dump(malwareKhongTrungLap, fileObj, indent=4)
 
-    log_success(f"Đã lưu {len(unique_malware)} bản ghi vào '{output_file}'.")
-    log_info(f"Đã lọc {len(all_malware) - len(unique_malware)} bản ghi trùng lặp.")
-    log_info(f"Tổng kết: {successful_requests} request thành công, " f"{failed_requests} request lỗi.")
+    ghiLogThanhCong(f"Đã lưu {len(malwareKhongTrungLap)} bản ghi vào '{outputFile}'.")
+    ghiLogInfo(f"Đã lọc {len(tatCaMalware) - len(malwareKhongTrungLap)} bản ghi trùng lặp.")
+    ghiLogInfo(f"Tổng kết: {soRequestThanhCong} request thành công, " f"{soRequestLoi} request lỗi.")
 
-def fetch_signature(sig: str, url: str, headers: dict[str, str]) -> dict | None:
+def laySignature(sig: str, url: str, headers: dict[str, str]) -> dict | None:
     payload = {
         "query": "get_siginfo",
         "signature": sig,
         "limit": 500,
     }
 
-    log_info(f"Lấy dữ liệu signature: {sig}")
+    ghiLogInfo(f"Lấy dữ liệu signature: {sig}")
     try:
         response = requests.post(url, data=payload, headers=headers, timeout=60)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as exc:
-        log_error(f"Signature {sig}: lỗi kết nối ({exc}), bỏ qua.")
+        ghiLogLoi(f"Signature {sig}: lỗi kết nối ({exc}), bỏ qua.")
     except ValueError:
-        log_warn(
+        ghiLogCanhBao(
             f"Signature {sig}: API trả về dữ liệu không phải JSON, bỏ qua."
         )
 
     return None
 
-def _format_db_error(action: str, exc: Exception) -> str:
-    return f"Lỗi Database khi {action}: {exc}"
+def _dinhDangLoiDb(hanhDong: str, exc: Exception) -> str:
+    return f"Lỗi Database khi {hanhDong}: {exc}"
 
 
-def _raise_db_runtime_error(action: str, exc: Exception) -> None:
-    message = _format_db_error(action, exc)
-    log_error(message)
-    raise RuntimeError(message) from exc
+def _nemLoiRuntimeDb(hanhDong: str, exc: Exception) -> None:
+    thongDiep = _dinhDangLoiDb(hanhDong, exc)
+    ghiLogLoi(thongDiep)
+    raise RuntimeError(thongDiep) from exc
 
-def filter_malware_data(input_file: str) -> pd.DataFrame | None:
-    log_info(f"Đọc dữ liệu từ file: {input_file}")
+def locDuLieuMalware(inputFile: str) -> pd.DataFrame | None:
+    ghiLogInfo(f"Đọc dữ liệu từ file: {inputFile}")
 
     try:
-        dataframe = pd.read_json(input_file)
-        if dataframe.empty:
-            log_warn("File input rỗng, không có dữ liệu để xử lý.")
+        bangDuLieu = pd.read_json(inputFile)
+        if bangDuLieu.empty:
+            ghiLogCanhBao("File input rỗng, không có dữ liệu để xử lý.")
             return None
 
         columns = [
@@ -128,50 +128,50 @@ def filter_malware_data(input_file: str) -> pd.DataFrame | None:
             "md5_hash", "sha1_hash", "sha256_hash", "sha3_384_hash"
         ]
 
-        selected_data = {}
+        duLieuDaChon = {}
         for col in columns:
-            if col in dataframe.columns:
-                selected_data[col] = dataframe[col]
+            if col in bangDuLieu.columns:
+                duLieuDaChon[col] = bangDuLieu[col]
             else:
-                selected_data[col] = "Unknown"
+                duLieuDaChon[col] = "Unknown"
 
-        cleaned = pd.DataFrame(selected_data, columns=columns)
-        cleaned.fillna("Unknown", inplace=True)
-        log_success("Đã chuẩn hóa dữ liệu JSON.")
-        return cleaned
+        duLieuDaLamSach = pd.DataFrame(duLieuDaChon, columns=columns)
+        duLieuDaLamSach.fillna("Unknown", inplace=True)
+        ghiLogThanhCong("Đã chuẩn hóa dữ liệu JSON.")
+        return duLieuDaLamSach
 
     except FileNotFoundError:
-        log_error(f"Không tìm thấy file {input_file}.")
+        ghiLogLoi(f"Không tìm thấy file {inputFile}.")
     except ValueError as exc:
-        log_error(f"Lỗi khi đọc file JSON: {exc}")
+        ghiLogLoi(f"Lỗi khi đọc file JSON: {exc}")
 
     return None
 
-def import_data_to_db(dataframe: pd.DataFrame) -> None:
-    log_info("Bắt đầu nhập dữ liệu vào PostgreSQL...")
+def nhapDuLieuVaoDatabase(dataframe: pd.DataFrame) -> None:
+    ghiLogInfo("Bắt đầu nhập dữ liệu vào PostgreSQL...")
 
     try:
-        conn = create_db_connection()
-        cursor = conn.cursor()
-        log_success("Kết nối Database thành công.")
+        ketNoiDb = taoKetNoiDb()
+        conTro = ketNoiDb.cursor()
+        ghiLogThanhCong("Kết nối Database thành công.")
     except (ValueError, psycopg2.Error) as exc:
-        _raise_db_runtime_error("kết nối", exc)
+        _nemLoiRuntimeDb("kết nối", exc)
 
-    records_to_insert = []
+    banGhiCanThem = []
     for row in dataframe.to_dict(orient="records"):
-        first_seen = row["first_seen"] if row["first_seen"] != "Unknown" else None
-        records_to_insert.append(
-            (row["file_name"], row["signature"], row["file_type"], first_seen, row["file_type_mime"], row["md5_hash"], row["sha1_hash"], row["sha256_hash"], row["sha3_384_hash"])
+        firstSeen = row["first_seen"] if row["first_seen"] != "Unknown" else None
+        banGhiCanThem.append(
+            (row["file_name"], row["signature"], row["file_type"], firstSeen, row["file_type_mime"], row["md5_hash"], row["sha1_hash"], row["sha256_hash"], row["sha3_384_hash"])
         )
 
-    if not records_to_insert:
-        log_warn("Không có bản ghi nào để thêm vào database.")
-        cursor.close()
-        conn.close()
-        log_info("Đóng kết nối Database.")
+    if not banGhiCanThem:
+        ghiLogCanhBao("Không có bản ghi nào để thêm vào database.")
+        conTro.close()
+        ketNoiDb.close()
+        ghiLogInfo("Đóng kết nối Database.")
         return
 
-    insert_query = """
+    insertQuery = """
         INSERT INTO malware_signatures (
             file_name, signature, file_type, first_seen, file_type_mime,
             md5_hash, sha1_hash, sha256_hash, sha3_384_hash
@@ -180,39 +180,39 @@ def import_data_to_db(dataframe: pd.DataFrame) -> None:
     """
 
     try:
-        execute_values(cursor, insert_query, records_to_insert)
-        conn.commit()
-        log_success(f"Đã thêm {len(records_to_insert)} bản ghi vào database.")
+        execute_values(conTro, insertQuery, banGhiCanThem)
+        ketNoiDb.commit()
+        ghiLogThanhCong(f"Đã thêm {len(banGhiCanThem)} bản ghi vào database.")
     except psycopg2.Error as exc:
-        conn.rollback()
-        _raise_db_runtime_error("thực hiện insert", exc)
+        ketNoiDb.rollback()
+        _nemLoiRuntimeDb("thực hiện insert", exc)
     finally:
-        cursor.close()
-        conn.close()
-        log_info("Đóng kết nối Database.")
+        conTro.close()
+        ketNoiDb.close()
+        ghiLogInfo("Đóng kết nối Database.")
 
-def import_signatures(json_output_file: Path) -> None:
-    initialize_environment()
-    if json_output_file.exists():
-        log_info(f"Xóa file cũ: {json_output_file}")
-        json_output_file.unlink()
+def nhapSignatures(jsonOutputFile: Path) -> None:
+    khoiTaoMoiTruong()
+    if jsonOutputFile.exists():
+        ghiLogInfo(f"Xóa file cũ: {jsonOutputFile}")
+        jsonOutputFile.unlink()
 
-    fetch_malware_signatures(output_file=str(json_output_file))
-    if not json_output_file.exists():
+    layMalwareSignatures(outputFile=str(jsonOutputFile))
+    if not jsonOutputFile.exists():
         raise RuntimeError(
-            f"Không tìm thấy file JSON sau khi fetch: {json_output_file}"
+            f"Không tìm thấy file JSON sau khi fetch: {jsonOutputFile}"
         )
 
-    log_success(f"Dữ liệu signatures được lưu tại: {json_output_file}")
-    log_info("-" * 100)
+    ghiLogThanhCong(f"Dữ liệu signatures được lưu tại: {jsonOutputFile}")
+    ghiLogInfo("-" * 100)
 
-    log_info("Bắt đầu lọc dữ liệu JSON.")
-    cleaned_dataframe = filter_malware_data(str(json_output_file))
-    if cleaned_dataframe is None or cleaned_dataframe.empty:
+    ghiLogInfo("Bắt đầu lọc dữ liệu JSON.")
+    duLieuDaLamSach = locDuLieuMalware(str(jsonOutputFile))
+    if duLieuDaLamSach is None or duLieuDaLamSach.empty:
         raise RuntimeError(
-            f"Không tạo được DataFrame hợp lệ từ file JSON: {json_output_file}"
+            f"Không tạo được DataFrame hợp lệ từ file JSON: {jsonOutputFile}"
         )
 
-    log_success(f"Đã tạo DataFrame với {len(cleaned_dataframe)} bản ghi.")
-    import_data_to_db(cleaned_dataframe)
-    log_success("Hoàn tất nhập dữ liệu vào PostgreSQL.")
+    ghiLogThanhCong(f"Đã tạo DataFrame với {len(duLieuDaLamSach)} bản ghi.")
+    nhapDuLieuVaoDatabase(duLieuDaLamSach)
+    ghiLogThanhCong("Hoàn tất nhập dữ liệu vào PostgreSQL.")
