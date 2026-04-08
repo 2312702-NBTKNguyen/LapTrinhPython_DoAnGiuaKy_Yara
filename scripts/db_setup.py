@@ -1,70 +1,70 @@
 import os
 
 from pathlib import Path
-from common.utils import taoKetNoiDb, ghiLogInfo, ghiLogThanhCong, ghiLogCanhBao
+from common.utils import create_db_connection, log_error, log_info, log_success, log_warn
 
-def kiemTraSqlFiles() -> None:
-    thuMucGoc = Path(__file__).resolve().parent.parent
+def check_sql_files() -> None:
+    root_dir = Path(__file__).resolve().parent.parent
 
-    danhSachSqlFiles = [
-        thuMucGoc / "database" / "01_create_database.sql",
-        thuMucGoc / "database" / "02_create_tables.sql",
+    sql_files = [
+        root_dir / "database" / "01_create_database.sql",
+        root_dir / "database" / "02_create_tables.sql",
     ]
 
-    for file in danhSachSqlFiles:
+    for file in sql_files:
         if not file.exists():
             raise FileNotFoundError(f"Không tìm thấy file SQL: {file}")
 
-def taoDatabaseNeuChuaCo() -> None:
-    thuMucGoc = Path(__file__).resolve().parent.parent
-    sqlTaoDatabase = thuMucGoc / "database" / "01_create_database.sql"
+def create_database_if_missing() -> None:
+    root_dir = Path(__file__).resolve().parent.parent
+    sql_create_db = root_dir / "database" / "01_create_database.sql"
 
-    with open(sqlTaoDatabase, "r", encoding="utf-8") as fileObj:
-        noiDungSqlTaoDb = fileObj.read().strip()
+    with open(sql_create_db, "r", encoding="utf-8") as file_obj:
+        create_db_sql = file_obj.read().strip()
 
-    ghiLogInfo(f"Đọc script: {sqlTaoDatabase}")
-    if noiDungSqlTaoDb:
-        ghiLogInfo("Thực thi logic tạo database dựa trên nội dung script SQL...")
+    log_info(f"Đọc script: {sql_create_db}")
+    if create_db_sql:
+        log_info("Thực thi logic tạo database dựa trên nội dung script SQL...")
 
-    ketNoiDb = taoKetNoiDb()
-    ketNoiDb.autocommit = True
+    conn = create_db_connection()
+    conn.autocommit = True
 
     try:
-        with ketNoiDb.cursor() as conTro:
-            sqlCoTheThucThi = noiDungSqlTaoDb.replace("\\gexec", "").strip()
-            if not sqlCoTheThucThi:
+        with conn.cursor() as cursor:
+            executable_sql = create_db_sql.replace("\\gexec", "").strip()
+            if not executable_sql:
                 raise RuntimeError("Nội dung SQL tạo database rỗng, không thể thực thi")
 
-            conTro.execute(sqlCoTheThucThi)
-            dongLenhTao = conTro.fetchone()
+            cursor.execute(executable_sql)
+            create_stmt_row = cursor.fetchone()
 
-            if dongLenhTao and dongLenhTao[0]:
-                conTro.execute(dongLenhTao[0])
-                ghiLogThanhCong(f"Đã tạo database '{os.getenv('DB_NAME')}' thành công.")
+            if create_stmt_row and create_stmt_row[0]:
+                cursor.execute(create_stmt_row[0])
+                log_success(f"Đã tạo database '{os.getenv('DB_NAME')}' thành công.")
             else:
-                ghiLogCanhBao(f"Database '{os.getenv('DB_NAME')}' đã tồn tại. Bỏ qua tạo mới.")
+                log_warn(f"Database '{os.getenv('DB_NAME')}' đã tồn tại. Bỏ qua tạo mới.")
     finally:
-        ketNoiDb.close()
+        conn.close()
 
-def taoTablesNeuChuaCo() -> None:
-    thuMucGoc = Path(__file__).resolve().parent.parent
-    sqlTaoTables = thuMucGoc / "database" / "02_create_tables.sql"
+def create_tables_if_missing() -> None:
+    root_dir = Path(__file__).resolve().parent.parent
+    sql_create_table = root_dir / "database" / "02_create_tables.sql"
 
-    with open(sqlTaoTables, "r", encoding="utf-8") as fileObj:
-        noiDungSqlTaoTables = fileObj.read().strip()
+    with open(sql_create_table, "r", encoding="utf-8") as file_obj:
+        create_tables_sql = file_obj.read().strip()
 
-    ghiLogInfo(f"Đọc script: {sqlTaoTables}")
+    log_info(f"Đọc script: {sql_create_table}")
 
-    ketNoiDb = taoKetNoiDb()
+    conn = create_db_connection()
     try:
-        with ketNoiDb.cursor() as conTro:
-            conTro.execute(noiDungSqlTaoTables)
-        ketNoiDb.commit()
-        ghiLogThanhCong("Đã cập nhật schema/table thành công.")
+        with conn.cursor() as cursor:
+            cursor.execute(create_tables_sql)
+        conn.commit()
+        log_success("Đã cập nhật schema/table thành công.")
     finally:
-        ketNoiDb.close()
+        conn.close()
 
-def thietLapDatabase() -> None:
-    kiemTraSqlFiles()
-    taoDatabaseNeuChuaCo()
-    taoTablesNeuChuaCo()
+def setup_database() -> None:
+    check_sql_files()
+    create_database_if_missing()
+    create_tables_if_missing()
