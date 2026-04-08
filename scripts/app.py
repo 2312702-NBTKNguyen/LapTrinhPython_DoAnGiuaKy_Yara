@@ -1,5 +1,6 @@
 from datetime import datetime
 from pathlib import Path
+import psycopg2
 from common.utils import initialize_environment, log_error, log_info, log_success, print_section
 
 from malware_scanner.reporting import finalize_scan_reports, print_summary
@@ -21,34 +22,16 @@ def init_system() -> int:
         print_section("THIẾT LẬP CƠ SỞ DỮ LIỆU")
         setup_database()
 
-        print_section("XỬ LÝ DỮ LIỆU")
+        print_section("LÀM MỚI DỮ LIỆU SIGNATURES")
         import_signatures(JSON_OUTPUT)
 
         print_section("HOÀN TẤT KHỞI CHẠY")
-        log_success("Hệ thống đã khởi tạo thành công.")
+        log_success("Hệ thống đã khởi tạo và làm mới dữ liệu signatures thành công.")
         return 0
 
-    except Exception as exc:
+    except (RuntimeError, ValueError, OSError, psycopg2.Error) as exc:
         print('-' * 100)
         log_error(f"Khởi chạy thất bại: {exc}")
-        return 1
-
-def update_signatures() -> int:
-    print_section("CHẾ ĐỘ CẬP NHẬT")
-
-    try:
-        initialize_environment()
-
-        print_section("XỬ LÝ DỮ LIỆU")
-        import_signatures(JSON_OUTPUT)
-
-        print_section("HOÀN TẤT UPDATE")
-        log_success("Đã cập nhật dữ liệu signatures.")
-        return 0
-
-    except Exception as exc:
-        print('-' * 100)
-        log_error(f"Cập nhật thất bại: {exc}")
         return 1
 
 def scan_target(target_path: str | None = None) -> int:

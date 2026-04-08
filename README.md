@@ -30,10 +30,7 @@ pip install -r requirements.txt
 # 3) Khởi tạo lần đầu
 python main.py --run
 
-# 4) Cập nhật dữ liệu signatures ở các lần sau
-python main.py --update
-
-# 5) Quét thủ công (chương trình sẽ hỏi đường dẫn)
+# 4) Quét thủ công (chương trình sẽ hỏi đường dẫn)
 python main.py --scan
 ```
 
@@ -115,11 +112,8 @@ psql -U postgres -d yara_malware_signatures -f database/02_create_tables.sql
 ### Bước 6: Import dữ liệu malware signatures
 
 ```bash
-# Khởi chạy lần đầu (setup DB + fetch + filter + import)
+# Khởi chạy (setup DB + fetch + filter + import)
 python main.py --run
-
-# Các lần sau chỉ cập nhật dữ liệu signatures
-python main.py --update
 ```
 
 ## Cách sử dụng
@@ -127,11 +121,8 @@ python main.py --update
 ### Chạy chương trình
 
 ```bash
-# Khởi chạy lần đầu
+# Khởi chạy và làm mới dữ liệu signatures
 python main.py --run
-
-# Cập nhật dữ liệu signatures
-python main.py --update
 
 # Quét (nhập đường dẫn khi chương trình yêu cầu)
 python main.py --scan
@@ -152,6 +143,7 @@ python main.py -h
 Gợi ý:
 
 - Có thể nhập đường dẫn có dấu ngoặc kép hoặc không.
+- Nên chạy `python main.py --run` trước khi quét để làm mới dữ liệu signatures.
 - Nên quét thư mục mẫu trước khi quét toàn bộ hệ thống.
 - Với file nén lớn hoặc nested sâu, thời gian quét sẽ tăng đáng kể.
 
@@ -199,7 +191,7 @@ Kiểm tra lại các biến DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD tro
 
 ### 2. Không có MB_AUTH_KEY
 
-Lỗi thường gặp khi chạy --run hoặc --update.
+Lỗi thường gặp khi chạy --run.
 
 Thêm MB_AUTH_KEY vào .env rồi chạy lại.
 
@@ -216,11 +208,11 @@ Kiểm tra thư mục logs/ và quyền ghi file tại thư mục dự án.
 Chạy test suite:
 
 ```bash
-pytest
+pytest tests/test_scan_flow.py
 ```
 
-Chạy nhanh nhóm test lõi:
+Chạy toàn bộ thư mục tests:
 
 ```bash
-pytest tests/unit/test_service_flow.py tests/unit/test_archive_validation.py
+pytest tests
 ```

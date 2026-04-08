@@ -1,7 +1,7 @@
 import os, sys, argparse
 
 from common.utils import center_text
-from scripts.app import init_system, update_signatures, scan_target
+from scripts.app import init_system, scan_target
 
 def clear_screen() -> None:
     os.system("cls" if os.name == "nt" else "clear")
@@ -17,18 +17,16 @@ def print_project_info() -> None:
     print(center_text("CÁC LỆNH KHẢ DỤNG", width=100))
     print(bar)
     print("1. Khởi chạy lần đầu: 'python main.py --run'")
-    print("2. Cập nhật dữ liệu: 'python main.py --update'")
-    print("3. Quét file/thư mục: 'python main.py --scan'")
-    print("4. Xem trợ giúp đầy đủ: 'python main.py -h'")
+    print("2. Quét file/thư mục: 'python main.py --scan'")
+    print("3. Xem trợ giúp đầy đủ: 'python main.py -h'")
 
 
 def build_parser() -> argparse.ArgumentParser:
     epilog = (
         "Ví dụ sử dụng:\n"
         "  python main.py --run\n"
-        "  python main.py --update\n"
         "  python main.py --scan\n\n"
-        "Gợi ý: Dùng --run cho lần đầu, sau đó dùng --update định kỳ trước khi quét."
+        "Gợi ý: Dùng --run để khởi tạo hoặc làm mới dữ liệu signatures trước khi quét."
     )
 
     parser = argparse.ArgumentParser(
@@ -41,13 +39,7 @@ def build_parser() -> argparse.ArgumentParser:
     mode_group.add_argument(
         "--run",
         action="store_true",
-        help="Khởi chạy lần đầu",
-    )
-    mode_group.add_argument(
-        "-u",
-        "--update",
-        action="store_true",
-        help="Cập nhật dữ liệu signatures",
+        help="Khởi tạo hệ thống và làm mới dữ liệu signatures",
     )
     mode_group.add_argument(
         "-s",
@@ -74,9 +66,6 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.run:
         return init_system()
-
-    if args.update:
-        return update_signatures()
 
     if args.scan:
         return scan_target()

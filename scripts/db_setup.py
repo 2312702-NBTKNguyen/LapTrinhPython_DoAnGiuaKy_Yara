@@ -1,4 +1,4 @@
-import os, psycopg2
+import os
 
 from pathlib import Path
 from common.utils import create_db_connection, log_error, log_info, log_success, log_warn
@@ -65,10 +65,6 @@ def create_tables_if_missing() -> None:
         conn.close()
 
 def setup_database() -> None:
-    try:
-        check_sql_files()
-        create_database_if_missing()
-        create_tables_if_missing()
-    except Exception as exc:
-        log_error(f"Thiết lập cơ sở dữ liệu thất bại: {exc}")
-        raise
+    check_sql_files()
+    create_database_if_missing()
+    create_tables_if_missing()
