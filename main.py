@@ -1,4 +1,6 @@
-import os, sys, argparse
+import argparse
+import os
+import sys
 
 from common.utils import center_text
 from scripts.app import init_system, scan_target

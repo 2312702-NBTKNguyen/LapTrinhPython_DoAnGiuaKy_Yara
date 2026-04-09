@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import builtins
 from dataclasses import dataclass
+from unittest.mock import mock_open
 
-import malware_scanner.scan_runtime as runtime_module
-from malware_scanner.scan_runtime import DetectionMethod
+import malware_scanner.scanner as runtime_module
+from malware_scanner.scanner import DetectionMethod
 
 
 @dataclass
@@ -53,7 +55,8 @@ def _build_scanner(monkeypatch):
 def test_scan_flow_uses_hash_stage_when_db_has_no_match_then_runs_file_yara(monkeypatch) -> None:
     scanner, repository = _build_scanner(monkeypatch)
     monkeypatch.setattr(runtime_module, "calculate_file_hashes", lambda _path: _default_hashes())
-    monkeypatch.setattr(runtime_module, "scan_with_yara", lambda *_args, **_kwargs: "RuleFile")
+    monkeypatch.setattr(runtime_module, "scan_bytes_with_yara", lambda *_args, **_kwargs: "RuleFile")
+    monkeypatch.setattr(builtins, "open", mock_open(read_data=b"fake binary data"))
 
     outcome = scanner.scan_file("payload.bin")
 
@@ -61,9 +64,9 @@ def test_scan_flow_uses_hash_stage_when_db_has_no_match_then_runs_file_yara(monk
     assert scanner.metrics["yara_match"] == 1
     assert scanner.metrics["hash_match"] == 0
     assert outcome is not None
-    assert outcome.detection.method == DetectionMethod.YARA_MATCH
-    assert repository.outcomes[-1].detection.signature == "RuleFile"
-    assert set(scanner.stage_timings) == {
+    assert outcome["detection"]["method"] == DetectionMethod.YARA_MATCH.value
+    assert repository.outcomes[-1]["detection"]["signature"] == "RuleFile"
+    assert set(outcome["stage_timings"]) == {
         "hash_calculation",
         "db_hash_lookup",
         "file_yara_scan",
@@ -74,28 +77,29 @@ def test_scan_flow_uses_hash_stage_when_db_has_match(monkeypatch) -> None:
     scanner, repository = _build_scanner(monkeypatch)
     repository.hash_match = "KnownFamily"
     monkeypatch.setattr(runtime_module, "calculate_file_hashes", lambda _path: _default_hashes())
-    monkeypatch.setattr(runtime_module, "scan_with_yara", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(runtime_module, "scan_bytes_with_yara", lambda *_args, **_kwargs: None)
 
     outcome = scanner.scan_file("payload.bin")
 
     assert scanner.metrics["hash_match"] == 1
     assert scanner.metrics["yara_match"] == 0
     assert outcome is not None
-    assert outcome.detection.method == DetectionMethod.HASH_MATCH
+    assert outcome["detection"]["method"] == DetectionMethod.HASH_MATCH.value
 
 
 def test_scan_flow_marks_clean_when_hash_and_yara_all_miss(monkeypatch) -> None:
     scanner, repository = _build_scanner(monkeypatch)
     monkeypatch.setattr(runtime_module, "calculate_file_hashes", lambda _path: _default_hashes())
-    monkeypatch.setattr(runtime_module, "scan_with_yara", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(runtime_module, "scan_bytes_with_yara", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(builtins, "open", mock_open(read_data=b"clean file data"))
 
     outcome = scanner.scan_file("clean.txt")
 
     assert scanner.metrics["clean"] == 1
     assert scanner.metrics["errors"] == 0
     assert outcome is not None
-    assert outcome.detection.method == DetectionMethod.CLEAN
-    assert repository.outcomes[-1].detection.signature == "None"
+    assert outcome["detection"]["method"] == DetectionMethod.CLEAN.value
+    assert repository.outcomes[-1]["detection"]["signature"] == "None"
 
 
 def test_scan_flow_counts_error_when_hash_calculation_fails(monkeypatch) -> None:

@@ -1,23 +1,23 @@
-from datetime import datetime
+﻿from datetime import datetime
 from pathlib import Path
+
 import psycopg2
-from common.utils import initialize_environment, log_error, log_info, log_success, print_section
 
-from malware_scanner.scan_runtime import ScannerEngine, export_scan_reports, print_scan_summary
-
+from common.utils import log_error, log_info, log_success, print_section
+from config import Config
+from malware_scanner.reporting import export_scan_reports, print_scan_summary
+from malware_scanner.scanner import ScannerEngine
 from scripts.db_setup import setup_database
 from scripts.pipeline import import_signatures
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 JSON_OUTPUT = ROOT_DIR / "data" / "malware_signatures.json"
-RULES_INDEX = ROOT_DIR / "rules" / "index.yar"
+
 
 def init_system() -> int:
     print_section("CHẾ ĐỘ KHỞI CHẠY LẦN ĐẦU")
 
     try:
-        initialize_environment()
-
         print_section("THIẾT LẬP CƠ SỞ DỮ LIỆU")
         setup_database()
 
@@ -29,9 +29,32 @@ def init_system() -> int:
         return 0
 
     except (RuntimeError, ValueError, OSError, psycopg2.Error) as exc:
-        print('-' * 100)
+        print("-" * 100)
         log_error(f"Khởi chạy thất bại: {exc}")
         return 1
+
+
+def _resolve_scan_target(target_path: str) -> Path | None:
+    resolved_target = Path(target_path).expanduser().resolve()
+    if not resolved_target.exists():
+        log_error(f"Đường dẫn không tồn tại: {resolved_target}")
+        return None
+    return resolved_target
+
+
+def _scan_with_reporting(scanner: ScannerEngine, resolved_target: Path) -> None:
+    start = datetime.now()
+
+    if resolved_target.is_file():
+        scanner.scan_file(str(resolved_target))
+        duration = (datetime.now() - start).total_seconds()
+        metrics = scanner.metrics
+    else:
+        metrics, duration = scanner.scan_directory(str(resolved_target))
+
+    print_scan_summary(metrics, duration)
+    export_scan_reports(scanner.store, start)
+
 
 def scan_target(target_path: str | None = None) -> int:
     if not target_path:
@@ -42,26 +65,16 @@ def scan_target(target_path: str | None = None) -> int:
         log_error("Bạn chưa nhập đường dẫn để quét.")
         return 1
 
-    resolved_target = Path(target_path).expanduser().resolve()
-
-    if not resolved_target.exists():
-        log_error(f"Đường dẫn không tồn tại: {resolved_target}")
+    resolved_target = _resolve_scan_target(target_path)
+    if resolved_target is None:
         return 1
 
-    scanner = ScannerEngine(rules_path=str(RULES_INDEX))
-
+    scanner = ScannerEngine(rules_path=Config.YARA_RULES_PATH)
     try:
         print_section("MALWARE SCANNER - CHẾ ĐỘ QUÉT")
         log_info(f"Target: {resolved_target}")
 
-        if resolved_target.is_file():
-            start = datetime.now()
-            scanner.scan_file(str(resolved_target))
-            duration = (datetime.now() - start).total_seconds()
-            print_scan_summary(scanner.metrics, duration)
-            export_scan_reports(scanner.store, start)
-        else:
-            scanner.scan_directory(str(resolved_target))
+        _scan_with_reporting(scanner, resolved_target)
 
         log_success("Hoàn tất quét.")
         return 0
