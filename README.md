@@ -16,7 +16,6 @@ Hệ thống phát hiện mã độc sử dụng kết hợp hai phương pháp:
 
 - **Quét file bằng YARA rules**: Phát hiện malware patterns trong file
 - **Kiểm tra hash database**: So sánh SHA256 hash với database malware đã biết
-- **Quét archive**: Hỗ trợ quét malware bên trong file ZIP và RAR mà không cần extract
 - **Báo cáo chi tiết**: Xuất báo cáo ra terminal và file .txt
 
 ## Khởi chạy nhanh
@@ -76,20 +75,6 @@ DB_USER=postgres
 DB_PASSWORD=your_password_
 ```
 
-### Cấu hình tool giải nén RAR (Windows)
-
-Nếu gặp lỗi Cannot find working tool khi quét .rar, thêm biến sau vào file .env:
-
-```bash
-RAR_TOOL_PATH=C:\\Program Files\\WinRAR\\UnRAR.exe
-```
-
-Hoặc dùng 7-Zip:
-
-```bash
-RAR_TOOL_PATH=C:\\Program Files\\7-Zip\\7z.exe
-```
-
 ### Bước 4: Lấy và cấu hình MalwareBazaar API key
 
 1. Đăng ký/đăng nhập tài khoản tại [MalwareBazaar](https://bazaar.abuse.ch/).
@@ -145,7 +130,6 @@ Gợi ý:
 - Có thể nhập đường dẫn có dấu ngoặc kép hoặc không.
 - Nên chạy `python main.py --run` trước khi quét để làm mới dữ liệu signatures.
 - Nên quét thư mục mẫu trước khi quét toàn bộ hệ thống.
-- Với file nén lớn hoặc nested sâu, thời gian quét sẽ tăng đáng kể.
 
 ## Báo cáo kết quả
 
@@ -172,9 +156,9 @@ Nội dung chính gồm:
 
 ## Cách phát hiện malware
 
-Hệ thống sử dụng chuỗi phát hiện theo thứ tự: hash database -> YARA pattern matching -> archive scanning in-memory.
+Hệ thống sử dụng chuỗi phát hiện theo thứ tự: hash database -> YARA pattern matching.
 
-Chi tiết triển khai, giới hạn bảo vệ archive, và quy tắc xử lý lỗi được mô tả trong overview/architecture.md và overview/features.md.
+Chi tiết triển khai được mô tả trong overview/architecture.md và overview/features.md.
 
 ## Các họ Malware (14)
 
@@ -195,11 +179,7 @@ Lỗi thường gặp khi chạy --run.
 
 Thêm MB_AUTH_KEY vào .env rồi chạy lại.
 
-### 3. Không quét được RAR
-
-Trên Windows, cấu hình RAR_TOOL_PATH trỏ đúng tới UnRAR.exe hoặc 7z.exe.
-
-### 4. Không thấy file report
+### 3. Không thấy file report
 
 Kiểm tra thư mục logs/ và quyền ghi file tại thư mục dự án.
 

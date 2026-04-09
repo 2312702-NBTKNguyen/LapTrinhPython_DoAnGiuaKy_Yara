@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from types import SimpleNamespace
-from typing import Any, cast
 
-import malware_scanner.service as service_module
+import malware_scanner.scan_runtime as runtime_module
+from malware_scanner.scan_runtime import DetectionMethod
 
 
 @dataclass
@@ -15,17 +14,24 @@ class _DummyConn:
         self.closed = True
 
 
-class _ArchiveScannerStub:
-    def __init__(self, _rules: object):
-        self.supported = False
-        self.results = []
+class _RepositoryStub:
+    def __init__(self):
+        self.connection = _DummyConn()
+        self.hash_match: str | None = None
+        self.outcomes = []
 
-    def is_supported(self, _filepath: str) -> bool:
-        return self.supported
+    def find_signature_by_hash(self, _file_hash: str) -> str | None:
+        return self.hash_match
 
-    def scan(self, _filepath: str):
-        for result in self.results:
-            yield result
+    def save_outcome(self, outcome) -> None:
+        self.outcomes.append(outcome)
+
+    def fetch_scan_results(self, _start_time, detected_only: bool = False):
+        _ = detected_only
+        return []
+
+    def close(self) -> None:
+        self.connection.close()
 
 
 def _default_hashes() -> dict[str, str]:
@@ -38,73 +44,74 @@ def _default_hashes() -> dict[str, str]:
 
 
 def _build_scanner(monkeypatch):
-    conn = _DummyConn()
-    monkeypatch.setattr(service_module, "connect_db", lambda: conn)
-    monkeypatch.setattr(service_module, "load_yara_rules", lambda _path: object())
-    monkeypatch.setattr(service_module, "ArchiveScanner", _ArchiveScannerStub)
-    monkeypatch.setattr(service_module, "log_scan_result", lambda *args, **kwargs: None)
-    monkeypatch.setattr(service_module, "create_malware_signature", lambda *args, **kwargs: None)
-    return service_module.MalwareScanner(), conn
+    repository = _RepositoryStub()
+    monkeypatch.setattr(runtime_module, "ScanStore", lambda: repository)
+    monkeypatch.setattr(runtime_module, "load_yara_rules", lambda _path: object())
+    return runtime_module.ScannerEngine(), repository
 
 
-def test_scan_flow_archive_detection_short_circuits_hash_and_file_yara(monkeypatch) -> None:
-    scanner, _ = _build_scanner(monkeypatch)
-    monkeypatch.setattr(service_module, "calculate_file_hashes", lambda _path: _default_hashes())
-    monkeypatch.setattr(service_module, "check_hash_in_db", lambda *_args, **_kwargs: None)
-    monkeypatch.setattr(service_module, "scan_with_yara", lambda *_args, **_kwargs: None)
+def test_scan_flow_uses_hash_stage_when_db_has_no_match_then_runs_file_yara(monkeypatch) -> None:
+    scanner, repository = _build_scanner(monkeypatch)
+    monkeypatch.setattr(runtime_module, "calculate_file_hashes", lambda _path: _default_hashes())
+    monkeypatch.setattr(runtime_module, "scan_with_yara", lambda *_args, **_kwargs: "RuleFile")
 
-    archive_scanner = cast(Any, scanner.archive_scanner)
-    archive_scanner.supported = True
-    archive_scanner.results = [SimpleNamespace(rule_name="RuleArchive")]
+    outcome = scanner.scan_file("payload.bin")
 
-    scanner.scan_target("payload.zip")
-
-    assert scanner.stats[service_module.SERVICE_STAT_SCANNED] == 1
-    assert scanner.stats[service_module.SERVICE_STAT_YARA_MATCH] == 1
-    assert scanner.stats[service_module.SERVICE_STAT_HASH_MATCH] == 0
-    assert set(scanner.last_stage_timings) == {
-        service_module.SERVICE_STAGE_HASH_CALCULATION,
-        service_module.SERVICE_STAGE_ARCHIVE_SCAN,
+    assert scanner.metrics["scanned"] == 1
+    assert scanner.metrics["yara_match"] == 1
+    assert scanner.metrics["hash_match"] == 0
+    assert outcome is not None
+    assert outcome.detection.method == DetectionMethod.YARA_MATCH
+    assert repository.outcomes[-1].detection.signature == "RuleFile"
+    assert set(scanner.stage_timings) == {
+        "hash_calculation",
+        "db_hash_lookup",
+        "file_yara_scan",
     }
 
 
-def test_scan_flow_uses_hash_stage_when_archive_has_no_detection(monkeypatch) -> None:
-    scanner, _ = _build_scanner(monkeypatch)
-    monkeypatch.setattr(service_module, "calculate_file_hashes", lambda _path: _default_hashes())
-    monkeypatch.setattr(service_module, "check_hash_in_db", lambda *_args, **_kwargs: "KnownFamily")
-    monkeypatch.setattr(service_module, "scan_with_yara", lambda *_args, **_kwargs: None)
+def test_scan_flow_uses_hash_stage_when_db_has_match(monkeypatch) -> None:
+    scanner, repository = _build_scanner(monkeypatch)
+    repository.hash_match = "KnownFamily"
+    monkeypatch.setattr(runtime_module, "calculate_file_hashes", lambda _path: _default_hashes())
+    monkeypatch.setattr(runtime_module, "scan_with_yara", lambda *_args, **_kwargs: None)
 
-    scanner.scan_target("payload.bin")
+    outcome = scanner.scan_file("payload.bin")
 
-    assert scanner.stats[service_module.SERVICE_STAT_HASH_MATCH] == 1
-    assert scanner.stats[service_module.SERVICE_STAT_YARA_MATCH] == 0
+    assert scanner.metrics["hash_match"] == 1
+    assert scanner.metrics["yara_match"] == 0
+    assert outcome is not None
+    assert outcome.detection.method == DetectionMethod.HASH_MATCH
 
 
-def test_scan_flow_marks_clean_when_archive_hash_and_yara_all_miss(monkeypatch) -> None:
-    scanner, _ = _build_scanner(monkeypatch)
-    monkeypatch.setattr(service_module, "calculate_file_hashes", lambda _path: _default_hashes())
-    monkeypatch.setattr(service_module, "check_hash_in_db", lambda *_args, **_kwargs: None)
-    monkeypatch.setattr(service_module, "scan_with_yara", lambda *_args, **_kwargs: None)
+def test_scan_flow_marks_clean_when_hash_and_yara_all_miss(monkeypatch) -> None:
+    scanner, repository = _build_scanner(monkeypatch)
+    monkeypatch.setattr(runtime_module, "calculate_file_hashes", lambda _path: _default_hashes())
+    monkeypatch.setattr(runtime_module, "scan_with_yara", lambda *_args, **_kwargs: None)
 
-    scanner.scan_target("clean.txt")
+    outcome = scanner.scan_file("clean.txt")
 
-    assert scanner.stats[service_module.SERVICE_STAT_CLEAN] == 1
-    assert scanner.stats[service_module.SERVICE_STAT_ERRORS] == 0
+    assert scanner.metrics["clean"] == 1
+    assert scanner.metrics["errors"] == 0
+    assert outcome is not None
+    assert outcome.detection.method == DetectionMethod.CLEAN
+    assert repository.outcomes[-1].detection.signature == "None"
 
 
 def test_scan_flow_counts_error_when_hash_calculation_fails(monkeypatch) -> None:
     scanner, _ = _build_scanner(monkeypatch)
-    monkeypatch.setattr(service_module, "calculate_file_hashes", lambda _path: None)
+    monkeypatch.setattr(runtime_module, "calculate_file_hashes", lambda _path: None)
 
-    scanner.scan_target("broken.bin")
+    outcome = scanner.scan_file("broken.bin")
 
-    assert scanner.stats[service_module.SERVICE_STAT_SCANNED] == 1
-    assert scanner.stats[service_module.SERVICE_STAT_ERRORS] == 1
+    assert scanner.metrics["scanned"] == 1
+    assert scanner.metrics["errors"] == 1
+    assert outcome is None
 
 
-def test_scan_flow_close_releases_db_connection(monkeypatch) -> None:
-    scanner, conn = _build_scanner(monkeypatch)
+def test_scan_flow_close_releases_repository_connection(monkeypatch) -> None:
+    scanner, repository = _build_scanner(monkeypatch)
 
     scanner.close()
 
-    assert conn.closed is True
+    assert repository.connection.closed is True

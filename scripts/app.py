@@ -3,8 +3,7 @@ from pathlib import Path
 import psycopg2
 from common.utils import initialize_environment, log_error, log_info, log_success, print_section
 
-from malware_scanner.reporting import finalize_scan_reports, print_summary
-from malware_scanner.service import MalwareScanner
+from malware_scanner.scan_runtime import ScannerEngine, export_scan_reports, print_scan_summary
 
 from scripts.db_setup import setup_database
 from scripts.pipeline import import_signatures
@@ -49,7 +48,7 @@ def scan_target(target_path: str | None = None) -> int:
         log_error(f"Đường dẫn không tồn tại: {resolved_target}")
         return 1
 
-    scanner = MalwareScanner(rules_path=str(RULES_INDEX))
+    scanner = ScannerEngine(rules_path=str(RULES_INDEX))
 
     try:
         print_section("MALWARE SCANNER - CHẾ ĐỘ QUÉT")
@@ -57,10 +56,10 @@ def scan_target(target_path: str | None = None) -> int:
 
         if resolved_target.is_file():
             start = datetime.now()
-            scanner.scan_target(str(resolved_target))
+            scanner.scan_file(str(resolved_target))
             duration = (datetime.now() - start).total_seconds()
-            print_summary(scanner.stats, duration)
-            finalize_scan_reports(scanner.db_conn, start)
+            print_scan_summary(scanner.metrics, duration)
+            export_scan_reports(scanner.store, start)
         else:
             scanner.scan_directory(str(resolved_target))
 
