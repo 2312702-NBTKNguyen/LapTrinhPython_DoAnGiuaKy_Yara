@@ -1,4 +1,4 @@
-import json, os, requests
+import json, requests
 import pandas as pd
 import psycopg2
 

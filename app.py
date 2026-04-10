@@ -1,14 +1,13 @@
-﻿from datetime import datetime
+﻿import psycopg2
+
+from datetime import datetime
 from pathlib import Path
-
-import psycopg2
-
 from malware_scanner.utils import log_error, log_info, log_success, print_section
 from config import Config
 from malware_scanner.reporting import write_report, show_summary
 from malware_scanner.scanner import ScannerEngine
 from data_tools.db_setup import setup_db
-from data_tools.pipeline import sync_signatures
+from data_tools.data_loader import sync_signatures
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 JSON_OUTPUT = ROOT_DIR / "data" / "malware_signatures.json"
