@@ -35,7 +35,9 @@ class ResultsPanel(ctk.CTkFrame):
         self.tree.grid(row=0, column=0, sticky="nsew")
         scrollbar = ttk.Scrollbar(tree_frame, orient="vertical", command=self.tree.yview)
         scrollbar.grid(row=0, column=1, sticky="ns")
-        self.tree.configure(yscrollcommand=scrollbar.set)
+        x_scrollbar = ttk.Scrollbar(tree_frame, orient="horizontal", command=self.tree.xview)
+        x_scrollbar.grid(row=1, column=0, sticky="ew")
+        self.tree.configure(yscrollcommand=scrollbar.set, xscrollcommand=x_scrollbar.set)
 
         headers = {
             "time": "Time",
@@ -45,11 +47,12 @@ class ResultsPanel(ctk.CTkFrame):
             "signature": "Signature",
             "sha256": "SHA256",
         }
-        widths = {"time": 140, "file": 180, "status": 90, "method": 120, "signature": 220, "sha256": 260}
+        widths = {"time": 120, "file": 220, "status": 100, "method": 130, "signature": 300, "sha256": 360}
 
         for col in self.COLUMNS:
             self.tree.heading(col, text=headers[col], command=lambda c=col: self._sort_by(c))
-            self.tree.column(col, width=widths[col], anchor="w")
+            stretch = col in {"file", "signature", "sha256"}
+            self.tree.column(col, width=widths[col], minwidth=90, anchor="w", stretch=stretch)
 
         self.detail = ctk.CTkTextbox(self, height=90)
         self.detail.grid(row=2, column=0, sticky="ew", padx=8, pady=(0, 8))

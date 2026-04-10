@@ -36,7 +36,9 @@ class HistoryPanel(ctk.CTkFrame):
         self.tree.grid(row=0, column=0, sticky="nsew")
         scrollbar = ttk.Scrollbar(table, orient="vertical", command=self.tree.yview)
         scrollbar.grid(row=0, column=1, sticky="ns")
-        self.tree.configure(yscrollcommand=scrollbar.set)
+        x_scrollbar = ttk.Scrollbar(table, orient="horizontal", command=self.tree.xview)
+        x_scrollbar.grid(row=1, column=0, sticky="ew")
+        self.tree.configure(yscrollcommand=scrollbar.set, xscrollcommand=x_scrollbar.set)
 
         headers = {
             "id": "ID",
@@ -45,10 +47,11 @@ class HistoryPanel(ctk.CTkFrame):
             "path": "Path",
             "method": "Method",
         }
-        widths = {"id": 70, "time": 150, "file": 170, "path": 320, "method": 120}
+        widths = {"id": 70, "time": 170, "file": 220, "path": 440, "method": 130}
         for col in self.COLUMNS:
             self.tree.heading(col, text=headers[col], command=lambda c=col: self._sort_by(c))
-            self.tree.column(col, width=widths[col], anchor="w")
+            stretch = col in {"file", "path"}
+            self.tree.column(col, width=widths[col], minwidth=90, anchor="w", stretch=stretch)
 
         self.detail = ctk.CTkTextbox(self, height=90)
         self.detail.grid(row=2, column=0, sticky="ew", padx=8, pady=(0, 8))
