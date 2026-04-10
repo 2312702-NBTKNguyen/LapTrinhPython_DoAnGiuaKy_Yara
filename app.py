@@ -13,9 +13,8 @@ from data_tools.pipeline import sync_signatures
 ROOT_DIR = Path(__file__).resolve().parent.parent
 JSON_OUTPUT = ROOT_DIR / "data" / "malware_signatures.json"
 
-
 def boot() -> int:
-    print_section("CHẾ ĐỘ KHỞI CHẠY LẦN ĐẦU")
+    print_section("CHẾ ĐỘ KHỞI TẠO DỮ LIỆU")
 
     try:
         print_section("THIẾT LẬP CƠ SỞ DỮ LIỆU")
@@ -33,14 +32,12 @@ def boot() -> int:
         log_error(f"Khởi chạy thất bại: {exc}")
         return 1
 
-
 def _resolve_target(target: str) -> Path | None:
     resolved = Path(target).expanduser().resolve()
     if not resolved.exists():
         log_error(f"Đường dẫn không tồn tại: {resolved}")
         return None
     return resolved
-
 
 def _scan_and_report(scanner: ScannerEngine, target: Path) -> None:
     start = datetime.now()
@@ -55,14 +52,13 @@ def _scan_and_report(scanner: ScannerEngine, target: Path) -> None:
     show_summary(metrics, duration)
     write_report(scanner.store, start)
 
-
 def scan(target: str | None = None) -> int:
     if not target:
         print_section("CHẾ ĐỘ QUÉT")
         target = input("Nhập đường dẫn file hoặc thư mục cần quét: ").strip().strip('"\'')
 
     if not target:
-        log_error("Bạn chưa nhập đường dẫn để quét.")
+        log_error("Chưa nhập đường dẫn để quét.")
         return 1
 
     resolved = _resolve_target(target)
@@ -71,7 +67,7 @@ def scan(target: str | None = None) -> int:
 
     scanner = ScannerEngine(rules_path=Config.YARA_RULES_PATH)
     try:
-        print_section("MALWARE SCANNER - CHẾ ĐỘ QUÉT")
+        print_section("CHẾ ĐỘ QUÉT")
         log_info(f"Target: {resolved}")
 
         _scan_and_report(scanner, resolved)

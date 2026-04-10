@@ -7,8 +7,6 @@ rule Suspicious_Document_Script_Loader {
     strings:
         $rtf = "{\\rtf" ascii nocase
         $ole = { D0 CF 11 E0 A1 B1 1A E1 }
-        $ooxml_1 = "[Content_Types].xml" ascii nocase
-        $ooxml_2 = "word/document.xml" ascii nocase
 
         $engine_1 = "wscript.shell" ascii wide nocase
         $engine_2 = "msxml2.xmlhttp" ascii wide nocase
@@ -31,7 +29,7 @@ rule Suspicious_Document_Script_Loader {
         filesize < 15MB and
         (
             (
-                (1 of ($rtf, $ole, $ooxml_*)) and
+                (1 of ($rtf, $ole)) and
                 (1 of ($engine_*)) and
                 (1 of ($exec_*, $net_*, $macro_*))
             )
@@ -93,22 +91,6 @@ rule Suspicious_JS_ActiveX_Obfuscated_Dropper {
 
     condition:
         filesize < 12MB and 4 of ($js_*)
-}
-
-rule Suspicious_OOXML_Embedded_Object_Anomaly {
-    meta:
-        description = "Detects OOXML documents embedding additional Office payload objects"
-        severity = "medium"
-        category = "document_anomaly"
-
-    strings:
-        $ct = "[Content_Types].xml" ascii nocase
-        $wd = "word/document.xml" ascii nocase
-        $embed = "word/embeddings/" ascii nocase
-        $xlsx = "Microsoft_Office_Excel_Worksheet" ascii nocase
-
-    condition:
-        filesize < 20MB and $ct and $wd and $embed and $xlsx
 }
 
 rule Suspicious_OLE_Excel_Embedded_PDF {

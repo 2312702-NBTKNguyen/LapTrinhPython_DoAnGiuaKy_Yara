@@ -7,10 +7,9 @@ from config import Config
 from malware_scanner.utils import log_error, log_info, log_success, log_warn
 from psycopg2.extras import execute_values
 
-
 def fetch_signatures(output_file: str = "./data/malware_signatures.json") -> None:
     url = "https://mb-api.abuse.ch/api/v1/"
-    auth_key = os.getenv("MALWAREBAZAAR_API_KEY") or Config.MB_AUTH_KEY
+    auth_key = Config.MB_AUTH_KEY
 
     if not auth_key:
         message = "Chưa có API key trong file .env hoặc biến môi trường hệ thống."
@@ -40,7 +39,7 @@ def fetch_signatures(output_file: str = "./data/malware_signatures.json") -> Non
         payload = {
             "query": "get_siginfo",
             "signature": sig,
-            "limit": 500,
+            "limit": 200,
         }
 
         log_info(f"Lấy dữ liệu signature: {sig}")
@@ -98,7 +97,6 @@ def fetch_signatures(output_file: str = "./data/malware_signatures.json") -> Non
 
 def clean_data(input_file: str) -> pd.DataFrame | None:
     log_info(f"Đọc dữ liệu từ file: {input_file}")
-
     try:
         df = pd.read_json(input_file)
         if df.empty:

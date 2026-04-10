@@ -5,7 +5,6 @@ from config import Config
 
 
 def _connect() -> psycopg2.extensions.connection:
-    """Tạo connection đơn lẻ cho setup (không dùng pool)."""
     return psycopg2.connect(
         host=Config.DB_HOST,
         port=Config.DB_PORT,

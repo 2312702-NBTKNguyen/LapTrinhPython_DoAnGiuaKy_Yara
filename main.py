@@ -18,7 +18,7 @@ def show_info() -> None:
     print(f"\n{bar}")
     print(center_text("CÁC LỆNH KHẢ DỤNG", width=100))
     print(bar)
-    print("1. Khởi chạy lần đầu: 'python main.py --run'")
+    print("1. Khởi tạo dữ liệu: 'python main.py --run'")
     print("2. Quét file/thư mục: 'python main.py --scan'")
     print("3. Xem trợ giúp đầy đủ: 'python main.py -h'")
 
