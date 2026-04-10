@@ -2,13 +2,13 @@ import argparse
 import os
 import sys
 
-from common.utils import center_text
-from scripts.app import init_system, scan_target
+from malware_scanner.utils import center_text
+from app import boot, scan
 
-def clear_screen() -> None:
+def clear() -> None:
     os.system("cls" if os.name == "nt" else "clear")
 
-def print_project_info() -> None:
+def show_info() -> None:
     bar = "=" * 100
 
     print(f"\n{bar}")
@@ -23,7 +23,7 @@ def print_project_info() -> None:
     print("3. Xem trợ giúp đầy đủ: 'python main.py -h'")
 
 
-def build_parser() -> argparse.ArgumentParser:
+def make_parser() -> argparse.ArgumentParser:
     epilog = (
         "Ví dụ sử dụng:\n"
         "  python main.py --run\n"
@@ -39,6 +39,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     mode_group = parser.add_mutually_exclusive_group(required=True)
     mode_group.add_argument(
+        "-r",
         "--run",
         action="store_true",
         help="Khởi tạo hệ thống và làm mới dữ liệu signatures",
@@ -57,20 +58,20 @@ def main(argv: list[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
 
-    clear_screen()
+    clear()
 
-    parser = build_parser()
+    parser = make_parser()
     if not argv:
-        print_project_info()
+        show_info()
         return 0
 
     args = parser.parse_args(argv)
 
     if args.run:
-        return init_system()
+        return boot()
 
     if args.scan:
-        return scan_target()
+        return scan()
 
     parser.print_help()
     return 1
