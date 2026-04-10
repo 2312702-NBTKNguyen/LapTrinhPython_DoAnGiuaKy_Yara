@@ -29,8 +29,8 @@ pip install -r requirements.txt
 # 3) Khởi tạo lần đầu
 python main.py --run
 
-# 4) Quét thủ công (chương trình sẽ hỏi đường dẫn)
-python main.py --scan
+# 4) Mở GUI CustomTkinter (Windows-first)
+python main.py
 ```
 
 ## Cài đặt chi tiết
@@ -106,30 +106,32 @@ python main.py --run
 ### Chạy chương trình
 
 ```bash
+# Mở GUI (mặc định)
+python main.py
+
 # Khởi chạy và làm mới dữ liệu signatures
 python main.py --run
 
-# Quét (nhập đường dẫn khi chương trình yêu cầu)
-python main.py --scan
+# Quét bằng CLI (legacy)
+python main.py --scan /path/to/file_or_folder
 
 # Xem trợ giúp
 python main.py -h
 ```
 
+Lưu ý:
+
+- GUI CustomTkinter là chế độ sử dụng chính.
+- Dự án ưu tiên vận hành trên Windows; Linux hiện hỗ trợ ở mức tương thích cơ bản.
+
 ### Quét file hoặc thư mục
 
-```bash
-# Nhập đường dẫn file hoặc thư mục
-/home/user/malware_sample.exe
-/home/user/downloads
-...
-```
+Trong GUI:
 
-Gợi ý:
-
-- Có thể nhập đường dẫn có dấu ngoặc kép hoặc không.
-- Nên chạy `python main.py --run` trước khi quét để làm mới dữ liệu signatures.
-- Nên quét thư mục mẫu trước khi quét toàn bộ hệ thống.
+- Bấm `File` hoặc `Folder` để chọn target.
+- Bấm `Start` để bắt đầu quét.
+- Bấm `Cancel` để yêu cầu dừng quét.
+- Tab `Results` hiển thị kết quả realtime; tab `History` hiển thị lịch sử từ database.
 
 ## Báo cáo kết quả
 
@@ -137,6 +139,8 @@ Báo cáo được tạo theo 2 dạng:
 
 - Terminal summary ngay sau khi quét.
 - File báo cáo .txt trong thư mục logs/.
+
+Trong GUI, có thể bấm `Open Report` để mở nhanh file báo cáo mới nhất.
 
 Ví dụ file:
 

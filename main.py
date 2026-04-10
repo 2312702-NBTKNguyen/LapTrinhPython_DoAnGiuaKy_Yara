@@ -16,19 +16,21 @@ def show_info() -> None:
     print(bar)
 
     print(f"\n{bar}")
-    print(center_text("CÁC LỆNH KHẢ DỤNG", width=100))
+    print(center_text("CHẾ ĐỘ MẶC ĐỊNH", width=100))
     print(bar)
-    print("1. Khởi tạo dữ liệu: 'python main.py --run'")
-    print("2. Quét file/thư mục: 'python main.py --scan'")
-    print("3. Xem trợ giúp đầy đủ: 'python main.py -h'")
+    print("1. Mở GUI: 'python main.py'")
+    print("2. Khởi tạo dữ liệu bằng CLI: 'python main.py --run'")
+    print("3. Quét bằng CLI: 'python main.py --scan <path>'")
+    print("4. Xem trợ giúp đầy đủ: 'python main.py -h'")
 
 
 def make_parser() -> argparse.ArgumentParser:
     epilog = (
         "Ví dụ sử dụng:\n"
+        "  python main.py\n"
         "  python main.py --run\n"
-        "  python main.py --scan\n\n"
-        "Gợi ý: Dùng --run để khởi tạo hoặc làm mới dữ liệu signatures trước khi quét."
+        "  python main.py --scan /path/to/target\n\n"
+        "Gợi ý: Chạy không tham số để mở GUI CustomTkinter (Windows-first)."
     )
 
     parser = argparse.ArgumentParser(
@@ -37,7 +39,7 @@ def make_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
-    mode_group = parser.add_mutually_exclusive_group(required=True)
+    mode_group = parser.add_mutually_exclusive_group(required=False)
     mode_group.add_argument(
         "-r",
         "--run",
@@ -47,8 +49,8 @@ def make_parser() -> argparse.ArgumentParser:
     mode_group.add_argument(
         "-s",
         "--scan",
-        action="store_true",
-        help="Nhập đường dẫn file/thư mục và quét",
+        metavar="TARGET",
+        help="Quét file/thư mục bằng CLI",
     )
 
     return parser
@@ -62,7 +64,8 @@ def main(argv: list[str] | None = None) -> int:
 
     parser = make_parser()
     if not argv:
-        show_info()
+        from gui.main_window import run as run_gui
+        run_gui()
         return 0
 
     args = parser.parse_args(argv)
@@ -71,10 +74,10 @@ def main(argv: list[str] | None = None) -> int:
         return boot()
 
     if args.scan:
-        return scan()
+        return scan(args.scan)
 
-    parser.print_help()
-    return 1
+    show_info()
+    return 0
 
 
 if __name__ == "__main__":
