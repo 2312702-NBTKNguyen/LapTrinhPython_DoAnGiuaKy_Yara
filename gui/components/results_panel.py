@@ -9,25 +9,38 @@ class ResultsPanel(ctk.CTkFrame):
 
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
-        self.grid_rowconfigure(1, weight=1)
+        self.grid_rowconfigure(2, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        filter_row = ctk.CTkFrame(self, fg_color="transparent")
-        filter_row.grid(row=0, column=0, sticky="ew", padx=8, pady=(8, 4))
-        filter_row.grid_columnconfigure(0, weight=1)
+        ctk.CTkLabel(
+            self,
+            text="Kết quả quét",
+            text_color="#475569",
+            font=ctk.CTkFont(family="Segoe UI", size=12),
+        ).grid(row=0, column=0, sticky="w", padx=12, pady=(8, 2))
+
+        toolbar = ctk.CTkFrame(self, fg_color="transparent")
+        toolbar.grid(row=1, column=0, sticky="ew", padx=8, pady=(0, 4))
+        toolbar.grid_columnconfigure(0, weight=1)
 
         self.search_var = ctk.StringVar(value="")
         self.status_var = ctk.StringVar(value="ALL")
-        self.method_var = ctk.StringVar(value="ALL")
 
-        ctk.CTkEntry(filter_row, textvariable=self.search_var, placeholder_text="Search file/hash/signature").grid(
+        ctk.CTkEntry(
+            toolbar,
+            textvariable=self.search_var,
+            placeholder_text="Tìm kiếm kết quả quét.",
+        ).grid(
             row=0, column=0, sticky="ew", padx=(0, 8)
         )
-        ctk.CTkOptionMenu(filter_row, variable=self.status_var, values=["ALL", "CLEAN", "DETECTED"]).grid(row=0, column=1, padx=(0, 8))
-        ctk.CTkOptionMenu(filter_row, variable=self.method_var, values=["ALL", "CLEAN", "HASH_MATCH", "YARA_MATCH"]).grid(row=0, column=2)
+        ctk.CTkOptionMenu(toolbar, variable=self.status_var, values=["ALL", "CLEAN", "DETECTED"]).grid(row=0, column=1, padx=(0, 8))
+        self.report_btn = ctk.CTkButton(toolbar, text="Xuất báo cáo", width=120, state="disabled")
+        self.report_btn.grid(row=0, column=2)
 
-        tree_frame = ctk.CTkFrame(self)
-        tree_frame.grid(row=1, column=0, sticky="nsew", padx=8, pady=(0, 8))
+        split_view = ttk.Panedwindow(self, orient="vertical")
+        split_view.grid(row=2, column=0, sticky="nsew", padx=8, pady=(0, 8))
+
+        tree_frame = ctk.CTkFrame(split_view)
         tree_frame.grid_rowconfigure(0, weight=1)
         tree_frame.grid_columnconfigure(0, weight=1)
 
@@ -50,32 +63,44 @@ class ResultsPanel(ctk.CTkFrame):
         widths = {"time": 120, "file": 220, "status": 100, "method": 130, "signature": 300, "sha256": 360}
 
         for col in self.COLUMNS:
-            self.tree.heading(col, text=headers[col], command=lambda c=col: self._sort_by(c))
+            self.tree.heading(col, text=headers[col], command=lambda c=col: self._toggle_sort(c))
             stretch = col in {"file", "signature", "sha256"}
             self.tree.column(col, width=widths[col], minwidth=90, anchor="w", stretch=stretch)
 
-        self.detail = ctk.CTkTextbox(self, height=90)
-        self.detail.grid(row=2, column=0, sticky="ew", padx=8, pady=(0, 8))
+        detail_frame = ctk.CTkFrame(split_view)
+        detail_frame.grid_rowconfigure(0, weight=1)
+        detail_frame.grid_columnconfigure(0, weight=1)
+
+        self.detail = ctk.CTkTextbox(detail_frame)
+        self.detail.grid(row=0, column=0, sticky="nsew")
         self.detail.configure(state="disabled")
 
-        self.tree.bind("<<TreeviewSelect>>", self._on_select)
-        self.search_var.trace_add("write", lambda *_: self._apply_filters())
-        self.status_var.trace_add("write", lambda *_: self._apply_filters())
-        self.method_var.trace_add("write", lambda *_: self._apply_filters())
+        split_view.add(tree_frame, weight=4)
+        split_view.add(detail_frame, weight=1)
+
+        self.tree.bind("<<TreeviewSelect>>", self._show_selected)
+        self.search_var.trace_add("write", lambda *_: self._refresh_rows())
+        self.status_var.trace_add("write", lambda *_: self._refresh_rows())
 
         self._rows: list[dict] = []
         self._item_to_row: dict[str, dict] = {}
         self._sort_column = "time"
         self._sort_desc = True
 
-    def add_outcome(self, outcome: dict) -> None:
-        detection = outcome.get("detection", {})
-        method = str(detection.get("method", "CLEAN"))
-        signature = str(detection.get("signature", "None"))
+    def on_export(self, handler) -> None:
+        self.report_btn.configure(command=handler)
+
+    def set_export_enabled(self, enabled: bool) -> None:
+        self.report_btn.configure(state="normal" if enabled else "disabled")
+
+    def add_result(self, outcome: dict) -> None:
+        hit = outcome.get("detection", {})
+        method = str(hit.get("method", "CLEAN"))
+        signature = str(hit.get("signature", "None"))
         status = "DETECTED" if method in ("HASH_MATCH", "YARA_MATCH") else "CLEAN"
 
-        stage_timings = outcome.get("stage_timings", {}) or {}
-        duration_ms = int((sum(stage_timings.values()) if isinstance(stage_timings, dict) else 0.0) * 1000)
+        timings = outcome.get("stage_timings", {}) or {}
+        duration_ms = int((sum(timings.values()) if isinstance(timings, dict) else 0.0) * 1000)
 
         row = {
             "time": datetime.now().strftime("%H:%M:%S"),
@@ -89,7 +114,7 @@ class ResultsPanel(ctk.CTkFrame):
             "raw": outcome,
         }
         self._rows.append(row)
-        self._apply_filters()
+        self._refresh_rows()
 
     def clear(self) -> None:
         self._rows.clear()
@@ -100,10 +125,9 @@ class ResultsPanel(ctk.CTkFrame):
         self.detail.delete("1.0", "end")
         self.detail.configure(state="disabled")
 
-    def _apply_filters(self) -> None:
-        search_text = self.search_var.get().strip().lower()
-        status_filter = self.status_var.get()
-        method_filter = self.method_var.get()
+    def _refresh_rows(self) -> None:
+        tokens = [token for token in self.search_var.get().strip().lower().split() if token]
+        status = self.status_var.get()
 
         for item in self.tree.get_children():
             self.tree.delete(item)
@@ -111,35 +135,33 @@ class ResultsPanel(ctk.CTkFrame):
         self._item_to_row.clear()
 
         rows = list(self._rows)
-        rows.sort(key=lambda row: self._sort_key(row, self._sort_column), reverse=self._sort_desc)
+        rows.sort(key=lambda row: self._row_key(row, self._sort_column), reverse=self._sort_desc)
 
         for row in rows:
-            if status_filter != "ALL" and row["status"] != status_filter:
-                continue
-            if method_filter != "ALL" and row["method"] != method_filter:
+            if status != "ALL" and row["status"] != status:
                 continue
 
-            haystack = f"{row['file']} {row['sha256']} {row['signature']}".lower()
-            if search_text and search_text not in haystack:
+            text_blob = " ".join(str(row.get(col, "")) for col in self.COLUMNS).lower()
+            if tokens and not all(token in text_blob for token in tokens):
                 continue
             values = (row["time"], row["file"], row["status"], row["method"], row["signature"], row["sha256"])
             item_id = self.tree.insert("", "end", values=values)
             self._item_to_row[item_id] = row
 
-    def _sort_key(self, row: dict, column: str):
+    def _row_key(self, row: dict, column: str):
         if column == "time":
             return row.get("time", "")
         return str(row.get(column, "")).lower()
 
-    def _sort_by(self, column: str) -> None:
+    def _toggle_sort(self, column: str) -> None:
         if self._sort_column == column:
             self._sort_desc = not self._sort_desc
         else:
             self._sort_column = column
             self._sort_desc = False
-        self._apply_filters()
+        self._refresh_rows()
 
-    def _on_select(self, _event=None) -> None:
+    def _show_selected(self, _event=None) -> None:
         selected = self.tree.selection()
         if not selected:
             return

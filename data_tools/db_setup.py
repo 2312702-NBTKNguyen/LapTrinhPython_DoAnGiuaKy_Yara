@@ -4,7 +4,7 @@ from malware_scanner.utils import log_error, log_info, log_success, log_warn
 from config import Config
 
 
-def _connect() -> psycopg2.extensions.connection:
+def _db_conn() -> psycopg2.extensions.connection:
     return psycopg2.connect(
         host=Config.DB_HOST,
         port=Config.DB_PORT,
@@ -14,7 +14,7 @@ def _connect() -> psycopg2.extensions.connection:
     )
 
 
-def setup_db() -> None:
+def init_db() -> None:
     root = Path(__file__).resolve().parent.parent
     db_sql_path = root / "database" / "01_create_database.sql"
     table_sql_path = root / "database" / "02_create_tables.sql"
@@ -34,7 +34,7 @@ def setup_db() -> None:
     if db_sql:
         log_info("Thực thi logic tạo database dựa trên nội dung script SQL...")
 
-    conn = _connect()
+    conn = _db_conn()
     conn.autocommit = True
     try:
         with conn.cursor() as cursor:
@@ -53,7 +53,7 @@ def setup_db() -> None:
         conn.close()
 
     log_info(f"Đọc script: {table_sql_path}")
-    conn = _connect()
+    conn = _db_conn()
     try:
         with conn.cursor() as cursor:
             cursor.execute(table_sql)

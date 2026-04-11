@@ -7,7 +7,8 @@ from config import Config
 from malware_scanner.utils import log_error, log_info, log_success, log_warn
 from psycopg2.extras import execute_values
 
-def fetch_signatures(output_file: str = "./data/malware_signatures.json") -> None:
+
+def fetch_sigs(output_file: str = "./data/malware_signatures.json") -> None:
     url = "https://mb-api.abuse.ch/api/v1/"
     auth_key = Config.MB_AUTH_KEY
 
@@ -95,7 +96,7 @@ def fetch_signatures(output_file: str = "./data/malware_signatures.json") -> Non
     log_info(f"Tổng kết: {ok_count} request thành công, {err_count} request lỗi.")
 
 
-def clean_data(input_file: str) -> pd.DataFrame | None:
+def clean_json(input_file: str) -> pd.DataFrame | None:
     log_info(f"Đọc dữ liệu từ file: {input_file}")
     try:
         df = pd.read_json(input_file)
@@ -126,7 +127,7 @@ def clean_data(input_file: str) -> pd.DataFrame | None:
     return None
 
 
-def save_db(dataframe: pd.DataFrame) -> None:
+def save_signatures(dataframe: pd.DataFrame) -> None:
     log_info("Bắt đầu nhập dữ liệu vào PostgreSQL...")
 
     try:
@@ -191,12 +192,12 @@ def save_db(dataframe: pd.DataFrame) -> None:
         log_info("Đóng kết nối Database.")
 
 
-def sync_signatures(json_path: Path) -> None:
+def sync_sigs(json_path: Path) -> None:
     if json_path.exists():
         log_info(f"Xóa file cũ: {json_path}")
         json_path.unlink()
 
-    fetch_signatures(output_file=str(json_path))
+    fetch_sigs(output_file=str(json_path))
     if not json_path.exists():
         raise RuntimeError(f"Không tìm thấy file JSON sau khi fetch: {json_path}")
 
@@ -204,10 +205,10 @@ def sync_signatures(json_path: Path) -> None:
     log_info("-" * 100)
 
     log_info("Bắt đầu lọc dữ liệu JSON.")
-    clean_df = clean_data(str(json_path))
+    clean_df = clean_json(str(json_path))
     if clean_df is None or clean_df.empty:
         raise RuntimeError(f"Không tạo được DataFrame hợp lệ từ file JSON: {json_path}")
 
     log_success(f"Đã tạo DataFrame với {len(clean_df)} bản ghi.")
-    save_db(clean_df)
+    save_signatures(clean_df)
     log_success("Hoàn tất nhập dữ liệu vào PostgreSQL.")

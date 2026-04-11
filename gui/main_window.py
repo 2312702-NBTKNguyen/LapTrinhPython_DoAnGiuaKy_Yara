@@ -1,6 +1,7 @@
 import io
 import os
 import queue
+import re
 import threading
 
 from contextlib import redirect_stderr, redirect_stdout
@@ -11,12 +12,12 @@ from tkinter import filedialog, messagebox, ttk
 import customtkinter as ctk
 
 from config import Config
-from data_tools.data_loader import sync_signatures
-from data_tools.db_setup import setup_db
+from data_tools.data_loader import sync_sigs
+from data_tools.db_setup import init_db
 from gui.components.history_panel import HistoryPanel
 from gui.components.log_panel import LogPanel
 from gui.components.results_panel import ResultsPanel
-from malware_scanner.reporting import write_report
+from malware_scanner.reporting import save_report
 from malware_scanner.scanner import ScanStore, ScannerEngine
 
 
@@ -38,29 +39,32 @@ class QueueWriter(io.TextIOBase):
         return
 
 
+LOG_PREFIX_PATTERN = re.compile(r"^\[(INFO|SUCCESS|WARNING|ERROR)\]\s*", re.IGNORECASE)
+
+
 class MainWindow(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("Hybrid Malware Scanner")
-        self.geometry("1440x860")
+        self._window_size = (1440, 860)
+        self._last_window_state = "normal"
+        self.geometry(f"{self._window_size[0]}x{self._window_size[1]}")
         self.minsize(1180, 760)
 
         ctk.set_appearance_mode("light")
         ctk.set_default_color_theme("blue")
 
-        self._configure_ttk_style()
+        self._style_tree()
 
         self.event_queue: queue.Queue = queue.Queue()
         self.cancel_event = threading.Event()
         self.scan_thread: threading.Thread | None = None
         self.boot_thread: threading.Thread | None = None
         self.history_thread: threading.Thread | None = None
-        self.current_scanner: ScannerEngine | None = None
 
         self.current_state = "idle"
         self.last_scan_started_at: datetime | None = None
         self.last_report_path: str | None = None
-        self.is_fullscreen = False
 
         self.path_var = ctk.StringVar(value="")
         self.state_var = ctk.StringVar(value="IDLE")
@@ -73,13 +77,34 @@ class MainWindow(ctk.CTk):
         self.err_var = ctk.StringVar(value="0")
         self.elapsed_var = ctk.StringVar(value="0.00s")
 
-        self._build_layout()
-        self._bind_shortcuts()
-        self._set_state("idle")
-        self._refresh_history()
-        self.after(100, self._drain_events)
+        self._build_ui()
+        self._center_window(*self._window_size)
+        self.bind("<Configure>", self._on_window_state_change)
+        self._set_mode("idle")
+        self._load_history()
+        self.after(100, self._pump_events)
 
-    def _configure_ttk_style(self) -> None:
+    def _center_window(self, width: int | None = None, height: int | None = None) -> None:
+        self.update_idletasks()
+        win_w = width if width is not None else self.winfo_width()
+        win_h = height if height is not None else self.winfo_height()
+
+        if win_w <= 1 or win_h <= 1:
+            return
+
+        screen_w = self.winfo_screenwidth()
+        screen_h = self.winfo_screenheight()
+        pos_x = max(0, (screen_w - win_w) // 2)
+        pos_y = max(0, (screen_h - win_h) // 2)
+        self.geometry(f"{win_w}x{win_h}+{pos_x}+{pos_y}")
+
+    def _on_window_state_change(self, _event=None) -> None:
+        current_state = self.state()
+        if current_state == "normal" and self._last_window_state == "zoomed":
+            self.after_idle(self._center_window)
+        self._last_window_state = current_state
+
+    def _style_tree(self) -> None:
         style = ttk.Style()
         if "clam" in style.theme_names():
             style.theme_use("clam")
@@ -106,22 +131,18 @@ class MainWindow(ctk.CTk):
             foreground=[("selected", "#0f172a")],
         )
 
-    def _bind_shortcuts(self) -> None:
-        self.bind("<F11>", lambda _event: self._toggle_fullscreen())
-        self.bind("<Escape>", lambda _event: self._exit_fullscreen())
-
-    def _build_layout(self) -> None:
+    def _build_ui(self) -> None:
         self.configure(fg_color="#f3f6fb")
 
         self.grid_rowconfigure(2, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        self._build_header()
-        self._build_metrics()
-        self._build_workspace()
-        self._build_footer()
+        self._build_top()
+        self._build_stats()
+        self._build_body()
+        self._build_bottom()
 
-    def _build_header(self) -> None:
+    def _build_top(self) -> None:
         header = ctk.CTkFrame(self, fg_color="#ffffff", corner_radius=16)
         header.grid(row=0, column=0, sticky="ew", padx=14, pady=(14, 8))
         header.grid_columnconfigure(1, weight=1)
@@ -130,13 +151,13 @@ class MainWindow(ctk.CTk):
         identity.grid(row=0, column=0, sticky="w", padx=(14, 8), pady=12)
         ctk.CTkLabel(
             identity,
-            text="Hybrid Malware Scanner",
+            text="Lập trình Python",
             font=ctk.CTkFont(family="Segoe UI Semibold", size=24, weight="bold"),
             text_color="#0f172a",
         ).pack(anchor="w")
         ctk.CTkLabel(
             identity,
-            text="CustomTkinter Dashboard - real-time YARA + Hashing workflow",
+            text="Ứng dụng thư viện YARA trong phát hiện Malware",
             font=ctk.CTkFont(family="Segoe UI", size=12),
             text_color="#475569",
         ).pack(anchor="w", pady=(2, 0))
@@ -150,36 +171,36 @@ class MainWindow(ctk.CTk):
             textvariable=self.path_var,
             height=38,
             corner_radius=12,
-            placeholder_text="Chon file hoac folder can quet...",
+            placeholder_text="Nhập hoặc chọn đường dẫn file/thư mục cần quét...",
             font=ctk.CTkFont(family="Segoe UI", size=12),
         )
         self.path_entry.grid(row=0, column=0, sticky="ew", padx=(0, 8))
 
         self.file_btn = ctk.CTkButton(
             controls,
-            text="File",
+            text="Chọn File",
             width=74,
             height=38,
             corner_radius=12,
-            command=self._pick_file,
+            command=self._choose_file,
             font=ctk.CTkFont(family="Segoe UI Semibold", size=12),
         )
         self.file_btn.grid(row=0, column=1, padx=4)
 
         self.folder_btn = ctk.CTkButton(
             controls,
-            text="Folder",
+            text="Chọn Thư mục",
             width=84,
             height=38,
             corner_radius=12,
-            command=self._pick_folder,
+            command=self._choose_folder,
             font=ctk.CTkFont(family="Segoe UI Semibold", size=12),
         )
         self.folder_btn.grid(row=0, column=2, padx=4)
 
         self.start_btn = ctk.CTkButton(
             controls,
-            text="Quet",
+            text="Quét",
             width=86,
             height=38,
             corner_radius=12,
@@ -192,67 +213,44 @@ class MainWindow(ctk.CTk):
 
         self.cancel_btn = ctk.CTkButton(
             controls,
-            text="Dung",
+            text="Dừng",
             width=86,
             height=38,
             corner_radius=12,
             fg_color="#b91c1c",
             hover_color="#991b1b",
-            command=self._cancel_scan,
+            command=self._cancel_job,
             font=ctk.CTkFont(family="Segoe UI Semibold", size=12),
         )
         self.cancel_btn.grid(row=0, column=4, padx=4)
 
         self.boot_btn = ctk.CTkButton(
             controls,
-            text="Sync Data",
+            text="Khởi tạo dữ liệu",
             width=98,
             height=38,
             corner_radius=12,
-            command=self._start_boot,
+            command=self._start_sync,
             font=ctk.CTkFont(family="Segoe UI Semibold", size=12),
         )
         self.boot_btn.grid(row=0, column=5, padx=4)
 
-        self.report_btn = ctk.CTkButton(
-            controls,
-            text="Bao cao",
-            width=94,
-            height=38,
-            corner_radius=12,
-            command=self._open_report,
-            font=ctk.CTkFont(family="Segoe UI Semibold", size=12),
-        )
-        self.report_btn.grid(row=0, column=6, padx=4)
 
-        self.fullscreen_btn = ctk.CTkButton(
-            controls,
-            text="Toan man hinh",
-            width=122,
-            height=38,
-            corner_radius=12,
-            fg_color="#334155",
-            hover_color="#1e293b",
-            command=self._toggle_fullscreen,
-            font=ctk.CTkFont(family="Segoe UI Semibold", size=12),
-        )
-        self.fullscreen_btn.grid(row=0, column=7, padx=(4, 0))
-
-    def _build_metrics(self) -> None:
+    def _build_stats(self) -> None:
         metrics = ctk.CTkFrame(self, fg_color="#ffffff", corner_radius=16)
         metrics.grid(row=1, column=0, sticky="ew", padx=14, pady=(0, 8))
 
         for col in range(6):
             metrics.grid_columnconfigure(col, weight=1)
 
-        self._metric_card(metrics, 0, "Tong file", self.total_var, "#2563eb")
-        self._metric_card(metrics, 1, "Hash hit", self.hash_var, "#dc2626")
-        self._metric_card(metrics, 2, "YARA hit", self.yara_var, "#ea580c")
-        self._metric_card(metrics, 3, "Clean", self.clean_var, "#0f766e")
-        self._metric_card(metrics, 4, "Errors", self.err_var, "#b91c1c")
-        self._metric_card(metrics, 5, "Elapsed", self.elapsed_var, "#4f46e5")
+        self._add_stat_card(metrics, 0, "Tổng số file đã quét", self.total_var, "#2563eb")
+        self._add_stat_card(metrics, 1, "Hash Match", self.hash_var, "#dc2626")
+        self._add_stat_card(metrics, 2, "YARA Match", self.yara_var, "#ea580c")
+        self._add_stat_card(metrics, 3, "Clean", self.clean_var, "#0f766e")
+        self._add_stat_card(metrics, 4, "Lỗi", self.err_var, "#b91c1c")
+        self._add_stat_card(metrics, 5, "Thời gian quét", self.elapsed_var, "#4f46e5")
 
-    def _metric_card(self, parent, col: int, title: str, value_var: ctk.StringVar, accent: str) -> None:
+    def _add_stat_card(self, parent, col: int, title: str, value_var: ctk.StringVar, accent: str) -> None:
         card = ctk.CTkFrame(parent, fg_color="#f8fafc", corner_radius=14)
         card.grid(row=0, column=col, sticky="ew", padx=8, pady=10)
         ctk.CTkLabel(
@@ -268,30 +266,32 @@ class MainWindow(ctk.CTk):
             font=ctk.CTkFont(family="Segoe UI Semibold", size=26, weight="bold"),
         ).pack(anchor="w", padx=12, pady=(0, 10))
 
-    def _build_workspace(self) -> None:
+    def _build_body(self) -> None:
         workspace = ctk.CTkFrame(self, fg_color="transparent")
         workspace.grid(row=2, column=0, sticky="nsew", padx=14, pady=(0, 8))
         workspace.grid_rowconfigure(0, weight=1)
-        workspace.grid_columnconfigure(0, weight=3)
-        workspace.grid_columnconfigure(1, weight=2)
+        workspace.grid_columnconfigure(0, weight=1)
 
-        self.results_panel = ResultsPanel(workspace, fg_color="#ffffff", corner_radius=16)
-        self.results_panel.grid(row=0, column=0, sticky="nsew", padx=(0, 6))
+        horizontal_pane = ttk.Panedwindow(workspace, orient="horizontal")
+        horizontal_pane.grid(row=0, column=0, sticky="nsew")
 
-        right_col = ctk.CTkFrame(workspace, fg_color="transparent")
-        right_col.grid(row=0, column=1, sticky="nsew", padx=(6, 0))
-        right_col.grid_rowconfigure(0, weight=1)
-        right_col.grid_rowconfigure(1, weight=1)
-        right_col.grid_columnconfigure(0, weight=1)
+        self.results_panel = ResultsPanel(horizontal_pane, fg_color="#ffffff", corner_radius=16)
+        self.results_panel.on_export(self._open_last_report)
+        self.results_panel.set_export_enabled(False)
 
-        self.history_panel = HistoryPanel(right_col, fg_color="#ffffff", corner_radius=16)
-        self.history_panel.grid(row=0, column=0, sticky="nsew", pady=(0, 6))
-        self.history_panel.set_refresh_handler(self._refresh_history)
+        vertical_pane = ttk.Panedwindow(horizontal_pane, orient="vertical")
 
-        self.log_panel = LogPanel(right_col, fg_color="#ffffff", corner_radius=16)
-        self.log_panel.grid(row=1, column=0, sticky="nsew", pady=(6, 0))
+        self.history_panel = HistoryPanel(vertical_pane, fg_color="#ffffff", corner_radius=16)
+        self.history_panel.on_refresh(self._load_history)
 
-    def _build_footer(self) -> None:
+        self.log_panel = LogPanel(vertical_pane, fg_color="#ffffff", corner_radius=16)
+
+        horizontal_pane.add(self.results_panel, weight=3)
+        horizontal_pane.add(vertical_pane, weight=2)
+        vertical_pane.add(self.history_panel, weight=1)
+        vertical_pane.add(self.log_panel, weight=1)
+
+    def _build_bottom(self) -> None:
         footer = ctk.CTkFrame(self, fg_color="#ffffff", corner_radius=16)
         footer.grid(row=3, column=0, sticky="ew", padx=14, pady=(0, 14))
         footer.grid_columnconfigure(0, weight=1)
@@ -325,95 +325,55 @@ class MainWindow(ctk.CTk):
             font=ctk.CTkFont(family="Segoe UI Semibold", size=12),
         ).grid(row=0, column=2, sticky="e")
 
-    def _toggle_fullscreen(self) -> None:
-        self.is_fullscreen = not self.is_fullscreen
-        self.attributes("-fullscreen", self.is_fullscreen)
-        self.fullscreen_btn.configure(text="Thu nho" if self.is_fullscreen else "Toan man hinh")
+    def _set_mode(self, state: str) -> None:
+        mode_map: dict[str, tuple[str, str, str, str, str, bool]] = {
+            "idle": ("normal", "normal", "normal", "normal", "disabled", bool(self.last_report_path)),
+            "scanning": ("disabled", "disabled", "disabled", "disabled", "normal", False),
+            "canceling": ("disabled", "disabled", "disabled", "disabled", "disabled", False),
+            "booting": ("disabled", "disabled", "disabled", "disabled", "disabled", bool(self.last_report_path)),
+            "completed": ("normal", "normal", "normal", "normal", "disabled", bool(self.last_report_path)),
+            "error": ("normal", "normal", "normal", "normal", "disabled", bool(self.last_report_path)),
+        }
 
-    def _exit_fullscreen(self) -> None:
-        if not self.is_fullscreen:
-            return
-        self.is_fullscreen = False
-        self.attributes("-fullscreen", False)
-        self.fullscreen_btn.configure(text="Toan man hinh")
+        if state not in mode_map:
+            state = "idle"
 
-    def _set_state(self, state: str) -> None:
         self.current_state = state
         self.state_var.set(state.upper())
+        file_state, folder_state, start_state, boot_state, cancel_state, can_export = mode_map[state]
+        self.file_btn.configure(state=file_state)
+        self.folder_btn.configure(state=folder_state)
+        self.start_btn.configure(state=start_state)
+        self.boot_btn.configure(state=boot_state)
+        self.cancel_btn.configure(state=cancel_state)
+        self.results_panel.set_export_enabled(can_export)
 
-        if state == "idle":
-            self.file_btn.configure(state="normal")
-            self.folder_btn.configure(state="normal")
-            self.start_btn.configure(state="normal")
-            self.boot_btn.configure(state="normal")
-            self.cancel_btn.configure(state="disabled")
-            self.report_btn.configure(state="normal" if self.last_report_path else "disabled")
-            return
-
-        if state == "scanning":
-            self.file_btn.configure(state="disabled")
-            self.folder_btn.configure(state="disabled")
-            self.start_btn.configure(state="disabled")
-            self.boot_btn.configure(state="disabled")
-            self.cancel_btn.configure(state="normal")
-            self.report_btn.configure(state="disabled")
-            return
-
-        if state == "canceling":
-            self.file_btn.configure(state="disabled")
-            self.folder_btn.configure(state="disabled")
-            self.start_btn.configure(state="disabled")
-            self.boot_btn.configure(state="disabled")
-            self.cancel_btn.configure(state="disabled")
-            self.report_btn.configure(state="disabled")
-            return
-
-        if state == "booting":
-            self.file_btn.configure(state="disabled")
-            self.folder_btn.configure(state="disabled")
-            self.start_btn.configure(state="disabled")
-            self.boot_btn.configure(state="disabled")
-            self.cancel_btn.configure(state="disabled")
-            self.report_btn.configure(state="normal" if self.last_report_path else "disabled")
-            return
-
-        if state in {"completed", "error"}:
-            self.file_btn.configure(state="normal")
-            self.folder_btn.configure(state="normal")
-            self.start_btn.configure(state="normal")
-            self.boot_btn.configure(state="normal")
-            self.cancel_btn.configure(state="disabled")
-            self.report_btn.configure(state="normal" if self.last_report_path else "disabled")
-            return
-
-        self._set_state("idle")
-
-    def _pick_file(self) -> None:
-        file_path = filedialog.askopenfilename(title="Select file to scan")
+    def _choose_file(self) -> None:
+        file_path = filedialog.askopenfilename(title="Chọn tệp để quét")
         if file_path:
             self.path_var.set(file_path)
 
-    def _pick_folder(self) -> None:
-        folder_path = filedialog.askdirectory(title="Select folder to scan")
+    def _choose_folder(self) -> None:
+        folder_path = filedialog.askdirectory(title="Chọn thư mục để quét")
         if folder_path:
             self.path_var.set(folder_path)
 
-    def _start_boot(self) -> None:
+    def _start_sync(self) -> None:
         if self.boot_thread and self.boot_thread.is_alive():
             return
 
-        self._set_state("booting")
-        self.progress_text_var.set("Dang dong bo du lieu signatures...")
-        self.boot_thread = threading.Thread(target=self._run_boot_worker, daemon=True)
+        self._set_mode("booting")
+        self.progress_text_var.set("Đang đồng bộ dữ liệu signatures...")
+        self.boot_thread = threading.Thread(target=self._sync_worker, daemon=True)
         self.boot_thread.start()
 
-    def _run_boot_worker(self) -> None:
+    def _sync_worker(self) -> None:
         writer = QueueWriter(self.event_queue)
         try:
             with redirect_stdout(writer), redirect_stderr(writer):
                 JSON_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-                setup_db()
-                sync_signatures(JSON_OUTPUT)
+                init_db()
+                sync_sigs(JSON_OUTPUT)
             self.event_queue.put({"type": "boot_done", "exit_code": 0})
         except Exception as exc:
             self.event_queue.put({"type": "boot_done", "exit_code": 1, "message": str(exc)})
@@ -426,37 +386,36 @@ class MainWindow(ctk.CTk):
 
         raw_path = self.path_var.get().strip().strip('"\'')
         if not raw_path:
-            messagebox.showerror("Missing target", "Please choose a file or folder to scan.")
+            messagebox.showerror("Thiếu đường dẫn", "Vui lòng chọn tệp hoặc thư mục để quét.")
             return
 
         target = Path(raw_path).expanduser().resolve()
         if not target.exists():
-            messagebox.showerror("Invalid path", f"Target does not exist:\n{target}")
+            messagebox.showerror("Đường dẫn không hợp lệ", f"Đường dẫn không tồn tại:\n{target}")
             return
 
-        self._reset_metrics()
+        self._reset_stats()
         self.results_panel.clear()
         self.cancel_event.clear()
         self.last_scan_started_at = datetime.now()
         self.last_report_path = None
-        self._set_state("scanning")
-        self.progress_text_var.set(f"Dang quet: {target}")
+        self._set_mode("scanning")
+        self.progress_text_var.set(f"Đang quét: {target}")
 
-        self.scan_thread = threading.Thread(target=self._run_scan_worker, args=(str(target),), daemon=True)
+        self.scan_thread = threading.Thread(target=self._scan_worker, args=(str(target),), daemon=True)
         self.scan_thread.start()
 
-    def _run_scan_worker(self, target_path: str) -> None:
+    def _scan_worker(self, target_path: str) -> None:
         scanner: ScannerEngine | None = None
         start = datetime.now()
 
         try:
             scanner = ScannerEngine(
                 rules_path=Config.YARA_RULES_PATH,
-                log_callback=self._on_scanner_log,
-                result_callback=self._on_scanner_result,
+                log_callback=self._push_log,
+                result_callback=self._push_result,
                 cancel_event=self.cancel_event,
             )
-            self.current_scanner = scanner
 
             target = Path(target_path)
             if target.is_file():
@@ -464,9 +423,9 @@ class MainWindow(ctk.CTk):
                 duration = (datetime.now() - start).total_seconds()
                 metrics = dict(scanner.metrics)
             else:
-                metrics, duration = scanner.scan_directory(target_path)
+                metrics, duration = scanner.scan_folder(target_path)
 
-            report_path = write_report(scanner.store, start)
+            report_path = save_report(scanner.store, start)
             self.event_queue.put(
                 {
                     "type": "scan_done",
@@ -481,27 +440,26 @@ class MainWindow(ctk.CTk):
         finally:
             if scanner:
                 scanner.close()
-            self.current_scanner = None
 
-    def _on_scanner_log(self, payload: dict) -> None:
+    def _push_log(self, payload: dict) -> None:
         self.event_queue.put(payload)
 
-    def _on_scanner_result(self, payload: dict) -> None:
+    def _push_result(self, payload: dict) -> None:
         self.event_queue.put(payload)
 
-    def _cancel_scan(self) -> None:
+    def _cancel_job(self) -> None:
         if self.scan_thread and self.scan_thread.is_alive():
             self.cancel_event.set()
-            self._set_state("canceling")
-            self.progress_text_var.set("Da yeu cau dung quet. Dang doi worker ket thuc...")
+            self._set_mode("canceling")
+            self.progress_text_var.set("Đã yêu cầu dừng quét. Đang đợi phiên làm việc kết thúc...")
 
-    def _open_report(self) -> None:
+    def _open_last_report(self) -> None:
         if not self.last_report_path:
             return
 
         report_path = Path(self.last_report_path)
         if not report_path.exists():
-            messagebox.showerror("Report missing", f"Report file not found:\n{report_path}")
+            messagebox.showerror("Lỗi mở báo cáo", f"File báo cáo không tồn tại:\n{report_path}")
             return
 
         try:
@@ -510,26 +468,26 @@ class MainWindow(ctk.CTk):
             else:
                 os.system(f'xdg-open "{report_path}"')
         except Exception as exc:
-            messagebox.showerror("Open report error", str(exc))
+            messagebox.showerror("Lỗi mở báo cáo", str(exc))
 
-    def _refresh_history(self) -> None:
+    def _load_history(self) -> None:
         if self.history_thread and self.history_thread.is_alive():
             return
 
-        self.history_thread = threading.Thread(target=self._run_history_worker, daemon=True)
+        self.history_thread = threading.Thread(target=self._history_worker, daemon=True)
         self.history_thread.start()
 
-    def _run_history_worker(self) -> None:
+    def _history_worker(self) -> None:
         store = ScanStore()
         try:
-            rows = store.fetch_recent_history(limit=300)
+            rows = store.list_history(limit=300)
             self.event_queue.put({"type": "history_rows", "rows": rows})
         except Exception as exc:
             self.event_queue.put({"type": "history_error", "message": str(exc)})
         finally:
             store.close()
 
-    def _reset_metrics(self) -> None:
+    def _reset_stats(self) -> None:
         self.total_var.set("0")
         self.hash_var.set("0")
         self.yara_var.set("0")
@@ -538,7 +496,7 @@ class MainWindow(ctk.CTk):
         self.elapsed_var.set("0.00s")
         self.progress.set(0)
 
-    def _update_metrics(self, metrics: dict[str, int]) -> None:
+    def _update_stats(self, metrics: dict[str, int]) -> None:
         total = int(metrics.get("total", 0) or 0)
         hash_count = int(metrics.get("hash", 0) or 0)
         yara_count = int(metrics.get("yara", 0) or 0)
@@ -556,7 +514,7 @@ class MainWindow(ctk.CTk):
         self.progress.set(max(0.0, min(1.0, progress)))
         self.progress_text_var.set(f"Processed {processed}/{total} files")
 
-    def _drain_events(self) -> None:
+    def _pump_events(self) -> None:
         while True:
             try:
                 event = self.event_queue.get_nowait()
@@ -568,18 +526,21 @@ class MainWindow(ctk.CTk):
                 level = str(event.get("level", "INFO")).upper()
                 message = str(event.get("message", "")).strip()
                 if message:
-                    self.log_panel.append(f"[{level}] {message}\n")
+                    if LOG_PREFIX_PATTERN.match(message):
+                        self.log_panel.append(f"{message}\n")
+                    else:
+                        self.log_panel.append(f"[{level}] {message}\n")
                 metrics = event.get("metrics")
                 if isinstance(metrics, dict):
-                    self._update_metrics(metrics)
+                    self._update_stats(metrics)
 
             elif event_type == "result":
                 outcome = event.get("outcome")
                 if outcome:
-                    self.results_panel.add_outcome(outcome)
+                    self.results_panel.add_result(outcome)
                 metrics = event.get("metrics")
                 if isinstance(metrics, dict):
-                    self._update_metrics(metrics)
+                    self._update_stats(metrics)
                 if self.last_scan_started_at:
                     elapsed = (datetime.now() - self.last_scan_started_at).total_seconds()
                     self.elapsed_var.set(f"{elapsed:.2f}s")
@@ -587,39 +548,39 @@ class MainWindow(ctk.CTk):
             elif event_type == "scan_done":
                 metrics = event.get("metrics")
                 if isinstance(metrics, dict):
-                    self._update_metrics(metrics)
+                    self._update_stats(metrics)
                 duration = float(event.get("duration", 0.0) or 0.0)
                 self.elapsed_var.set(f"{duration:.2f}s")
                 self.last_report_path = event.get("report_path")
                 cancelled = bool(event.get("cancelled"))
-                self.progress_text_var.set("Scan cancelled" if cancelled else "Scan completed")
-                self._set_state("completed")
-                self._refresh_history()
+                self.progress_text_var.set("Hủy bỏ quét" if cancelled else "Quét hoàn tất")
+                self._set_mode("completed")
+                self._load_history()
 
             elif event_type == "scan_failed":
-                self.log_panel.append(f"[ERROR] Scan failed: {event.get('message', 'unknown')}\n")
-                self.progress_text_var.set("Scan failed")
-                self._set_state("error")
+                self.log_panel.append(f"[ERROR] Quét thất bại: {event.get('message', 'unknown')}\n")
+                self.progress_text_var.set("Quét thất bại")
+                self._set_mode("error")
 
             elif event_type == "boot_done":
                 exit_code = int(event.get("exit_code", 1))
                 if exit_code == 0:
-                    self.log_panel.append(f"[SUCCESS] Sync data completed ({JSON_OUTPUT}).\n")
-                    self.progress_text_var.set("Sync data completed")
-                    self._set_state("completed")
+                    self.log_panel.append(f"[SUCCESS] Đồng bộ dữ liệu hoàn tất ({JSON_OUTPUT}).\n")
+                    self.progress_text_var.set("Đồng bộ dữ liệu hoàn tất")
+                    self._set_mode("completed")
                 else:
-                    self.log_panel.append(f"[ERROR] Sync data failed: {event.get('message', 'unknown')}\n")
-                    self.progress_text_var.set("Sync data failed")
-                    self._set_state("error")
+                    self.log_panel.append(f"[ERROR] Đồng bộ dữ liệu thất bại: {event.get('message', 'unknown')}\n")
+                    self.progress_text_var.set("Đồng bộ dữ liệu thất bại")
+                    self._set_mode("error")
 
             elif event_type == "history_rows":
                 rows = event.get("rows") or []
-                self.history_panel.set_rows(rows)
+                self.history_panel.load_rows(rows)
 
             elif event_type == "history_error":
-                self.log_panel.append(f"[WARNING] Cannot load history: {event.get('message', '')}\n")
+                self.log_panel.append(f"[WARNING] Không thể tải lịch sử: {event.get('message', '')}\n")
 
-        self.after(100, self._drain_events)
+        self.after(100, self._pump_events)
 
 
 def run() -> None:

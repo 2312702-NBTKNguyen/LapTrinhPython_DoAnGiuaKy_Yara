@@ -16,7 +16,7 @@ Hệ thống phát hiện mã độc sử dụng kết hợp hai phương pháp:
 
 - **Quét file bằng YARA rules**: Phát hiện malware patterns trong file
 - **Kiểm tra hash database**: So sánh SHA256 hash với database malware đã biết
-- **Báo cáo chi tiết**: Xuất báo cáo ra terminal và file .txt
+- **Báo cáo chi tiết**: Xuất báo cáo ra file .txt và mở nhanh từ GUI
 
 ## Khởi chạy nhanh
 
@@ -26,10 +26,7 @@ pip install -r requirements.txt
 
 # 2) Tạo file .env (DB + MB_AUTH_KEY)
 
-# 3) Khởi tạo lần đầu
-python main.py --run
-
-# 4) Mở GUI CustomTkinter (Windows-first)
+# 3) Mở GUI CustomTkinter (Windows-first)
 python main.py
 ```
 
@@ -96,32 +93,21 @@ psql -U postgres -d yara_malware_signatures -f database/02_create_tables.sql
 
 ### Bước 6: Import dữ liệu malware signatures
 
-```bash
-# Khởi chạy (setup DB + fetch + filter + import)
-python main.py --run
-```
+Trong GUI, bấm nút `Khởi tạo dữ liệu` để đồng bộ signatures vào cơ sở dữ liệu.
 
 ## Cách sử dụng
 
 ### Chạy chương trình
 
 ```bash
-# Mở GUI (mặc định)
+# Mở GUI (chế độ hiện tại)
 python main.py
-
-# Khởi chạy và làm mới dữ liệu signatures
-python main.py --run
-
-# Quét bằng CLI (legacy)
-python main.py --scan /path/to/file_or_folder
-
-# Xem trợ giúp
-python main.py -h
 ```
 
 Lưu ý:
 
 - GUI CustomTkinter là chế độ sử dụng chính.
+- Các cờ CLI cũ (`--run`, `--scan`) hiện không còn được hỗ trợ trong entrypoint hiện tại.
 - Dự án ưu tiên vận hành trên Windows; Linux hiện hỗ trợ ở mức tương thích cơ bản.
 
 ### Quét file hoặc thư mục
@@ -137,7 +123,6 @@ Trong GUI:
 
 Báo cáo được tạo theo 2 dạng:
 
-- Terminal summary ngay sau khi quét.
 - File báo cáo .txt trong thư mục logs/.
 
 Trong GUI, có thể bấm `Open Report` để mở nhanh file báo cáo mới nhất.
@@ -179,7 +164,7 @@ Kiểm tra lại các biến DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD tro
 
 ### 2. Không có MB_AUTH_KEY
 
-Lỗi thường gặp khi chạy --run.
+Lỗi thường gặp khi bấm `Khởi tạo dữ liệu` trong GUI.
 
 Thêm MB_AUTH_KEY vào .env rồi chạy lại.
 
