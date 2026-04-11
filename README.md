@@ -21,13 +21,20 @@ Hệ thống phát hiện mã độc sử dụng kết hợp hai phương pháp:
 ## Khởi chạy nhanh
 
 ```bash
-# 1) Cài dependencies
-pip install -r requirements.txt
+# 1) Cài uv
+# Linux/macOS:
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 2) Tạo file .env (DB + MB_AUTH_KEY)
+# Windows (PowerShell):
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 
-# 3) Mở GUI CustomTkinter (Windows-first)
-python main.py
+# 2) Tạo môi trường + cài dependencies
+uv sync --extra dev
+
+# 3) Tạo file .env (DB + MB_AUTH_KEY)
+
+# 4) Mở GUI CustomTkinter (Windows-first)
+uv run python main.py
 ```
 
 ## Cài đặt chi tiết
@@ -46,9 +53,19 @@ cd LapTrinhPython_DoAnGiuaKy_Yara
 
 ### Bước 2: Cài đặt dependencies
 
+#### Cách khuyến nghị: dùng uv
+
+```bash
+uv sync --extra dev
+```
+
+#### Cách tương thích cũ: dùng pip
+
 ```bash
 pip install -r requirements.txt
 ```
+
+Lưu ý: dependencies chính đã được quản lý qua `pyproject.toml` để dùng với uv.
 
 ### Bước 3: Cấu hình database
 
@@ -101,7 +118,7 @@ Trong GUI, bấm nút `Khởi tạo dữ liệu` để đồng bộ signatures v
 
 ```bash
 # Mở GUI (chế độ hiện tại)
-python main.py
+uv run python main.py
 ```
 
 Lưu ý:
@@ -177,11 +194,32 @@ Kiểm tra thư mục logs/ và quyền ghi file tại thư mục dự án.
 Chạy test suite:
 
 ```bash
-pytest tests/test_scan_flow.py
+uv run pytest tests/test_scan_flow.py
 ```
 
 Chạy toàn bộ thư mục tests:
 
 ```bash
-pytest tests
+uv run pytest tests
 ```
+
+## Quản lý dependencies bằng uv
+
+Một số lệnh thường dùng:
+
+```bash
+# Đồng bộ môi trường theo pyproject.toml
+uv sync --extra dev
+
+# Chạy lệnh trong môi trường của dự án
+uv run python main.py
+uv run pytest tests
+
+# Thêm dependency runtime
+uv add <package-name>
+
+# Thêm dependency cho nhóm dev
+uv add --optional dev <package-name>
+```
+
+Nếu vẫn muốn giữ workflow cũ, bạn có thể tiếp tục dùng `pip install -r requirements.txt`.
