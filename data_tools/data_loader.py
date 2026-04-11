@@ -21,9 +21,8 @@ def fetch_sigs(
     auth_key = Config.MB_AUTH_KEY
 
     if not auth_key:
-        message = "Chưa có API key trong file .env hoặc biến môi trường hệ thống."
-        _log(log_callback, message)
-        raise RuntimeError(message)
+        _log(log_callback, "Chưa có API key trong file .env hoặc biến môi trường hệ thống.")
+        raise RuntimeError("Chưa có API key trong file .env hoặc biến môi trường hệ thống.")
 
     headers = {
         "Auth-Key": auth_key,
@@ -82,9 +81,8 @@ def fetch_sigs(
         err_count += 1
 
     if ok_count == 0:
-        message = "Không có request nào thành công."
-        _log(log_callback, message)
-        raise RuntimeError(message)
+        _log(log_callback, "Không có request nào thành công.")
+        raise RuntimeError("Không có request nào thành công.")
 
     uniq_rows = []
     seen = set()
@@ -155,9 +153,8 @@ def save_signatures(
         cursor = conn.cursor()
         _log(log_callback, "Kết nối Database thành công.")
     except (ValueError, psycopg2.Error) as exc:
-        message = f"Lỗi Database khi kết nối: {exc}"
-        _log(log_callback, message)
-        raise RuntimeError(message) from exc
+        _log(log_callback, f"Lỗi Database khi kết nối: {exc}")
+        raise RuntimeError(f"Lỗi Database khi kết nối: {exc}") from exc
 
     rows = []
     for row in dataframe.to_dict(orient="records"):
@@ -197,9 +194,8 @@ def save_signatures(
         _log(log_callback, f"Đã thêm {len(rows)} bản ghi vào database.")
     except psycopg2.Error as exc:
         conn.rollback()
-        message = f"Lỗi Database khi thực hiện insert: {exc}"
-        _log(log_callback, message)
-        raise RuntimeError(message) from exc
+        _log(log_callback, f"Lỗi Database khi thực hiện insert: {exc}")
+        raise RuntimeError(f"Lỗi Database khi thực hiện insert: {exc}") from exc
     finally:
         cursor.close()
         conn.close()

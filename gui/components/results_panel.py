@@ -93,25 +93,25 @@ class ResultsPanel(ctk.CTkFrame):
     def set_export_enabled(self, enabled: bool) -> None:
         self.report_btn.configure(state="normal" if enabled else "disabled")
 
-    def add_result(self, outcome: dict) -> None:
-        hit = outcome.get("detection", {})
+    def add_result(self, scan_result: dict) -> None:
+        hit = scan_result.get("detection", {})
         method = str(hit.get("method", "CLEAN"))
         signature = str(hit.get("signature", "None"))
         status = "DETECTED" if method in ("HASH_MATCH", "YARA_MATCH") else "CLEAN"
 
-        timings = outcome.get("stage_timings", {}) or {}
+        timings = scan_result.get("stage_timings", {}) or {}
         duration_ms = int((sum(timings.values()) if isinstance(timings, dict) else 0.0) * 1000)
 
         row = {
             "time": datetime.now().strftime("%H:%M:%S"),
-            "file": outcome.get("filename", ""),
+            "file": scan_result.get("filename", ""),
             "status": status,
             "method": method,
             "signature": signature,
-            "sha256": outcome.get("hash", {}).get("sha256", ""),
-            "target_path": outcome.get("target_path", ""),
+            "sha256": scan_result.get("hash", {}).get("sha256", ""),
+            "target_path": scan_result.get("target_path", ""),
             "duration_ms": duration_ms,
-            "raw": outcome,
+            "raw": scan_result,
         }
         self._rows.append(row)
         self._refresh_rows()

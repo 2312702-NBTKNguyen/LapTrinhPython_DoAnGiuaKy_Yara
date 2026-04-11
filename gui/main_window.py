@@ -535,9 +535,9 @@ class MainWindow(ctk.CTk):
                     self._update_stats(metrics)
 
             elif event_type == "result":
-                outcome = event.get("outcome")
-                if outcome:
-                    self.results_panel.add_result(outcome)
+                scan_result = event.get("scan_result")
+                if scan_result:
+                    self.results_panel.add_result(scan_result)
                 metrics = event.get("metrics")
                 if isinstance(metrics, dict):
                     self._update_stats(metrics)
