@@ -92,7 +92,7 @@ rule Crypto_AES_Detection {
         $aes4 = "aes_decrypt" ascii wide nocase
 
     condition:
-        $aes_sbox or (3 of ($aes*))
+        pe.is_pe and ($aes_sbox or 3 of ($aes*))
 }
 
 rule Crypto_RC4_Detection {
@@ -108,7 +108,7 @@ rule Crypto_RC4_Detection {
         $rc4_4 = "rc4_crypt" ascii wide nocase
 
     condition:
-        2 of ($rc4_*)
+        pe.is_pe and 2 of ($rc4_*)
 }
 
 rule Network_HardcodedIP {
@@ -127,7 +127,7 @@ rule Network_HardcodedIP {
         $ctx6 = "https://" ascii wide nocase
 
     condition:
-        filesize < 12MB and #ip1 >= 2 and 1 of ($ctx*)
+        filesize < 12MB and pe.is_pe and #ip1 >= 2 and 1 of ($ctx*)
 }
 
 rule Network_Tor_Indicators {
@@ -143,7 +143,7 @@ rule Network_Tor_Indicators {
         $tor4 = "hidden_service" ascii wide nocase
 
     condition:
-        2 of ($tor*)
+        pe.is_pe and 2 of ($tor*)
 }
 
 rule Shellcode_Common_Patterns {
@@ -159,5 +159,5 @@ rule Shellcode_Common_Patterns {
         $shell4 = { 64 A1 30 00 00 00 }
 
     condition:
-        any of them
-}
+        pe.is_pe and 2 of ($shell*)
+} 

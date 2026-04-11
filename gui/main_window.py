@@ -419,13 +419,13 @@ class MainWindow(ctk.CTk):
 
             target = Path(target_path)
             if target.is_file():
-                scanner.scan(target_path)
+                scanner.scan_file(target_path)
                 duration = (datetime.now() - start).total_seconds()
                 metrics = dict(scanner.metrics)
             else:
-                metrics, duration = scanner.scan_folder(target_path)
+                metrics, duration = scanner.scan_dir(target_path)
 
-            report_path = save_report(scanner.store, start)
+            report_path = save_report(scanner.store, start, log_callback=self._push_sync_log)
             self.event_queue.put(
                 {
                     "type": "scan_done",

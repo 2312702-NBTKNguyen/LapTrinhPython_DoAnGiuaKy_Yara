@@ -90,7 +90,11 @@ rule Suspicious_JS_ActiveX_Obfuscated_Dropper {
         $js_8 = "replace(" ascii nocase
 
     condition:
-        filesize < 12MB and 4 of ($js_*)
+        filesize < 12MB and 
+        uint16(0) != 0xFBFF and
+        uint16(0) != 0xFAFF and
+        uint32(0) != 0x474E5089 and
+        4 of ($js_*)
 }
 
 rule Suspicious_OLE_Excel_Embedded_PDF {
