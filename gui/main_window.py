@@ -4,7 +4,6 @@ import queue
 import re
 import threading
 
-from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
@@ -368,15 +367,16 @@ class MainWindow(ctk.CTk):
         self.boot_thread.start()
 
     def _sync_worker(self) -> None:
-        writer = QueueWriter(self.event_queue)
         try:
-            with redirect_stdout(writer), redirect_stderr(writer):
-                JSON_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-                init_db()
-                sync_sigs(JSON_OUTPUT)
+            JSON_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+            init_db(log_callback=self._push_sync_log)
+            sync_sigs(JSON_OUTPUT, log_callback=self._push_sync_log)
             self.event_queue.put({"type": "boot_done", "exit_code": 0})
         except Exception as exc:
             self.event_queue.put({"type": "boot_done", "exit_code": 1, "message": str(exc)})
+
+    def _push_sync_log(self, message: str) -> None:
+        self.event_queue.put({"type": "log", "level": "INFO", "message": message})
 
     def _start_scan(self) -> None:
         if self.current_state in {"scanning", "canceling", "booting"}:

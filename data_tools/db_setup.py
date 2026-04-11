@@ -1,6 +1,6 @@
 import psycopg2
 from pathlib import Path
-from malware_scanner.utils import log_error, log_info, log_success, log_warn
+from collections.abc import Callable
 from config import Config
 
 
@@ -14,7 +14,12 @@ def _db_conn() -> psycopg2.extensions.connection:
     )
 
 
-def init_db() -> None:
+def _log(log_callback: Callable[[str], None] | None, message: str) -> None:
+    if log_callback:
+        log_callback(message)
+
+
+def init_db(log_callback: Callable[[str], None] | None = None) -> None:
     root = Path(__file__).resolve().parent.parent
     db_sql_path = root / "database" / "01_create_database.sql"
     table_sql_path = root / "database" / "02_create_tables.sql"
@@ -22,7 +27,7 @@ def init_db() -> None:
     for file in (db_sql_path, table_sql_path):
         if not file.exists():
             message = f"Không tìm thấy file SQL: {file}"
-            log_error(message)
+            _log(log_callback, message)
             raise FileNotFoundError(message)
 
     with open(db_sql_path, "r", encoding="utf-8") as file_obj:
@@ -30,9 +35,9 @@ def init_db() -> None:
     with open(table_sql_path, "r", encoding="utf-8") as file_obj:
         table_sql = file_obj.read().strip()
 
-    log_info(f"Đọc script: {db_sql_path}")
+    _log(log_callback, f"Đọc script: {db_sql_path}")
     if db_sql:
-        log_info("Thực thi logic tạo database dựa trên nội dung script SQL...")
+        _log(log_callback, "Thực thi logic tạo database dựa trên nội dung script SQL...")
 
     conn = _db_conn()
     conn.autocommit = True
@@ -46,18 +51,18 @@ def init_db() -> None:
             row = cursor.fetchone()
             if row and row[0]:
                 cursor.execute(row[0])
-                log_success(f"Đã tạo database '{Config.DB_NAME}' thành công.")
+                _log(log_callback, f"Đã tạo database '{Config.DB_NAME}' thành công.")
             else:
-                log_warn(f"Database '{Config.DB_NAME}' đã tồn tại. Bỏ qua tạo mới.")
+                _log(log_callback, f"Database '{Config.DB_NAME}' đã tồn tại. Bỏ qua tạo mới.")
     finally:
         conn.close()
 
-    log_info(f"Đọc script: {table_sql_path}")
+    _log(log_callback, f"Đọc script: {table_sql_path}")
     conn = _db_conn()
     try:
         with conn.cursor() as cursor:
             cursor.execute(table_sql)
         conn.commit()
-        log_success("Đã cập nhật schema/table thành công.")
+        _log(log_callback, "Đã cập nhật schema/table thành công.")
     finally:
         conn.close()
