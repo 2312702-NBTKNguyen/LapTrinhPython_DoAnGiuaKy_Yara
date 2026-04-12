@@ -134,7 +134,8 @@ rule Network_HardcodedIP {
         category = "network"
 
     strings:
-        $ip1 = /[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/ ascii
+        // Regex với word-boundary và loại trừ pattern kiểu version (x.x.x.x trong tên file)
+        $ip1 = /\b(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\b/ ascii
         $ctx1 = "connect" ascii wide nocase
         $ctx2 = "sockaddr" ascii wide nocase
         $ctx3 = "socket" ascii wide nocase
