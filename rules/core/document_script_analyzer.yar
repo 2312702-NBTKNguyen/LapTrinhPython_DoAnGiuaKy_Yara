@@ -1,6 +1,8 @@
 rule Suspicious_Document_Script_Loader {
     meta:
-        description = "Detects suspicious Office/script loader behavior in non-PE files"
+        author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
+        description = "Phát hiện hành vi tải mã độc qua tài liệu Office hoặc script đáng ngờ."
+        date = "2026-03-18"
         severity = "high"
         category = "document_script"
 
@@ -44,7 +46,9 @@ rule Suspicious_Document_Script_Loader {
 
 rule Suspicious_Obfuscated_Script_Patterns {
     meta:
-        description = "Detects obfuscated script patterns often used by malware droppers"
+        author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
+        description = "Phát hiện các mẫu script bị làm rối (obfuscated) thường dùng bởi dropper mã độc."
+        date = "2026-03-18"
         severity = "high"
         category = "script_obfuscation"
 
@@ -75,7 +79,9 @@ rule Suspicious_Obfuscated_Script_Patterns {
 
 rule Suspicious_JS_ActiveX_Obfuscated_Dropper {
     meta:
-        description = "Detects heavily obfuscated JScript droppers using ActiveX and staging primitives"
+        author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
+        description = "Phát hiện JScript dropper dùng ActiveX bị làm rối nặng kết hợp kỹ thuật staging."
+        date = "2026-03-18"
         severity = "high"
         category = "script_obfuscation"
 
@@ -99,7 +105,9 @@ rule Suspicious_JS_ActiveX_Obfuscated_Dropper {
 
 rule Suspicious_OLE_Excel_Embedded_PDF {
     meta:
-        description = "Detects Excel OLE documents embedding PDF content/object handlers"
+        author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
+        description = "Phát hiện tài liệu Excel OLE nhúng nội dung PDF đáng ngờ."
+        date = "2026-03-18"
         severity = "medium"
         category = "document_anomaly"
 
@@ -116,7 +124,9 @@ rule Suspicious_OLE_Excel_Embedded_PDF {
 
 rule Suspicious_RTF_Heavy_Obfuscation {
     meta:
-        description = "Detects RTF documents with dense obfuscation patterns"
+        author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
+        description = "Phát hiện tài liệu RTF có mật độ mã rối cao bất thường."
+        date = "2026-03-18"
         severity = "medium"
         category = "document_anomaly"
 

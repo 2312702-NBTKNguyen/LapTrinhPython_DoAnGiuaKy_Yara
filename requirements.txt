@@ -7,8 +7,6 @@ python-dotenv
 # Database
 psycopg2-binary
 
-# Xử lý dữ liệu
-pandas
 
 # Quét YARA (core)
 yara-python

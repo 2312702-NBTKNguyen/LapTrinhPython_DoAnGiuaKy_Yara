@@ -2,6 +2,7 @@ import psycopg2
 from pathlib import Path
 from collections.abc import Callable
 from config import Config
+from data_tools import _log
 
 
 def _db_conn() -> psycopg2.extensions.connection:
@@ -12,11 +13,6 @@ def _db_conn() -> psycopg2.extensions.connection:
         user=Config.DB_USER,
         password=Config.DB_PASSWORD,
     )
-
-
-def _log(log_callback: Callable[[str], None] | None, message: str) -> None:
-    if log_callback:
-        log_callback(message)
 
 
 def init_db(log_callback: Callable[[str], None] | None = None) -> None:

@@ -197,8 +197,8 @@ class ResultsPanel(ctk.CTkFrame):
             f"MD5: {hashes.get('md5', '')}\n"
             f"SHA1: {hashes.get('sha1', '')}\n"
             f"SHA3_384: {hashes.get('sha3_384', '')}\n"
-            f"MIME: {raw.get('file_mime_type', '')}\n"
-            f"Extension: {raw.get('file_extension', '')}\n"
+            f"MIME: {raw.get('mime', '')}\n"
+            f"Extension: {raw.get('ext', '')}\n"
             f"Duration: {row.get('duration_ms', 0)} ms\n"
             f"Stage timings: {stage_timings}\n"
         )

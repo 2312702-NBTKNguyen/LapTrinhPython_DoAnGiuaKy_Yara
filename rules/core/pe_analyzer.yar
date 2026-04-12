@@ -2,7 +2,9 @@ import "pe"
 
 rule PE_Anomaly_HighEntropy {
     meta:
-        description = "Detects PE files with multiple sections (potential packing)"
+        author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
+        description = "Phát hiện file PE có quá nhiều section (dấu hiệu bị đóng gói/packing)."
+        date = "2026-03-18"
         severity = "medium"
         category = "pe_anomaly"
 
@@ -12,7 +14,9 @@ rule PE_Anomaly_HighEntropy {
 
 rule Suspicious_Imports_ProcessInjection {
     meta:
-        description = "Detects PE files importing process injection APIs"
+        author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
+        description = "Phát hiện file PE import các API tiêm mã vào tiến trình (Process Injection)."
+        date = "2026-03-18"
         severity = "high"
         category = "suspicious_api"
 
@@ -29,7 +33,9 @@ rule Suspicious_Imports_ProcessInjection {
 
 rule Suspicious_Imports_Persistence {
     meta:
-        description = "Detects PE files importing persistence-related APIs"
+        author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
+        description = "Phát hiện file PE import các API dùng cho duy trì quyền truy cập (Persistence)."
+        date = "2026-03-18"
         severity = "high"
         category = "suspicious_api"
 
@@ -46,7 +52,9 @@ rule Suspicious_Imports_Persistence {
 
 rule Suspicious_Imports_Evasion {
     meta:
-        description = "Detects anti-analysis and evasion techniques"
+        author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
+        description = "Phát hiện kỹ thuật chống phân tích và né tránh (Anti-Analysis / Evasion)."
+        date = "2026-03-18"
         severity = "medium"
         category = "evasion"
 
@@ -64,7 +72,9 @@ rule Suspicious_Imports_Evasion {
 
 rule Packer_UPX {
     meta:
-        description = "Detects UPX packed executables"
+        author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
+        description = "Phát hiện file thực thi được đóng gói bằng UPX."
+        date = "2026-03-18"
         severity = "low"
         category = "packer"
 
@@ -80,7 +90,9 @@ rule Packer_UPX {
 
 rule Crypto_AES_Detection {
     meta:
-        description = "Detects AES crypto implementation (potential ransomware)"
+        author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
+        description = "Phát hiện triển khai mã hóa AES (dấu hiệu tiềm năng của ransomware)."
+        date = "2026-03-18"
         severity = "medium"
         category = "crypto"
 
@@ -97,7 +109,9 @@ rule Crypto_AES_Detection {
 
 rule Crypto_RC4_Detection {
     meta:
-        description = "Detects RC4 crypto implementation"
+        author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
+        description = "Phát hiện triển khai mã hóa RC4."
+        date = "2026-03-18"
         severity = "medium"
         category = "crypto"
 
@@ -113,7 +127,9 @@ rule Crypto_RC4_Detection {
 
 rule Network_HardcodedIP {
     meta:
-        description = "Detects potential C2 hardcoded IPs with network context"
+        author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
+        description = "Phát hiện địa chỉ IP cứng tiềm ẩn dùng cho máy chủ điều khiển (C2)."
+        date = "2026-03-18"
         severity = "medium"
         category = "network"
 
@@ -132,7 +148,9 @@ rule Network_HardcodedIP {
 
 rule Network_Tor_Indicators {
     meta:
-        description = "Detects Tor network indicators"
+        author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
+        description = "Phát hiện dấu hiệu sử dụng mạng ẩn danh Tor."
+        date = "2026-03-18"
         severity = "high"
         category = "network"
 
@@ -148,7 +166,9 @@ rule Network_Tor_Indicators {
 
 rule Shellcode_Common_Patterns {
     meta:
-        description = "Detects common shellcode patterns"
+        author = "Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"
+        description = "Phát hiện các mẫu shellcode phổ biến."
+        date = "2026-03-18"
         severity = "high"
         category = "shellcode"
 

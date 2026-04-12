@@ -1,16 +1,31 @@
-import json, requests
-import pandas as pd
-import psycopg2
+import json, requests, psycopg2
 
 from pathlib import Path
 from collections.abc import Callable
 from config import Config
 from psycopg2.extras import execute_values
+from data_tools import _log
 
+COLUMNS = [
+    "file_name", "signature", "file_type", "first_seen", "file_type_mime",
+    "md5_hash", "sha1_hash", "sha256_hash", "sha3_384_hash",
+]
 
-def _log(log_callback: Callable[[str], None] | None, message: str) -> None:
-    if log_callback:
-        log_callback(message)
+SIGNATURES = [
+    # --- Nhóm Infostealer (Đánh cắp thông tin) ---
+    "AgentTesla", "Formbook", "LokiBot",
+    "RedLineStealer", "RaccoonStealer",
+    # --- Nhóm Banking Trojan (Trojan ngân hàng) ---
+    "Dridex", "Emotet", "TrickBot", "IcedID",
+    # --- Nhóm Ransomware (Mã độc tống tiền) ---
+    "WannaCry", "LockBit", "Conti", "Ryuk", "BlackCat",
+    # --- Nhóm RAT (Trojan điều khiển từ xa) ---
+    "RemcosRAT", "njRAT", "AsyncRAT", "DarkComet",
+    # --- Nhóm Botnet ---
+    "Mirai",
+    # --- Nhóm Framework (Công cụ tấn công) ---
+    "CobaltStrike",
+]
 
 
 def fetch_sigs(
@@ -29,21 +44,14 @@ def fetch_sigs(
         "User-Agent": "Python-MalwareBazaar-Client/1.0",
     }
 
-    signatures = [
-        "RedLineStealer", "LokiBot", "AgentTesla", "Formbook",
-        "Emotet", "TrickBot", "Mirai", "Dridex",
-        "WannaCry", "LockBit", "Conti", "Ryuk",
-        "RemcosRAT", "njRAT",
-    ]
-
-    _log(log_callback, f"Gửi request đến MalwareBazaar API với {len(signatures)} signatures...")
-    _log(log_callback, f"Danh sách các signatures: {', '.join(signatures)}")
+    _log(log_callback, f"Gửi request đến MalwareBazaar API với {len(SIGNATURES)} signatures...")
+    _log(log_callback, f"Danh sách các signatures: {', '.join(SIGNATURES)}")
 
     all_rows = []
     ok_count = 0
     err_count = 0
 
-    for sig in signatures:
+    for sig in SIGNATURES:
         payload = {
             "query": "get_siginfo",
             "signature": sig,
@@ -102,44 +110,39 @@ def fetch_sigs(
     _log(log_callback, f"Tổng kết: {ok_count} request thành công, {err_count} request lỗi.")
 
 
-def clean_json(
-    input_file: str,
-    log_callback: Callable[[str], None] | None = None,
-) -> pd.DataFrame | None:
+def _parse_json(input_file: str, log_callback: Callable[[str], None] | None = None) -> list[tuple]:
     _log(log_callback, f"Đọc dữ liệu từ file: {input_file}")
     try:
-        df = pd.read_json(input_file)
-        if df.empty:
-            _log(log_callback, "File input rỗng, không có dữ liệu để xử lý.")
-            return None
-
-        columns = [
-            "file_name", "signature", "file_type", "first_seen", "file_type_mime",
-            "md5_hash", "sha1_hash", "sha256_hash", "sha3_384_hash",
-        ]
-
-        selected = {
-            col: df[col] if col in df.columns else "Unknown"
-            for col in columns
-        }
-
-        clean_df = pd.DataFrame(selected, columns=columns)
-        clean_df.fillna("Unknown", inplace=True)
-        _log(log_callback, "Đã chuẩn hóa dữ liệu JSON.")
-        return clean_df
-
+        with open(input_file, "r", encoding="utf-8") as f:
+            raw = json.load(f)
     except FileNotFoundError:
         _log(log_callback, f"Không tìm thấy file {input_file}.")
-    except ValueError as exc:
+        return []
+    except (ValueError, json.JSONDecodeError) as exc:
         _log(log_callback, f"Lỗi khi đọc file JSON: {exc}")
+        return []
 
-    return None
+    if not raw:
+        _log(log_callback, "File input rỗng, không có dữ liệu để xử lý.")
+        return []
+
+    rows = []
+    for item in raw:
+        first_seen = item.get("first_seen") or None
+        rows.append(tuple(
+            first_seen if col == "first_seen" else (item.get(col) or "Unknown")
+            for col in COLUMNS
+        ))
+
+    _log(log_callback, f"Đã chuẩn hóa {len(rows)} bản ghi từ JSON.")
+    return rows
 
 
-def save_signatures(
-    dataframe: pd.DataFrame,
-    log_callback: Callable[[str], None] | None = None,
-) -> None:
+def _import_db(rows: list[tuple], log_callback: Callable[[str], None] | None = None) -> None:
+    if not rows:
+        _log(log_callback, "Không có bản ghi nào để thêm vào database.")
+        return
+
     _log(log_callback, "Bắt đầu nhập dữ liệu vào PostgreSQL...")
 
     try:
@@ -150,35 +153,10 @@ def save_signatures(
             user=Config.DB_USER,
             password=Config.DB_PASSWORD,
         )
-        cursor = conn.cursor()
         _log(log_callback, "Kết nối Database thành công.")
     except (ValueError, psycopg2.Error) as exc:
         _log(log_callback, f"Lỗi Database khi kết nối: {exc}")
         raise RuntimeError(f"Lỗi Database khi kết nối: {exc}") from exc
-
-    rows = []
-    for row in dataframe.to_dict(orient="records"):
-        first_seen = row["first_seen"] if row["first_seen"] != "Unknown" else None
-        rows.append(
-            (
-                row["file_name"],
-                row["signature"],
-                row["file_type"],
-                first_seen,
-                row["file_type_mime"],
-                row["md5_hash"],
-                row["sha1_hash"],
-                row["sha256_hash"],
-                row["sha3_384_hash"],
-            )
-        )
-
-    if not rows:
-        _log(log_callback, "Không có bản ghi nào để thêm vào database.")
-        cursor.close()
-        conn.close()
-        _log(log_callback, "Đóng kết nối Database.")
-        return
 
     sql = """
         INSERT INTO malware_signatures (
@@ -189,7 +167,8 @@ def save_signatures(
     """
 
     try:
-        execute_values(cursor, sql, rows)
+        with conn.cursor() as cursor:
+            execute_values(cursor, sql, rows)
         conn.commit()
         _log(log_callback, f"Đã thêm {len(rows)} bản ghi vào database.")
     except psycopg2.Error as exc:
@@ -197,7 +176,6 @@ def save_signatures(
         _log(log_callback, f"Lỗi Database khi thực hiện insert: {exc}")
         raise RuntimeError(f"Lỗi Database khi thực hiện insert: {exc}") from exc
     finally:
-        cursor.close()
         conn.close()
         _log(log_callback, "Đóng kết nối Database.")
 
@@ -212,13 +190,10 @@ def sync_sigs(json_path: Path, log_callback: Callable[[str], None] | None = None
         raise RuntimeError(f"Không tìm thấy file JSON sau khi fetch: {json_path}")
 
     _log(log_callback, f"Dữ liệu signatures được lưu tại: {json_path}")
-    _log(log_callback, "-" * 100)
+    rows = _parse_json(str(json_path), log_callback=log_callback)
+    if not rows:
+        raise RuntimeError(f"Không tạo được dữ liệu hợp lệ từ file JSON: {json_path}")
 
-    _log(log_callback, "Bắt đầu lọc dữ liệu JSON.")
-    clean_df = clean_json(str(json_path), log_callback=log_callback)
-    if clean_df is None or clean_df.empty:
-        raise RuntimeError(f"Không tạo được DataFrame hợp lệ từ file JSON: {json_path}")
-
-    _log(log_callback, f"Đã tạo DataFrame với {len(clean_df)} bản ghi.")
-    save_signatures(clean_df, log_callback=log_callback)
+    _log(log_callback, f"Đã tạo {len(rows)} bản ghi.")
+    _import_db(rows, log_callback=log_callback)
     _log(log_callback, "Hoàn tất nhập dữ liệu vào PostgreSQL.")
