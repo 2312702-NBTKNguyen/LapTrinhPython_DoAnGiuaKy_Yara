@@ -19,7 +19,7 @@
     <nav class="nav-dots" id="navDots"></nav>
 
     <!-- Slide Number -->
-    <div class="slide-number" id="slideNumber">01 / 11</div>
+    <div class="slide-number" id="slideNumber">01 / 16</div>
 
     <!-- Keyboard Hint -->
     <div class="keyboard-hint">
@@ -42,114 +42,81 @@
         </div>
       </div>
       <div class="slide-content">
-        <h1 class="reveal">
-          ỨNG DỤNG THƯ VIỆN YARA VÀ NGÔN NGỮ PYTHON TRONG XÂY DỰNG HỆ THỐNG PHÁT
-          HIỆN MÃ ĐỘC.
-        </h1>
-        <p class="subtitle reveal">
-          Bằng kỹ thuật phân tích đặc trưng <strong>(YARA Rules)</strong> kết
-          hợp tối ưu hóa truy vấn <strong>Mã băm (Hash)</strong>
-        </p>
+        <h1 class="reveal">ỨNG DỤNG THƯ VIỆN YARA TRONG PHÁT HIỆN MALWARE BẰNG PYTHON</h1>
         <div class="accent-line reveal"></div>
         <p class="author-info reveal">Học phần: Lập trình Python</p>
         <p class="author-info reveal">
-          <strong
-            >Sinh viên thực hiện: Hồ Quốc Long — Nguyễn Bá Thiều Khôi
-            Nguyên</strong
-          >
+          <strong>Sinh viên thực hiện: Hồ Quốc Long — Nguyễn Bá Thiều Khôi Nguyên</strong>
         </p>
       </div>
     </section>
 
     <!-- ===========================================
-         SLIDE 2: PROBLEM STATEMENT & OBJECTIVES
+         SLIDE 2: PROBLEM
          =========================================== -->
     <section class="slide" id="slide-2">
       <div class="slide-content">
-        <div class="section-num reveal">
-          01: Tổng quan — Giới thiệu bài toán
-        </div>
-        <h2 class="reveal">BỐI CẢNH & GIẢI PHÁP ĐỀ XUẤT</h2>
+        <div class="section-num reveal">01 — Bài toán</div>
+        <h2 class="reveal">MALWARE LÀ GÌ?</h2>
         <div class="problem-grid">
           <article class="problem-card reveal">
-            <h3>Bối cảnh</h3>
+            <h3>Khái niệm</h3>
             <p>
-              Ngày nay, mã độc hiện đại ngày càng ngày càng đa dạng, nhiều biến
-              thể với các kỹ thuật ngụy trang và biến đổi cấu trúc, khiến việc
-              phát hiện trở nên khó khăn hơn.
-            </p>
-            <p>
-              Các phương pháp phát hiện truyền thống tồn tại những hạn chế rõ
-              rệt:
+              <strong>Malware</strong> (Malicious Software) là phần mềm được tạo ra để xâm nhập, phá hoại hoặc đánh cắp dữ liệu trái phép.
             </p>
             <ul>
-              <li>
-                <strong>Phương pháp đối chiếu mã băm (hash)</strong> có tốc độ
-                xử lý nhanh nhưng dễ bị vượt qua khi mã độc thay đổi nhỏ về nội
-                dung.
-              </li>
-              <li>
-                Ngược lại, <strong>Phương pháp phân tích sâu</strong> nội dung
-                tệp tin giúp tăng độ chính xác, nhưng lại tiêu tốn nhiều tài
-                nguyên và thời gian xử lý.
-              </li>
+              <li>Các nhóm điển hình: Trojan, Ransomware, Worm, Info-Stealer, RAT.</li>
+              <li>Mục tiêu: chiếm quyền điều khiển, mã hóa dữ liệu, đánh cắp thông tin.</li>
+              <li>Hậu quả: gián đoạn hệ thống, rò rỉ dữ liệu, thiệt hại tài chính.</li>
             </ul>
           </article>
 
           <article class="problem-card reveal">
-            <h3>Giải pháp đề xuất</h3>
+            <h3>Thách thức phát hiện</h3>
             <p>
-              Xây dựng một hệ thống phát hiện malware sử dụng ngôn ngữ Python,
-              kết hợp giữa:
+              Malware hiện đại liên tục biến đổi để né tránh công cụ phòng thủ truyền thống.
             </p>
             <ul>
-              <li>Phương pháp đối chiếu mã băm (hash-based detection)</li>
-              <li>Phân tích nội dung tệp tin bằng YARA</li>
+              <li>Biến thể hóa nhanh, thay đổi mẫu nhị phân liên tục.</li>
+              <li>Đóng gói, nén, mã hóa để che giấu payload.</li>
+              <li>Giả mạo hành vi hợp lệ để giảm xác suất bị phát hiện.</li>
             </ul>
-            <p>
-              Hệ thống có khả năng quét tệp tin đơn lẻ hoặc toàn bộ thư mục một
-              cách tự động.
-            </p>
           </article>
         </div>
       </div>
     </section>
 
     <!-- ===========================================
-         SLIDE 3: OVERVIEW
+         SLIDE 3: METHODS
          =========================================== -->
     <section class="slide" id="slide-3">
       <div class="slide-content">
-        <div class="section-num reveal">02 — Công cụ phân tích</div>
-        <h2 class="reveal">TỔNG QUAN VỀ CÔNG CỤ YARA</h2>
+        <div class="section-num reveal">02 — Phương pháp phát hiện</div>
+        <h2 class="reveal">SO SÁNH PHƯƠNG PHÁP</h2>
         <div class="arch-flow">
           <article class="arch-step reveal">
-            <div class="concept-layout">
-              <div class="concept-text">
-                <span class="arch-layer">Khái niệm</span>
-                <h3>YARA là gì?</h3>
-                <ul>
-                  <li>
-                    YARA là công cụ mã nguồn mở, được sử dụng rộng rãi trong
-                    lĩnh vực phân tích malware, dùng để tạo các quy tắc mô tả mã
-                    độc dựa trên chuỗi văn bản hoặc mẫu nhị phân.
-                  </li>
-                  <li>Hiện do VirusTotal bảo trợ và phát triển liên tục.</li>
-                </ul>
-              </div>
-              <img src="yara.png" alt="YARA Logo" class="yara-image" />
-            </div>
+            <span class="arch-layer">Các hướng tiếp cận</span>
+            <h3>So sánh nhanh</h3>
+            <ul>
+              <li><strong>Hash-based:</strong> tốc độ cao, hiệu quả với malware đã biết, hạn chế với biến thể mới.</li>
+              <li><strong>Signature/Rule-based:</strong> mô tả đặc trưng rõ ràng, linh hoạt hơn hash.</li>
+              <li><strong>Behavior-based:</strong> mạnh với zero-day, nhưng tốn tài nguyên và khó triển khai.</li>
+              <li><strong>Machine Learning:</strong> có tiềm năng mở rộng, cần dữ liệu lớn và kiểm soát cảnh báo sai.</li>
+            </ul>
           </article>
 
           <article class="arch-step reveal">
-            <span class="arch-layer">Cơ chế hoạt động</span>
-            <h3>Khớp dấu hiệu trên dữ liệu thô</h3>
+            <span class="arch-layer">Phương pháp dùng trong đồ án</span>
+            <h3>Kết luận lựa chọn</h3>
             <p>
-              YARA phân loại và nhận diện mã độc dựa trên các
-              <strong>dấu hiệu nhận dạng (Signature-based matching)</strong>.
-              Công cụ hoạt động bằng cách quét và so sánh dữ liệu thô của tệp
-              tin với các mô tả logic do người dùng định nghĩa: bao gồm chuỗi
-              văn bản, mẫu nhị phân Hex hoặc biểu thức chính quy.
+              Dự án triển khai <strong>phương pháp kết hợp Hash-based + Signature/Rule-based (YARA)</strong> theo hai lớp.
+            </p>
+            <ul>
+              <li><strong>Lớp 1:</strong> so khớp mã băm SHA256 trong CSDL để nhận diện nhanh mẫu đã biết.</li>
+              <li><strong>Lớp 2:</strong> quét YARA rule cho các tệp chưa trùng mã băm để tăng độ bao phủ.</li>
+            </ul>
+            <p>
+              Đây là lựa chọn cân bằng giữa tốc độ, độ chính xác và khả năng mở rộng phù hợp phạm vi đồ án.
             </p>
           </article>
         </div>
@@ -157,470 +124,486 @@
     </section>
 
     <!-- ===========================================
-         SLIDE 4: MAIN COMPONENTS
+         SLIDE 4: YARA INTRO
          =========================================== -->
     <section class="slide" id="slide-4">
       <div class="slide-content">
-        <div class="section-num reveal">03 — Cấu trúc</div>
-        <h2 class="reveal">CẤU TRÚC MỘT TẬP LUẬT YARA</h2>
+        <div class="section-num reveal">03 — Giới thiệu YARA</div>
+        <h2 class="reveal">YARA LÀ GÌ?</h2>
+        <div class="yara-theory-box reveal">
+            <h3>Định nghĩa</h3>
+          <div class="yara-definition-row">
+            <p class="reveal">
+              <strong>YARA</strong> là công cụ mã nguồn mở chuyên dùng trong phân tích malware để mô tả đặc trưng tệp độc hại dưới dạng tập
+              luật, sau đó so khớp trực tiếp trên dữ liệu nhị phân hoặc văn bản.
+            </p>
+          </div>
+          <img src="yara.png" alt="YARA Logo" class="yara-definition-image" />
+        </div>
+        <p>
+            Về bản chất, YARA là một <strong>ngôn ngữ mô tả mẫu</strong> kết hợp với <strong>engine so khớp</strong>.
+            Mỗi rule biểu diễn một giả thuyết nhận diện malware dựa trên <strong>chỉ dấu tĩnh</strong>.
+        </p>
+        <ul class="yara-theory-list">
+            <li><strong>Tầng mô tả:</strong> chuyên gia định nghĩa chỉ dấu và logic phát hiện theo ngữ cảnh mối đe dọa.</li>
+            <li><strong>Tầng thực thi:</strong> engine biên dịch rule và quét dữ liệu để xác định trạng thái khớp/không
+                khớp.</li>
+            <li><strong>Tầng mở rộng:</strong> rule có thể bổ sung module như <code>pe</code>, <code>elf</code>,
+                <code>math</code> để tăng độ chính xác.
+            </li>
+        </ul>
+        <p class="meaning-note reveal"><strong>Ý nghĩa:</strong> YARA là chuẩn thực tiễn trong phân tích malware nhờ khả năng biểu diễn logic phát hiện rõ ràng và có thể kiểm chứng.</p>
+      </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 5: YARA USE CASES
+         =========================================== -->
+    <section class="slide" id="slide-4c">
+      <div class="slide-content">
+        <div class="section-num reveal">04 — Ứng dụng YARA</div>
+        <h2 class="reveal">ỨNG DỤNG THỰC TẾ</h2>
+        <div class="yara-usage-grid">
+          <article class="arch-step reveal">
+            <span class="arch-layer">Ứng dụng thực tế</span>
+            <h3>YARA được dùng để làm gì?</h3>
+            <ul>
+              <li>Săn tìm mối đe dọa: truy tìm dấu vết tấn công trong nhật ký hệ thống, ảnh bộ nhớ và mẫu tệp nghi ngờ.</li>
+              <li>Ứng phó sự cố: phân loại nhanh tệp đáng ngờ trong quá trình điều tra và xử lý.</li>
+              <li>Phân loại mẫu mã độc: sàng lọc ban đầu trước khi chuyển sang phân tích chuyên sâu.</li>
+              <li>Tự động hóa giám sát: tích hợp vào quy trình trung tâm an ninh để quét định kỳ.</li>
+            </ul>
+          </article>
+
+          <article class="arch-step reveal">
+            <span class="arch-layer">Tổ chức tiêu biểu</span>
+            <h3>Đơn vị sử dụng YARA</h3>
+            <div class="brand-wall">
+              <div class="brand-card">
+                <span class="brand-rank">01</span>
+                <span class="brand-chip">VirusTotal</span>
+                <span class="brand-meta">Threat Intelligence Platform</span>
+              </div>
+              <div class="brand-card">
+                <span class="brand-rank">02</span>
+                <span class="brand-chip">CrowdStrike</span>
+                <span class="brand-meta">EDR / Threat Detection</span>
+              </div>
+              <div class="brand-card">
+                <span class="brand-rank">03</span>
+                <span class="brand-chip">Palo Alto Networks (Unit 42)</span>
+                <span class="brand-meta">Threat Research</span>
+              </div>
+              <div class="brand-card">
+                <span class="brand-rank">04</span>
+                <span class="brand-chip">Mandiant</span>
+                <span class="brand-meta">Incident Response</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 5: YARA RULE STRUCTURE
+         =========================================== -->
+    <section class="slide" id="slide-4b">
+      <div class="slide-content">
+        <div class="section-num reveal">05 — Cấu trúc tập luật YARA</div>
+        <h2 class="reveal">CẤU TRÚC CHUẨN CỦA MỘT RULE YARA</h2>
         <p class="reveal">
-          Một quy tắc (Rule) YARA tiêu chuẩn được chia thành 3 thành phần cốt
-          lõi:
+          Một tập luật YARA thường gồm ba thành phần chính: <strong>meta</strong>, <strong>strings</strong>, <strong>condition</strong>.
         </p>
         <div class="card-grid">
           <div class="card reveal">
-            <h3>Meta (Siêu dữ liệu)</h3>
-            <p>Lưu trữ thông tin về tác giả, mô tả và ngày tạo của quy tắc.</p>
-          </div>
-          <div class="card reveal">
-            <h3>Strings (Chuỗi dấu hiệu)</h3>
+            <h3>Meta</h3>
             <p>
-              Định nghĩa các chuỗi văn bản (Text), chuỗi thập lục phân (Hex)
-              hoặc biểu thức chính quy (Regex).
+              Phần siêu dữ liệu: tác giả, mô tả, ngày tạo, mức độ cảnh báo, nguồn tham chiếu.
             </p>
           </div>
           <div class="card reveal">
-            <h3>Condition (Điều kiện logic)</h3>
+            <h3>Strings</h3>
             <p>
-              Các phép toán logic quyết định khi nào quy tắc này được kích hoạt.
+              Khai báo các chỉ dấu để tìm: chuỗi text, mẫu hex, regex, hoặc chuỗi wide/ascii.
+            </p>
+          </div>
+          <div class="card reveal">
+            <h3>Condition</h3>
+            <p>
+              Biểu thức logic quyết định rule có kích hoạt hay không dựa trên kết quả so khớp.
             </p>
           </div>
         </div>
-        <p class="reveal"><strong>Ví dụ minh họa cấu trúc cơ bản:</strong></p>
-        <div class="code-block reveal"><span class="keyword">rule</span> <span class="function">MalwareExample</span> {
-    <span class="keyword">meta</span>:
-        author = <span class="string">"Hồ Quốc Long — Nguyễn Bá Thiều Khôi Nguyên"</span>
-        description = <span class="string">"Phát hiện đoạn mã độc cụ thể"</span>
-    <span class="keyword">strings</span>:
-        $s1 = <span class="string">"malicious_code"</span>
-    <span class="keyword">condition</span>:
-        $s1
-}</div>
+        <div class="highlight reveal" style="margin-top: 0.7em">
+          <p>
+            Cấu trúc này giúp rule vừa rõ ngữ nghĩa, vừa dễ bảo trì khi cần cập nhật IOC theo các chiến dịch tấn công mới.
+          </p>
+        </div>
       </div>
     </section>
 
     <!-- ===========================================
-         SLIDE 5: YARA RULE EXAMPLE
-         =========================================== -->
-    <section class="slide" id="slide-5">
-      <div class="slide-content">
-        <div class="section-num reveal">04 — YARA Rules</div>
-        <h2 class="reveal">VÍ DỤ: RULE PHÁT HIỆN WANNACRY</h2>
-        <div class="code-block reveal"><span class="keyword">import</span> <span class="string">"pe"</span>
-
-<span class="keyword">rule</span> Ransomware_WannaCry {
-    <span class="keyword">meta</span>:
-        author = <span class="string">"Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"</span>
-        description = <span class="string">"Phát hiện mã độc tống tiền WannaCry dựa trên các chuỗi đặc trưng và hành vi."</span>
-        reference_1 = <span class="string">"https://www.cisa.gov/news-events/alerts/2017/05/12/indicators-associated-wannacry-ransomware"</span>
-        reference_2 = <span class="string">"https://attack.mitre.org/software/S0366/"</span>
-        date = <span class="string">"2026-03-18"</span>
-        malware_family = <span class="string">"WannaCry"</span>
-        severity = <span class="string">"high"</span>
-
-    <span class="keyword">strings</span>:
-        <span class="comment">// Tên miền kill-switch xuất hiện trong các biến thể WannaCry ban đầu.</span>
-        $killswitch = <span class="string">"iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com"</span> ascii nocase
-
-        <span class="comment">// Dùng tiền tố $ioc_ cho tất cả các dấu vết còn lại để dễ nhóm trong condition</span>
-        $ioc_svc_name     = <span class="string">"mssecsvc2.0"</span> ascii nocase
-        $ioc_task_binary  = <span class="string">"tasksche.exe"</span> ascii nocase
-        $ioc_decryptor    = <span class="string">"@WanaDecryptor@.exe"</span> ascii nocase
-        $ioc_task_dl      = <span class="string">"taskdl.exe"</span> ascii nocase
-        $ioc_readme       = <span class="string">"@Please_Read_Me@.txt"</span> ascii nocase
-        $ioc_ransom_title = <span class="string">"Wanna Decryptor"</span> ascii wide nocase
-        $ioc_ransom_text  = <span class="string">"Oops, your files have been encrypted!"</span> ascii wide nocase
-        $ioc_ext_wncry    = <span class="string">".WNCRY"</span> ascii nocase
-        $ioc_ext_wnry     = <span class="string">".WNRY"</span> ascii nocase
-
-    <span class="keyword">condition</span>:
-        (
-            pe.is_pe and
-            (
-                <span class="comment">// Tín hiệu mạnh: có kill-switch và ít nhất 1 dấu vết khác.</span>
-                ($killswitch and 1 of ($ioc_*))
-                or
-                <span class="comment">// Trường hợp biến thể đã bị vá kill-switch: cần ít nhất 3 dấu vết.</span>
-                (3 of ($ioc_*))
-            )
-        )
-        or
-        (
-            ($killswitch and 1 of ($ioc_*))
-            or
-            (3 of ($ioc_*))
-        )
-}</div>
-      </div>
-    </section>
-
-    <!-- ===========================================
-         SLIDE 6: DETECTION LAYERS
+         SLIDE 6: RULE EXAMPLE
          =========================================== -->
     <section class="slide" id="slide-6">
       <div class="slide-content">
-        <div class="section-num reveal">05 — Tích hợp công cụ</div>
-        <h2 class="reveal">TÍCH HỢP YARA VÀO MÔI TRƯỜNG PYTHON</h2>
+        <div class="section-num reveal">06 — Ví dụ rule</div>
+        <h2 class="reveal">RULE YARA MINH HỌA</h2>
         <p class="reveal">
-          <strong>Gói thư viện:</strong> Sử dụng <code>yara-python</code>, được
-          cài đặt qua trình quản lý gói <code>pip</code> của Python.
+          Ví dụ rule phát hiện chỉ dấu của họ WannaCry (rút gọn để trình bày):
         </p>
 
-        <div class="layer-box reveal">
-          <div class="layer-title">Biên dịch (Compile)</div>
-          <p>
-            Chuyển đổi tệp luật văn bản (.yar) thành đối tượng thực thi trong bộ
-            nhớ (RAM) nhằm tối ưu hóa tốc độ xử lý.
-          </p>
-        </div>
+        <div class="code-block reveal"><pre><code>import "pe"
 
-        <div class="layer-box reveal">
-          <div class="layer-title">So khớp (Match)</div>
-          <p>
-            Áp dụng đối tượng biên dịch lên tệp tin hoặc luồng dữ liệu thô để
-            phát hiện vi phạm.
-          </p>
-        </div>
+rule Demo_WannaCry_Indicators {
+    meta:
+        author = "LapTrinhPython_DoAnGiuaKy_Yara"
+        description = "Phat hien IOC lien quan WannaCry"
+        date = "2026-04-13"
 
-        <p class="reveal"><strong>Mã nguồn minh họa:</strong></p>
-        <div class="code-block reveal"><span class="keyword">import</span> yara
+    strings:
+        $s1 = "mssecsvc2.0" ascii nocase
+        $s2 = "@WanaDecryptor@.exe" ascii nocase
+        $s3 = "Oops, your files have been encrypted!" ascii wide nocase
 
-<span class="comment"># Bước 1: Biên dịch tập luật vào bộ nhớ</span>
-rules = yara.compile(<span class="string">'rules/index.yar'</span>)
+    condition:
+        pe.is_pe and 2 of ($s*)
+}</code></pre></div>
 
-<span class="comment"># Bước 2: Rà quét tệp tin khả nghi</span>
-matches = rules.match(<span class="string">'suspicious.exe'</span>)
-<span class="function">print</span>(matches)  <span class="comment"># Trả về danh sách quy tắc vi phạm</span></div>
+        <p class="reveal">
+          Rule dùng module <code>pe</code> và yêu cầu tối thiểu 2 chỉ dấu xuất hiện đồng thời để giảm cảnh báo sai.
+        </p>
       </div>
     </section>
 
     <!-- ===========================================
-         SLIDE 7: PROJECT STRUCTURE
+         SLIDE 7: HOW YARA WORKS
          =========================================== -->
-    <section class="slide" id="slide-7">
+    <section class="slide" id="slide-5">
       <div class="slide-content">
-        <div class="section-num reveal">06 — Tổng quan kiến trúc</div>
-        <h2 class="reveal">KIẾN TRÚC TỔNG THỂ</h2>
-        <p class="reveal"><strong>Mô hình nền tảng:</strong></p>
-        <ul class="reveal">
-          <li>
-            Hệ thống được xây dựng bằng Python, kết hợp cơ chế phát hiện malware
-            dựa trên mã băm và phân tích đặc trưng bằng YARA.
-          </li>
-          <li>
-            Sử dụng cơ sở dữ liệu để lưu trữ malware signatures và hỗ trợ tra
-            cứu nhanh.
-          </li>
-        </ul>
-
-        <p class="reveal"><strong>Thiết kế kiến trúc phân tầng:</strong></p>
+        <div class="section-num reveal">07 — Cách YARA hoạt động</div>
+        <h2 class="reveal">CƠ CHẾ SO KHỚP CỦA YARA</h2>
         <div class="arch-flow">
           <article class="arch-step reveal">
-            <span class="arch-layer">Tầng Giao diện người dùng</span>
-            <h3>User Interface</h3>
+            <span class="arch-layer">Bước 1</span>
+            <h3>Biên dịch rule</h3>
             <p>
-              Tiếp nhận tệp tin hoặc thư mục đầu vào từ người dùng và trình bày
-              kết quả rà quét trực quan.
+              Tệp <code>.yar</code> được biên dịch thành đối tượng <code>Rules</code> trong bộ nhớ để tăng hiệu năng quét.
             </p>
+          </article>
+          <article class="arch-step reveal">
+            <span class="arch-layer">Bước 2</span>
+            <h3>So khớp dữ liệu</h3>
+            <p>
+              Engine quét dữ liệu tệp, tìm chuỗi và đánh giá điều kiện logic của từng rule.
+            </p>
+          </article>
+          <article class="arch-step reveal">
+            <span class="arch-layer">Bước 3</span>
+            <h3>Trả kết quả</h3>
+            <p>
+              Nếu điều kiện thỏa mãn, trả về tên rule khớp; nếu không, tệp được đánh dấu chưa phát hiện bởi tập luật hiện tại.
+            </p>
+          </article>
+        </div>
+        <div class="highlight reveal" style="margin-top: 1em">
+          <p>
+            Trong dự án, cơ chế này được triển khai tại <strong>malware_scanner/detection/yara_engine.py</strong> với hai hàm chính <code>load_rules()</code> và <code>match_bytes()</code>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+        <!-- ===========================================
+          SLIDE 8: PYTHON + YARA
+          =========================================== -->
+    <section class="slide" id="slide-7">
+      <div class="slide-content">
+         <div class="section-num reveal">08 — Python + YARA</div>
+        <h2 class="reveal">TÍCH HỢP YARA TRONG HỆ THỐNG PYTHON</h2>
+        <p class="reveal"><strong>Kiến trúc tích hợp theo module:</strong></p>
+        <div class="arch-flow">
+          <article class="arch-step reveal">
+            <span class="arch-layer">Detection Engine</span>
+            <h3>yara_engine.py</h3>
+            <ul>
+              <li><code>load_rules(path)</code>: biên dịch tập luật từ <code>rules/index.yar</code>.</li>
+              <li><code>match_bytes(rules, data)</code>: quét dữ liệu và trả tên rule khớp.</li>
+            </ul>
           </article>
 
           <article class="arch-step reveal">
-            <span class="arch-layer">Tầng Xử lý ứng dụng</span>
-            <h3>Application Layer</h3>
-            <p>
-              Đảm nhiệm việc đọc dữ liệu, biên dịch rule và thực thi cơ chế rà
-              quét hai lớp:
-              <strong
-                >Đối chiếu mã băm qua cơ sở dữ liệu -> phân tích đặc trưng bằng
-                YARA.</strong
-              >
-            </p>
+            <span class="arch-layer">Scanner Core</span>
+            <h3>scanner.py</h3>
+            <ul>
+              <li>Tính hash bằng <code>hash_data()</code> trước khi quét YARA.</li>
+              <li>Luồng quyết định: <strong>HASH_MATCH -> YARA_MATCH -> CLEAN</strong>.</li>
+              <li>Lưu kết quả vào PostgreSQL để truy vết và báo cáo.</li>
+            </ul>
           </article>
 
           <article class="arch-step reveal">
-            <span class="arch-layer">Tầng Lưu trữ dữ liệu</span>
-            <h3>Data Layer</h3>
-            <p>
-              Ghi nhận kết quả rà quét, lưu trữ lịch sử hệ thống và các metadata
-              liên quan đến tệp tin khả nghi.
-            </p>
+            <span class="arch-layer">Presentation Layer</span>
+            <h3>GUI + Reporting</h3>
+            <ul>
+              <li>Khởi chạy từ <code>main.py</code> qua giao diện CustomTkinter.</li>
+              <li>Hiển thị realtime kết quả quét và lịch sử quét.</li>
+            </ul>
           </article>
         </div>
       </div>
     </section>
 
-    <!-- ===========================================
-         SLIDE 8: DETECTION MECHANISM (HASH + YARA)
-         =========================================== -->
+        <!-- ===========================================
+          SLIDE 9: INSTALLATION
+          =========================================== -->
     <section class="slide" id="slide-8">
       <div class="slide-content">
-        <div class="section-num reveal">07 — Cơ chế hoạt động</div>
-        <h2 class="reveal">CƠ CHẾ PHÁT HIỆN MALWARE</h2>
+         <div class="section-num reveal">09 — Cài đặt</div>
+        <h2 class="reveal">THIẾT LẬP MÔI TRƯỜNG DỰ ÁN</h2>
         <p class="reveal" style="margin-bottom: 0.75rem">
-          Hệ thống phát hiện malware được thiết kế theo
-          <strong>cơ chế 2 lớp </strong>, kết hợp giữa tốc độ và độ chính xác.
+          Dự án sử dụng Python, PostgreSQL và thư viện <strong>yara-python</strong> để triển khai pipeline quét malware.
         </p>
 
         <div class="two-column" style="margin-top: 0.5rem">
           <article class="arch-step reveal">
-            <span class="arch-layer">Lớp 1: Mã băm</span>
-            <h3>Hash Detection</h3>
-            <ul>
-              <li>
-                Đọc nội dung tệp tin phân loại và tính toán các giá trị hash như
-                MD5 và <strong style="color: var(--accent)">SHA256</strong>.
-              </li>
-              <li>
-                <strong>Nhanh:</strong> Các giá trị này được so sánh trực tiếp
-                với dữ liệu đã lưu trong cơ sở dữ liệu.
-              </li>
-              <li>
-                <strong>Phát hiện malware đã biết:</strong> Nếu trùng khớp, tệp
-                tin ngay lập tức bị loại bỏ.
-              </li>
-              <li>
-                Tối ưu hiệu năng với kỹ thuật đọc tệp theo từng khối nhỏ (4096
-                bytes).
-              </li>
-            </ul>
+            <span class="arch-layer">Bước cài đặt nhanh</span>
+            <h3>Dependencies</h3>
+            <div class="code-block" style="margin-top: 0.5rem"><pre><code># Khuyen nghi: uv
+uv sync --extra dev
+
+# Tuong thich voi pip
+pip install -r requirements.txt</code></pre></div>
           </article>
 
           <article class="arch-step reveal">
-            <span class="arch-layer">Lớp 2: Chuyên sâu</span>
-            <h3><span style="color: var(--accent)">YARA</span> Analysis</h3>
-            <ul>
-              <li>
-                Đối với các tệp tin không được nhận diện bằng phương pháp hash,
-                hệ thống sử dụng YARA để phân tích sâu.
-              </li>
-              <li>
-                <strong>Rule-based:</strong> Hệ thống sử dụng các rule được xây
-                dựng dựa trên chuỗi đặc trưng và mẫu dữ liệu của malware để kiểm
-                tra.
-              </li>
-              <li>
-                Nếu thỏa mãn điều kiện của rule, tệp tin sẽ được đánh dấu là
-                đáng ngờ.
-              </li>
-            </ul>
+            <span class="arch-layer">Cấu hình hệ thống</span>
+            <h3>Database + Khởi chạy</h3>
+            <div class="code-block" style="margin-top: 0.5rem"><pre><code># Tao CSDL
+psql -U postgres -f database/01_create_database.sql
+psql -U postgres -d yara_malware_signatures -f database/02_create_tables.sql
+
+# Chay ung dung
+uv run python main.py</code></pre></div>
           </article>
         </div>
 
         <div class="highlight reveal" style="margin-top: 1em">
           <p>
-            Cách tiếp cận giúp hệ thống vừa đảm bảo tốc độ xử lý nhanh, vừa nâng
-            cao khả năng phát hiện các biến thể malware mới.
+            Cần cấu hình <code>.env</code> với thông tin DB và <code>MB_AUTH_KEY</code> trước khi đồng bộ chữ ký malware từ MalwareBazaar.
           </p>
         </div>
       </div>
     </section>
 
-    <!-- ===========================================
-         SLIDE 9: SYSTEM WORKFLOW (HORIZONTAL)
-         =========================================== -->
+        <!-- ===========================================
+          SLIDE 10: CODE DEMO
+          =========================================== -->
     <section class="slide" id="slide-9">
       <div class="slide-content">
-        <div class="section-num reveal">08 — Luồng xử lý</div>
-        <h2 class="reveal">QUY TRÌNH PHÁT HIỆN MÃ ĐỘC</h2>
+         <div class="section-num reveal">10 — Code demo</div>
+        <h2 class="reveal">MINI DEMO QUÉT FILE BẰNG PYTHON + YARA</h2>
 
         <p class="reveal" style="margin-bottom: 1rem;">
-          Hệ thống được tổ chức theo mô hình pipeline, trong đó mỗi tệp tin sẽ đi qua các giai đoạn xử lý tuần tự nhằm đảm bảo cân bằng giữa tốc độ và độ chính xác.
+          Đoạn mã sau dùng trực tiếp module của đồ án để tính hash và quét YARA trên một tệp bất kỳ:
         </p>
 
-        <!-- S-CURVE FLOW -->
-        <div class="workflow-s-curve reveal">
-          <!-- Row 1: Left to Right -->
-          <div class="wf-row">
-            <div class="wf-step">
-              <div class="wf-title">Dữ liệu đầu vào</div>
-              <p>Tệp tin / Thư mục</p>
-            </div>
-            <div class="wf-arrow" style="color: var(--accent);">→</div>
-            <div class="wf-step">
-              <div class="wf-title">Tiền xử lý</div>
-              <p>Nhận diện định dạng<br>Giải nén (nếu cần)</p>
-            </div>
-            <div class="wf-arrow" style="color: var(--accent);">→</div>
-            <div class="wf-step">
-              <div class="wf-title">Tính toán mã băm (hash)</div>
-              <p>MD5 / SHA256<br>Đọc từng khối nhỏ</p>
-            </div>
-            <div class="wf-arrow" style="color: var(--accent);">→</div>
-            <div class="wf-step highlight-fast">
-              <div class="wf-title">Đối chiếu CSDL</div>
-              <p>So khớp signatures<br><strong>Fast Path</strong></p>
-            </div>
-          </div>
+        <div class="code-block reveal"><pre><code>from malware_scanner.detection.hashing import hash_data
+from malware_scanner.detection.yara_engine import load_rules, match_bytes
 
-          <!-- Connector -->
-          <div class="wf-connector" style="color: var(--accent);">↙</div>
+target_path = "README.md"
+rules = load_rules("rules/index.yar")
 
-          <!-- Row 2: Right to Left -->
-          <div class="wf-row reverse">
-            <div class="wf-step highlight-deep">
-              <div class="wf-title">Phân tích bằng YARA</div>
-              <p>Phân tích đặc trưng<br><strong>Deep Path</strong></p>
-            </div>
-            <div class="wf-arrow" style="color: var(--accent);">←</div>
-            <div class="wf-step">
-              <div class="wf-title">Cập nhật dữ liệu</div>
-              <p>Lưu hash mới & <br>Cập nhật CSDL</p>
-            </div>
-            <div class="wf-arrow" style="color: var(--accent);">←</div>
-            <div class="wf-step">
-              <div class="wf-title">Kết xuất kết quả</div>
-              <p>Lưu kết quả + Ghi lịch sử quét</p>
-            </div>
-          </div>
-        </div>
+with open(target_path, "rb") as f:
+    data = f.read()
+
+hashes = hash_data(data)
+yara_hit = match_bytes(rules, data, path=target_path)
+
+print("SHA256:", hashes["sha256"])
+print("Detection:", yara_hit or "CLEAN")</code></pre></div>
 
         <div class="system-summary reveal">
           <p>
-            Luồng xử lý này cho phép hệ thống ưu tiên phát hiện nhanh các mối đe dọa đã biết thông qua cơ sở dữ liệu, đồng thời vẫn đảm bảo khả năng nhận diện các biến thể mới nhờ cơ chế phân tích YARA.
+            Luồng demo: đọc dữ liệu -> tính hash -> so khớp YARA -> in kết quả phát hiện.
           </p>
         </div>
       </div>
     </section>
 
-    <!-- ===========================================
-         SLIDE 10: YARA RULES
-         =========================================== -->
+        <!-- ===========================================
+          SLIDE 11: MALWARE FAMILIES
+          =========================================== -->
     <section class="slide" id="slide-10">
       <div class="slide-content">
-        <div class="section-num reveal">09 — Tập luật YARA</div>
-        <h2 class="reveal">TẬP LUẬT PHÁT HIỆN MALWARE</h2>
+         <div class="section-num reveal">11 — Họ malware trong dự án</div>
+        <h2 class="reveal">20 HỌ MALWARE ĐƯỢC PHÂN NHÓM THEO CHỨC NĂNG</h2>
         <p class="reveal" style="margin-bottom: 0.25rem">
-          Hệ thống triển khai tập luật YARA nhằm nhận diện nhiều họ malware phổ
-          biến trong thực tế, được xây dựng dựa trên các nguồn phân tích mối đe
-          dọa đáng tin cậy như MalwareBazaar và MITRE ATT&CK.
+          Tập luật hiện tại bao phủ 20 họ malware, tổ chức thành 4 nhóm chức năng để thuận tiện mở rộng và bảo trì.
         </p>
         <div class="malware-grid">
           <div class="malware-category reveal">
-            <div class="category-title">Info Stealers</div>
-            <p
-              style="
-                font-size: 0.8rem;
-                color: var(--text-muted);
-                margin-bottom: 0.5em;
-              "
-            >
-              Mã độc đánh cắp thông tin
-            </p>
+            <div class="category-title">Info Stealers (5)</div>
             <ul>
-              <li>RedLineStealer</li>
-              <li>LokiBot</li>
               <li>AgentTesla</li>
               <li>Formbook</li>
+              <li>LokiBot</li>
+              <li>Raccoon Stealer</li>
+              <li>RedLine Stealer</li>
             </ul>
           </div>
           <div class="malware-category reveal">
-            <div class="category-title">Banking Trojans</div>
-            <p
-              style="
-                font-size: 0.8rem;
-                color: var(--text-muted);
-                margin-bottom: 0.5em;
-              "
-            >
-              Trojan ngân hàng & Botnet
-            </p>
+            <div class="category-title">Banking/Botnet (5)</div>
             <ul>
+              <li>Dridex</li>
               <li>Emotet</li>
+              <li>IcedID</li>
               <li>TrickBot</li>
               <li>Mirai</li>
-              <li>Dridex</li>
             </ul>
           </div>
           <div class="malware-category reveal">
-            <div class="category-title">Ransomware</div>
-            <p
-              style="
-                font-size: 0.8rem;
-                color: var(--text-muted);
-                margin-bottom: 0.5em;
-              "
-            >
-              Mã độc tống tiền
-            </p>
+            <div class="category-title">Ransomware (5)</div>
             <ul>
               <li>WannaCry</li>
               <li>LockBit</li>
               <li>Conti</li>
               <li>Ryuk</li>
+              <li>BlackCat</li>
             </ul>
           </div>
           <div class="malware-category reveal">
-            <div class="category-title">RATs (Remote Access Trojans)</div>
-            <p
-              style="
-                font-size: 0.8rem;
-                color: var(--text-muted);
-                margin-bottom: 0.5em;
-              "
-            >
-              Trojan điều khiển từ xa
-            </p>
+            <div class="category-title">RAT/C2 Framework (5)</div>
             <ul>
-              <li>RemcosRAT</li>
+              <li>AsyncRAT</li>
+              <li>DarkComet</li>
               <li>njRAT</li>
+              <li>RemcosRAT</li>
+              <li>Cobalt Strike</li>
             </ul>
           </div>
         </div>
         <div class="key-takeaway reveal">
-          <p class="reveal" style="margin-top: 1em">
-            Việc phân loại theo từng họ malware giúp hệ thống xây dựng các rule
-            YARA chuyên biệt, từ đó <strong>nâng cao độ chính xác</strong> và
-            giảm thiểu cảnh báo sai trong toàn bộ quá trình quét.
+          <p class="reveal" style="margin-top: 0.3em">
+            Việc phân nhóm theo chức năng giúp viết rule có ngữ cảnh rõ ràng hơn và giảm nhiễu khi phân tích kết quả quét.
           </p>
         </div>
       </div>
     </section>
 
-    <!-- ===========================================
-         SLIDE 11: SCANNING FLOW
-         =========================================== -->
+        <!-- ===========================================
+          SLIDE 12: RESULTS
+          =========================================== -->
     <section class="slide" id="slide-11">
       <div class="slide-content">
-        <div class="section-num reveal">10 — Phân tích nâng cao</div>
-        <h2 class="reveal">CƠ CHẾ XỬ LÝ TỆP NÉN</h2>
-
-        <article class="arch-step reveal">
-          <span class="arch-layer">Vấn đề</span>
-          <p>
-            Trong thực tế, mã độc thường được đóng gói trong các tệp nén
-            (ZIP/RAR) nhằm che giấu nội dung, làm thay đổi cấu trúc dữ liệu và
-            tránh bị phát hiện bởi các phương pháp quét thông thường.
-          </p>
-        </article>
-
+         <div class="section-num reveal">12 — Kết quả</div>
+        <h2 class="reveal">KẾT QUẢ TRIỂN KHAI TRONG DỰ ÁN</h2>
         <div class="arch-flow">
-          <article class="arch-step reveal" style="margin-top: 0.5em">
-            <span class="arch-layer">Giải pháp</span>
-            <h3>Cơ chế phân tích trong vùng cách ly</h3>
+          <article class="arch-step reveal">
+            <span class="arch-layer">Mục tiêu kỹ thuật</span>
             <ul>
-              <li>
-                Nhận diện định dạng tệp nén bằng thư viện xử lý file của Python.
-              </li>
-              <li>Giải nén toàn bộ nội dung tệp tin vào vùng cách ly.</li>
-              <li>
-                Thực hiện quét đệ quy từng tệp con bằng cơ chế Hash + YARA.
-              </li>
-              <li>
-                Dọn dẹp tự động vùng cách ly sau hoàn tất để đảm bảo an toàn hệ
-                thống.
-              </li>
+              <li>Triển khai thành công pipeline quét malware với cơ chế hai lớp.</li>
+              <li>Xử lý được cả quét file đơn và quét thư mục nhiều tệp.</li>
+              <li>Lưu lịch sử quét và chữ ký vào PostgreSQL để truy vết.</li>
+            </ul>
+          </article>
+
+          <article class="arch-step reveal">
+            <span class="arch-layer">Vận hành hệ thống</span>
+            <ul>
+              <li>Giao diện GUI hiển thị realtime trạng thái quét và kết quả phát hiện.</li>
+              <li>Tạo báo cáo text phục vụ tổng hợp và đối chiếu.</li>
+              <li>Hỗ trợ mở rộng rule theo họ malware mà không thay đổi kiến trúc lõi.</li>
             </ul>
           </article>
         </div>
       </div>
     </section>
 
-    <!-- ===========================================
-         SLIDE 12: THANK YOU
-         =========================================== -->
-    <section class="slide title-slide" id="slide-12">
+        <!-- ===========================================
+          SLIDE 13: ADVANTAGES / LIMITATIONS / USE CASES
+          =========================================== -->
+    <section class="slide" id="slide-12">
       <div class="slide-content">
-        <h1 class="reveal" style="border: none">CẢM ƠN!</h1>
+         <div class="section-num reveal">13 — Đánh giá</div>
+        <h2 class="reveal">ƯU NHƯỢC ĐIỂM VÀ ỨNG DỤNG</h2>
+
+        <article class="arch-step reveal">
+          <span class="arch-layer">Ưu điểm</span>
+          <ul>
+            <li>Kiến trúc kết hợp Hash + YARA cân bằng giữa tốc độ và độ chính xác.</li>
+            <li>Rule dễ mở rộng theo IOC mới và theo từng họ malware.</li>
+            <li>Mô-đun hóa rõ ràng, thuận lợi cho bảo trì và nâng cấp.</li>
+          </ul>
+        </article>
+
+        <div class="arch-flow">
+          <article class="arch-step reveal" style="margin-top: 0.5em">
+            <span class="arch-layer">Nhược điểm</span>
+            <ul>
+              <li>Phụ thuộc chất lượng và độ cập nhật của tập luật.</li>
+              <li>Không thay thế hoàn toàn phân tích hành vi động trong sandbox.</li>
+              <li>Cần đồng bộ signatures và rule định kỳ để duy trì hiệu quả.</li>
+            </ul>
+          </article>
+
+          <article class="arch-step reveal" style="margin-top: 0.5em">
+            <span class="arch-layer">Ứng dụng</span>
+            <ul>
+              <li>Tích hợp vào quy trình sàng lọc file nghi ngờ trong SOC.</li>
+              <li>Kiểm tra file tải lên trong hệ thống nội bộ và phòng lab đào tạo.</li>
+              <li>Làm nền tảng học thuật cho môn An toàn thông tin và Malware Analysis.</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+        <!-- ===========================================
+          SLIDE 14: CONCLUSION (NEW STYLE)
+          =========================================== -->
+    <section class="slide" id="slide-13">
+      <div class="slide-content">
+         <div class="section-num reveal">14 — Kết luận</div>
+        <h2 class="reveal">TỔNG KẾT ĐỒ ÁN</h2>
+
+        <div class="two-column" style="margin-top: 0.4rem">
+          <article class="arch-step reveal conclusion-panel">
+            <span class="arch-layer">Đóng góp chính</span>
+            <h3>Giá trị kỹ thuật đạt được</h3>
+            <ul>
+              <li>Xây dựng thành công hệ thống phát hiện malware bằng Python với YARA.</li>
+              <li>Áp dụng mô hình hai lớp giúp tối ưu tốc độ và tăng độ bao phủ phát hiện.</li>
+              <li>Chuẩn hóa dữ liệu quét để truy vết và tái sử dụng trong nghiên cứu tiếp theo.</li>
+            </ul>
+          </article>
+
+          <article class="arch-step reveal conclusion-panel">
+            <span class="arch-layer">Hướng phát triển</span>
+            <h3>Mở rộng trong tương lai</h3>
+            <ul>
+              <li>Tích hợp phân tích hành vi động và sandbox tự động.</li>
+              <li>Bổ sung pipeline cập nhật rule từ threat intelligence feeds.</li>
+              <li>Đánh giá thực nghiệm trên tập mẫu lớn để tinh chỉnh độ chính xác.</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="highlight reveal" style="margin-top: 1.2em">
+          <p>
+            Kết luận: YARA là thành phần hiệu quả khi kết hợp với Python để xây dựng hệ thống phát hiện malware có tính thực tiễn và phù hợp môi trường học thuật.
+          </p>
+        </div>
+      </div>
+    </section>
+
+        <!-- ===========================================
+          SLIDE 15: THANK YOU
+          =========================================== -->
+    <section class="slide title-slide" id="slide-14">
+      <div class="slide-content">
+        <h1 class="reveal" style="border: none">XIN CẢM ƠN!</h1>
         <div class="accent-line reveal"></div>
         <p class="subtitle reveal">Questions & Answers</p>
       </div>

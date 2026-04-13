@@ -272,6 +272,12 @@
             color: var(--text-secondary);
         }
 
+        .slide:not(.title-slide) p,
+        .slide:not(.title-slide) li {
+            text-align: justify;
+            text-justify: inter-word;
+        }
+
         ul,
         ol {
             font-size: var(--body-size);
@@ -545,6 +551,169 @@
             margin-bottom: 0.55rem;
         }
 
+        #slide-4 .yara-theory-box {
+            background: linear-gradient(160deg, #fffdfa 0%, #f7f1e8 100%);
+            border: 1px solid #e9dcc7;
+            border-left: 5px solid #b85c38;
+            border-radius: 10px;
+            padding: clamp(0.75rem, 1.3vw, 1rem);
+            margin: 0.35rem 0 0.65rem;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) clamp(160px, 21vw, 250px);
+            grid-template-areas:
+                "title image"
+                "body image";
+            column-gap: clamp(0.7rem, 1.1vw, 1rem);
+            align-items: center;
+        }
+
+        #slide-4 .yara-theory-box h3 {
+            grid-area: title;
+            color: #9a3f21;
+            margin-bottom: 0.35rem;
+            font-size: clamp(0.95rem, 1.45vw, 1.16rem);
+        }
+
+        #slide-4 .yara-theory-box p {
+            margin-bottom: 0.35rem;
+            line-height: 1.62;
+        }
+
+        #slide-4 .yara-definition-row {
+            grid-area: body;
+        }
+
+        #slide-4 .yara-definition-image {
+            grid-area: image;
+            width: 100%;
+            max-width: 250px;
+            height: auto;
+            justify-self: center;
+            align-self: center;
+            border-radius: 10px;
+            border: 1px solid #e8dcc8;
+            background: #ffffff;
+            padding: 0.45rem;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+        }
+
+        #slide-4 .yara-theory-list {
+            margin: 0.2rem 0 0.45rem 1.2rem;
+        }
+
+        #slide-4 .yara-theory-list li {
+            margin-bottom: 0.2rem;
+            line-height: 1.5;
+        }
+
+        .meaning-note {
+            border-left: 4px solid var(--accent);
+            background: linear-gradient(120deg, rgba(196, 30, 58, 0.08) 0%, rgba(196, 30, 58, 0.03) 100%);
+            border-radius: 0 8px 8px 0;
+            padding: 0.55rem 0.8rem;
+            margin-top: 0.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .meaning-note strong {
+            color: #8f1b31;
+            letter-spacing: 0.01em;
+        }
+
+        #slide-4c .yara-usage-grid {
+            display: grid;
+            gap: clamp(0.6rem, 1vw, 0.85rem);
+            margin-top: 0.35rem;
+            margin-bottom: 0.5rem;
+        }
+
+        #slide-4c .brand-wall {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.65rem;
+            margin-top: 0.45rem;
+        }
+
+        #slide-4c .brand-card {
+            display: grid;
+            grid-template-columns: 2.25rem 1fr;
+            grid-template-areas:
+                "rank name"
+                "rank meta";
+            column-gap: 0.65rem;
+            row-gap: 0.2rem;
+            background: linear-gradient(155deg, #fff 0%, #f7f4ef 100%);
+            border: 1px solid #e7ddd0;
+            border-left: 4px solid #b85c38;
+            border-radius: 9px;
+            padding: 0.62rem 0.75rem;
+            min-height: 4rem;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        #slide-4c .brand-rank {
+            grid-area: rank;
+            width: 1.9rem;
+            height: 1.9rem;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.76rem;
+            font-weight: 800;
+            color: #ffffff;
+            background: linear-gradient(135deg, #9a3f21 0%, #c56138 100%);
+            margin-top: 0.1rem;
+        }
+
+        #slide-4c .brand-chip {
+            grid-area: name;
+            display: block;
+            color: #7f2b14;
+            font-size: clamp(0.92rem, 1.25vw, 1.08rem);
+            font-weight: 700;
+            line-height: 1.34;
+            text-align: left;
+        }
+
+        #slide-4c .brand-meta {
+            grid-area: meta;
+            color: var(--text-muted);
+            font-size: clamp(0.8rem, 1.02vw, 0.92rem);
+            line-height: 1.34;
+            text-align: left;
+        }
+
+        @media (max-width: 760px) {
+            #slide-4 .yara-theory-box {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "title"
+                    "body"
+                    "image";
+            }
+
+            #slide-4 .yara-definition-image {
+                justify-self: center;
+                max-width: 170px;
+            }
+
+            #slide-4c .brand-wall {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        #slide-4b .slide-content>p.reveal:first-of-type {
+            margin-bottom: 0.45rem;
+        }
+
+        #slide-4b .card-grid {
+            margin-top: 0.2rem;
+            margin-bottom: 0.4rem;
+            gap: clamp(0.55rem, 0.9vw, 0.8rem);
+        }
+
         #slide-4 .card-grid {
             margin-top: 0.35rem;
             margin-bottom: 0.35rem;
@@ -677,6 +846,25 @@
             overflow-x: auto;
             margin: var(--content-gap) 0;
             white-space: pre;
+        }
+
+        .code-block pre {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            white-space: inherit;
+        }
+
+        .code-block code {
+            display: block;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: inherit;
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
         }
 
         .code-block .comment {
@@ -956,6 +1144,8 @@
             margin-bottom: 0;
             line-height: 1.4;
             color: var(--text-secondary);
+            text-align: center;
+            text-justify: auto;
         }
 
         .wf-arrow {
@@ -1019,6 +1209,33 @@
             border-radius: 20px;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+        }
+
+        /* ===========================================
+           CONCLUSION SLIDE STYLE
+           =========================================== */
+        #slide-13 {
+            background: linear-gradient(145deg, #f8f7f4 0%, #f3efe8 100%);
+        }
+
+        #slide-13 h2 {
+            border-bottom: 3px solid var(--accent);
+            letter-spacing: 0.02em;
+        }
+
+        #slide-13 .conclusion-panel {
+            border-left: 4px solid var(--accent);
+            background: #fffdf9;
+        }
+
+        #slide-13 .highlight {
+            background: rgba(196, 30, 58, 0.08);
+            border-left-width: 4px;
+        }
+
+        #slide-13 .highlight p {
+            text-align: center;
+            font-style: italic;
         }
 
         /* ===========================================
