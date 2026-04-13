@@ -8,18 +8,15 @@ python-dotenv
 psycopg2-binary
 
 
-# Quét YARA (core)
+# Thư viện YARA
 yara-python
 
-# GUI (Windows-first)
+# GUI
 customtkinter>=5.2.2
 
-# Hỗ trợ đọc stream OLE (.doc/.xls legacy) khi quét YARA
+# Hỗ trợ đọc stream OLE khi quét YARA
 olefile>=0.47
 
-# Hỗ trợ giải nén ZIP mã hóa AES (MalwareBazaar, VirusShare...)
+# Hỗ trợ giải nén ZIP mã hóa AES
 pyzipper>=0.3.6
 
-# Testing
-pytest>=8.2.0
-pytest-cov>=5.0.0
