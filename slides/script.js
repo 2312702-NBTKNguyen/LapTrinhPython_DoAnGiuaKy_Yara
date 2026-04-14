@@ -10,7 +10,56 @@ class SlidePresentation {
     this.setupIntersectionObserver();
     this.setupKeyboardNav();
     this.setupNavDots();
+    this.setupCodeTheme();
     this.updateProgress();
+  }
+
+  setupCodeTheme() {
+    const codeBlocks = document.querySelectorAll(".code-block");
+    const keywordPattern =
+      /\b(import|rule|meta|strings|condition|ascii|wide|nocase|and|or|not|of|true|false|any|all)\b/g;
+
+    codeBlocks.forEach((block) => {
+      if (!block.dataset.codeTitle) {
+        block.dataset.codeTitle = "Code";
+      }
+
+      const codeElement = block.querySelector("code");
+      if (!codeElement) {
+        return;
+      }
+
+      const rawCode = codeElement.textContent || "";
+      let html = rawCode
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+      html = html.replace(
+        /#.*$/gm,
+        (m) => `<span class="code-token-comment">${m}</span>`,
+      );
+      html = html.replace(
+        /"([^"\\]|\\.)*"/g,
+        (m) => `<span class="code-token-string">${m}</span>`,
+      );
+      html = html.replace(
+        /\b\d+\b/g,
+        (m) => `<span class="code-token-number">${m}</span>`,
+      );
+      html = html.replace(
+        /\b([a-zA-Z_]\w*)\.([a-zA-Z_]\w*)\b/g,
+        (_m, p1, p2) => {
+          return `<span class="code-token-property">${p1}.${p2}</span>`;
+        },
+      );
+      html = html.replace(
+        keywordPattern,
+        (m) => `<span class="code-token-keyword">${m}</span>`,
+      );
+
+      codeElement.innerHTML = html;
+    });
   }
 
   setupIntersectionObserver() {
