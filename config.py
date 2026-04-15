@@ -5,7 +5,7 @@ load_dotenv()
 
 class Config:
     # Database (SQLite)
-    DB_FILE: str = os.getenv("DB_FILE", "data/scanner.db")
+    DB_FILE: str = os.getenv("DB_FILE", "database/scanner.db")
     DB_TIMEOUT_SECONDS: float = float(os.getenv("DB_TIMEOUT_SECONDS", "30"))
     DB_BUSY_TIMEOUT_MS: int = int(os.getenv("DB_BUSY_TIMEOUT_MS", "5000"))
 
