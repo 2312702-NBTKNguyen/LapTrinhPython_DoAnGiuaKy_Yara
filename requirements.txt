@@ -4,10 +4,6 @@ requests
 # Biến môi trường
 python-dotenv
 
-# Database
-psycopg2-binary
-
-
 # Thư viện YARA
 yara-python
 
