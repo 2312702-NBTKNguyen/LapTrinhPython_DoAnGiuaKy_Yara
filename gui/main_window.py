@@ -42,6 +42,7 @@ class MainWindow(ctk.CTk):
 
         self.event_queue: queue.Queue = queue.Queue()
         self.stop_flag = threading.Event()
+        self.db_retry_lock = threading.Lock()
         self.scan_thread: threading.Thread | None = None
         self.boot_thread: threading.Thread | None = None
         self.history_thread: threading.Thread | None = None
@@ -49,6 +50,8 @@ class MainWindow(ctk.CTk):
         self.current_state = "idle"
         self.scan_started: datetime | None = None
         self.report_path: str | None = None
+        self.db_ready = True
+        self.db_error: str | None = None
 
         self.path_var = ctk.StringVar(value="")
         self.state_var = ctk.StringVar(value="IDLE")
@@ -65,6 +68,17 @@ class MainWindow(ctk.CTk):
         self._center_window(*self._size)
         self.bind("<Configure>", self._on_window_state_change)
         self._set_mode("idle")
+
+        try:
+            init_db(log_callback=self._on_sync_log)
+        except Exception as exc:
+            self.db_ready = False
+            self.db_error = str(exc)
+
+        if not self.db_ready and self.db_error:
+            self.log_panel.append(f"[WARNING] Database chưa sẵn sàng khi khởi động: {self.db_error}\n")
+            self.log_panel.append("[INFO] Nhấn Quét hoặc refresh History để thử kết nối lại database.\n")
+            self.status_text.set("Database chưa sẵn sàng. Vui lòng thử lại.")
         self._load_history()
         self.after(100, self._tick)
 
@@ -210,8 +224,8 @@ class MainWindow(ctk.CTk):
 
         self.boot_btn = ctk.CTkButton(
             controls,
-            text="Khởi tạo dữ liệu",
-            width=98,
+            text="Đồng bộ signatures",
+            width=124,
             height=38,
             corner_radius=12,
             command=self._do_sync,
@@ -266,7 +280,7 @@ class MainWindow(ctk.CTk):
         vertical_pane = ttk.Panedwindow(horizontal_pane, orient="vertical")
 
         self.history_panel = HistoryPanel(vertical_pane, fg_color="#ffffff", corner_radius=16)
-        self.history_panel.on_refresh(self._load_history)
+        self.history_panel.on_refresh(lambda: self._load_history(retry_db=True))
 
         self.log_panel = LogPanel(vertical_pane, fg_color="#ffffff", corner_radius=16)
 
@@ -346,6 +360,11 @@ class MainWindow(ctk.CTk):
         if self.boot_thread and self.boot_thread.is_alive():
             return
 
+        if not self._ensure_db_ready(action="đồng bộ signatures"):
+            self.status_text.set("Database chưa sẵn sàng để đồng bộ signatures")
+            self._set_mode("error")
+            return
+
         self._set_mode("booting")
         self.status_text.set("Đang đồng bộ dữ liệu signatures...")
         self.boot_thread = threading.Thread(target=self._sync_bg, daemon=True)
@@ -354,7 +373,6 @@ class MainWindow(ctk.CTk):
     def _sync_bg(self) -> None:
         try:
             JSON_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-            init_db(log_callback=self._on_sync_log)
             sync_sigs(JSON_OUTPUT, log_callback=self._on_sync_log)
             self.event_queue.put({"type": "boot_done", "exit_code": 0})
         except Exception as exc:
@@ -362,6 +380,40 @@ class MainWindow(ctk.CTk):
 
     def _on_sync_log(self, message: str) -> None:
         self.event_queue.put({"type": "log", "level": "INFO", "message": message})
+
+    def _ensure_db_ready(self, action: str) -> bool:
+        if self.db_ready:
+            return True
+
+        with self.db_retry_lock:
+            if self.db_ready:
+                return True
+
+            self.event_queue.put(
+                {
+                    "type": "log",
+                    "level": "INFO",
+                    "message": f"Database chưa sẵn sàng. Đang thử khởi tạo lại trước khi {action}...",
+                }
+            )
+
+            try:
+                init_db(log_callback=self._on_sync_log)
+            except Exception as exc:
+                self.db_error = str(exc)
+                self.event_queue.put(
+                    {
+                        "type": "db_retry_failed",
+                        "action": action,
+                        "message": self.db_error,
+                    }
+                )
+                return False
+
+            self.db_ready = True
+            self.db_error = None
+            self.event_queue.put({"type": "db_recovered", "action": action})
+            return True
 
     def _do_scan(self) -> None:
         if self.current_state in {"scanning", "canceling", "booting"}:
@@ -377,6 +429,16 @@ class MainWindow(ctk.CTk):
         target = Path(raw_path).expanduser().resolve()
         if not target.exists():
             messagebox.showerror("Đường dẫn không hợp lệ", f"Đường dẫn không tồn tại:\n{target}")
+            return
+
+        if not self._ensure_db_ready(action="quét dữ liệu"):
+            self.status_text.set("Database chưa sẵn sàng để quét")
+            messagebox.showwarning(
+                "Database chưa sẵn sàng",
+                "Không thể bắt đầu quét vì database chưa sẵn sàng.\n"
+                "Vui lòng kiểm tra cấu hình DB_FILE rồi thử lại.",
+            )
+            self._set_mode("error")
             return
 
         self._reset_stats()
@@ -455,7 +517,15 @@ class MainWindow(ctk.CTk):
         except Exception as exc:
             messagebox.showerror("Lỗi mở báo cáo", str(exc))
 
-    def _load_history(self) -> None:
+    def _load_history(self, retry_db: bool = False) -> None:
+        if not self.db_ready:
+            if not retry_db:
+                return
+
+            if not self._ensure_db_ready(action="tải lịch sử quét"):
+                self.status_text.set("Database chưa sẵn sàng để tải lịch sử")
+                return
+
         if self.history_thread and self.history_thread.is_alive():
             return
 
@@ -557,6 +627,18 @@ class MainWindow(ctk.CTk):
                     self.log_panel.append(f"[ERROR] Đồng bộ dữ liệu thất bại: {event.get('message', 'unknown')}\n")
                     self.status_text.set("Đồng bộ dữ liệu thất bại")
                     self._set_mode("error")
+
+            elif event_type == "db_recovered":
+                self.log_panel.append(
+                    f"[SUCCESS] Database đã sẵn sàng trở lại trước khi {event.get('action', 'tiếp tục thao tác')}.\n"
+                )
+
+            elif event_type == "db_retry_failed":
+                self.log_panel.append(
+                    f"[WARNING] Không thể khởi tạo database trước khi {event.get('action', 'thao tác')}: "
+                    f"{event.get('message', 'unknown')}\n"
+                )
+                self.status_text.set("Database chưa sẵn sàng")
 
             elif event_type == "history_rows":
                 rows = event.get("rows") or []

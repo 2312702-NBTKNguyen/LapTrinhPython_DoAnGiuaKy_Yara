@@ -4,16 +4,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    # Database
-    DB_HOST: str = os.getenv("DB_HOST", "localhost")
-    DB_PORT: int = int(os.getenv("DB_PORT", "5432"))
-    DB_NAME: str = os.getenv("DB_NAME", "yara_malware_signatures")
-    DB_USER: str = os.getenv("DB_USER", "postgres")
-    DB_PASSWORD: str = os.getenv("DB_PASSWORD", "")
-
-    # Connection Pool
-    DB_POOL_MIN: int = int(os.getenv("DB_POOL_MIN", "1"))
-    DB_POOL_MAX: int = int(os.getenv("DB_POOL_MAX", "5"))
+    # Database (SQLite)
+    DB_FILE: str = os.getenv("DB_FILE", "data/scanner.db")
+    DB_TIMEOUT_SECONDS: float = float(os.getenv("DB_TIMEOUT_SECONDS", "30"))
+    DB_BUSY_TIMEOUT_MS: int = int(os.getenv("DB_BUSY_TIMEOUT_MS", "5000"))
 
     # MalwareBazaar API
     MB_AUTH_KEY: str = os.getenv("MB_AUTH_KEY", "")

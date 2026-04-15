@@ -1,10 +1,13 @@
-import json, requests, psycopg2
+import json
+import sqlite3
+import requests
 
 from pathlib import Path
 from collections.abc import Callable
+
 from config import Config
-from psycopg2.extras import execute_values
 from data_tools import _log
+from data_tools.db_setup import connect_db
 
 COLUMNS = [
     "file_name", "signature", "file_type", "first_seen", "file_type_mime",
@@ -36,7 +39,6 @@ def fetch_sigs(
     auth_key = Config.MB_AUTH_KEY
 
     if not auth_key:
-        _log(log_callback, "Chưa có API key trong file .env hoặc biến môi trường hệ thống.")
         raise RuntimeError("Chưa có API key trong file .env hoặc biến môi trường hệ thống.")
 
     headers = {
@@ -44,8 +46,9 @@ def fetch_sigs(
         "User-Agent": "Python-MalwareBazaar-Client/1.0",
     }
 
-    _log(log_callback, f"Gửi request đến MalwareBazaar API với {len(SIGNATURES)} signatures...")
+    _log(log_callback, f"Bắt đầu đồng bộ signatures từ MalwareBazaar ({len(SIGNATURES)} signatures).")
     _log(log_callback, f"Danh sách các signatures: {', '.join(SIGNATURES)}")
+
 
     all_rows = []
     ok_count = 0
@@ -81,7 +84,7 @@ def fetch_sigs(
             continue
 
         if status in ("no_results", "sig_not_found", "signature_not_found"):
-            _log(log_callback, f"Signature {sig}: không có dữ liệu ({status}).")
+            _log(log_callback, f"Signature {sig}: không tìm thấy dữ liệu ({status}).")
             ok_count += 1
             continue
 
@@ -89,8 +92,7 @@ def fetch_sigs(
         err_count += 1
 
     if ok_count == 0:
-        _log(log_callback, "Không có request nào thành công.")
-        raise RuntimeError("Không có request nào thành công.")
+        raise RuntimeError(f"Không có request nào thành công.")
 
     uniq_rows = []
     seen = set()
@@ -111,7 +113,6 @@ def fetch_sigs(
 
 
 def _parse_json(input_file: str, log_callback: Callable[[str], None] | None = None) -> list[tuple]:
-    _log(log_callback, f"Đọc dữ liệu từ file: {input_file}")
     try:
         with open(input_file, "r", encoding="utf-8") as f:
             raw = json.load(f)
@@ -134,66 +135,47 @@ def _parse_json(input_file: str, log_callback: Callable[[str], None] | None = No
             for col in COLUMNS
         ))
 
-    _log(log_callback, f"Đã chuẩn hóa {len(rows)} bản ghi từ JSON.")
     return rows
 
 
 def _import_db(rows: list[tuple], log_callback: Callable[[str], None] | None = None) -> None:
     if not rows:
-        _log(log_callback, "Không có bản ghi nào để thêm vào database.")
         return
 
-    _log(log_callback, "Bắt đầu nhập dữ liệu vào PostgreSQL...")
-
     try:
-        conn = psycopg2.connect(
-            host=Config.DB_HOST,
-            port=Config.DB_PORT,
-            dbname=Config.DB_NAME,
-            user=Config.DB_USER,
-            password=Config.DB_PASSWORD,
-        )
-        _log(log_callback, "Kết nối Database thành công.")
-    except (ValueError, psycopg2.Error) as exc:
-        _log(log_callback, f"Lỗi Database khi kết nối: {exc}")
-        raise RuntimeError(f"Lỗi Database khi kết nối: {exc}") from exc
+        conn = connect_db()
+    except sqlite3.Error as exc:
+        _log(log_callback, f"Lỗi CSDL khi kết nối: {exc}")
+        return
 
     sql = """
-        INSERT INTO malware_signatures (
+        INSERT OR IGNORE INTO malware_signatures (
             file_name, signature, file_type, first_seen, file_type_mime,
             md5_hash, sha1_hash, sha256_hash, sha3_384_hash
-        ) VALUES %s
-        ON CONFLICT (sha256_hash) DO NOTHING;
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
 
     try:
-        with conn.cursor() as cursor:
-            execute_values(cursor, sql, rows)
+        conn.executemany(sql, rows)
         conn.commit()
-        _log(log_callback, f"Đã thêm {len(rows)} bản ghi vào database.")
-    except psycopg2.Error as exc:
+    except sqlite3.Error as exc:
         conn.rollback()
-        _log(log_callback, f"Lỗi Database khi thực hiện insert: {exc}")
-        raise RuntimeError(f"Lỗi Database khi thực hiện insert: {exc}") from exc
+        _log(log_callback, f"Lỗi CSDL khi insert: {exc}")
     finally:
         conn.close()
-        _log(log_callback, "Đóng kết nối Database.")
 
 
 def sync_sigs(json_path: Path, log_callback: Callable[[str], None] | None = None) -> None:
     if json_path.exists():
-        _log(log_callback, f"Xóa file cũ: {json_path}")
         json_path.unlink()
 
     fetch_sigs(output_file=str(json_path), log_callback=log_callback)
     if not json_path.exists():
         raise RuntimeError(f"Không tìm thấy file JSON sau khi fetch: {json_path}")
 
-    _log(log_callback, f"Dữ liệu signatures được lưu tại: {json_path}")
     rows = _parse_json(str(json_path), log_callback=log_callback)
     if not rows:
         raise RuntimeError(f"Không tạo được dữ liệu hợp lệ từ file JSON: {json_path}")
 
-    _log(log_callback, f"Đã tạo {len(rows)} bản ghi.")
     _import_db(rows, log_callback=log_callback)
-    _log(log_callback, "Hoàn tất nhập dữ liệu vào PostgreSQL.")
+    _log(log_callback, f"Đồng bộ signatures thành công: {len(rows)} bản ghi hợp lệ.")

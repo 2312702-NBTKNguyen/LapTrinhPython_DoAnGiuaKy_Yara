@@ -42,7 +42,7 @@ uv run python main.py
 ### Yêu cầu
 
 - Python 3.8+
-- PostgreSQL 12+
+- SQLite (tích hợp sẵn trong Python sqlite3)
 
 ### Bước 1: Clone repository
 
@@ -72,21 +72,17 @@ Lưu ý: dependencies chính đã được quản lý qua `pyproject.toml` để
 Dựa vào file .env.example, tạo file .env với các thông tin database:
 
 ```bash
-DB_HOST=your_host_here
-DB_PORT=your_port_here
-DB_NAME=your_database_name_here
-DB_USER=your_username_here
-DB_PASSWORD=your_password_here
+DB_FILE=data/scanner.db
+DB_TIMEOUT_SECONDS=30
+DB_BUSY_TIMEOUT_MS=5000
 ```
 
 Ví dụ:
 
 ```bash
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=yara_malware_signatures
-DB_USER=postgres
-DB_PASSWORD=your_password_
+DB_FILE=data/scanner.db
+DB_TIMEOUT_SECONDS=30
+DB_BUSY_TIMEOUT_MS=5000
 ```
 
 ### Bước 4: Lấy và cấu hình MalwareBazaar API key
@@ -104,13 +100,14 @@ MB_AUTH_KEY=your_malwarebazaar_api_key_here
 ### Bước 5: Khởi tạo database
 
 ```bash
-psql -U postgres -f database/01_create_database.sql
-psql -U postgres -d yara_malware_signatures -f database/02_create_tables.sql
+uv run python main.py
 ```
+
+Khi khởi động, ứng dụng sẽ tự tạo file SQLite và schema nếu chưa tồn tại.
 
 ### Bước 6: Import dữ liệu malware signatures
 
-Trong GUI, bấm nút `Khởi tạo dữ liệu` để đồng bộ signatures vào cơ sở dữ liệu.
+Trong GUI, bấm nút `Đồng bộ signatures` để đồng bộ signatures vào cơ sở dữ liệu.
 
 ## Cách sử dụng
 
@@ -160,6 +157,12 @@ Nội dung chính gồm:
 - Kiến trúc hệ thống và luồng dữ liệu: overview/architecture.md
 - Đặc tả tính năng: overview/features.md
 
+## Quy ước xử lý lỗi
+
+- Core layer (data_tools, malware_scanner) ưu tiên raise exception thay vì vừa log lỗi vừa raise cho cùng một sự cố.
+- GUI/entrypoint là boundary hiển thị lỗi cho người dùng qua log panel hoặc messagebox.
+- Exception message cần đủ ngữ cảnh để GUI có thể hiển thị trực tiếp mà không cần log lỗi lặp lại ở core.
+
 ## Cách phát hiện malware
 
 Hệ thống sử dụng chuỗi phát hiện theo thứ tự: hash database -> YARA pattern matching.
@@ -177,11 +180,11 @@ Chi tiết triển khai được mô tả trong overview/architecture.md và ove
 
 ### 1. Thiếu kết nối database
 
-Kiểm tra lại các biến DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD trong .env.
+Kiểm tra lại biến DB_FILE trong .env và quyền ghi tại thư mục chứa file database.
 
 ### 2. Không có MB_AUTH_KEY
 
-Lỗi thường gặp khi bấm `Khởi tạo dữ liệu` trong GUI.
+Lỗi thường gặp khi bấm `Đồng bộ signatures` trong GUI.
 
 Thêm MB_AUTH_KEY vào .env rồi chạy lại.
 

@@ -7,7 +7,6 @@ requires-python = ">=3.8"
 dependencies = [
     "requests",
     "python-dotenv",
-    "psycopg2-binary",
     "yara-python",
     "customtkinter>=5.2.2",
     "olefile>=0.47",
