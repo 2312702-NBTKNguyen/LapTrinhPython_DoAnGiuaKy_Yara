@@ -29,7 +29,7 @@ LOG_PREFIX_PATTERN = re.compile(r"^\[(INFO|SUCCESS|WARNING|ERROR)\]\s*", re.IGNO
 class MainWindow(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("Hybrid Malware Scanner")
+        self.title("Lập trình Python")
         self._size = (1440, 860)
         self._prev_state = "normal"
         self.geometry(f"{self._size[0]}x{self._size[1]}")
@@ -149,13 +149,13 @@ class MainWindow(ctk.CTk):
         identity.grid(row=0, column=0, sticky="w", padx=(14, 8), pady=12)
         ctk.CTkLabel(
             identity,
-            text="Lập trình Python",
+            text="LẬP TRÌNH PYTHON",
             font=ctk.CTkFont(family="Segoe UI Semibold", size=24, weight="bold"),
             text_color="#0f172a",
         ).pack(anchor="w")
         ctk.CTkLabel(
             identity,
-            text="Ứng dụng thư viện YARA trong phát hiện Malware",
+            text="Ứng dụng thư viện YARA trong phát hiện Mã độc",
             font=ctk.CTkFont(family="Segoe UI", size=12),
             text_color="#475569",
         ).pack(anchor="w", pady=(2, 0))
