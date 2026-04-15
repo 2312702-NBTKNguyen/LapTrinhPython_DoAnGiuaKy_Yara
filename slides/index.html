@@ -80,7 +80,7 @@
             </p>
             <ul>
               <li>Biến thể hóa nhanh, thay đổi mẫu nhị phân liên tục.</li>
-              <li>Đóng gói, nén, mã hóa để che giấu payload.</li>
+              <li>Đóng gói, nén, mã hóa để che giấu phần lõi mã độc (payload).</li>
               <li>Giả mạo hành vi hợp lệ để giảm xác suất bị phát hiện.</li>
             </ul>
           </article>
@@ -166,34 +166,58 @@
           <article class="arch-step reveal">
             <span class="arch-layer">Ứng dụng thực tế</span>
             <h3>YARA được dùng để làm gì?</h3>
-            <ul>
-              <li>Săn tìm mối đe dọa: truy tìm dấu vết tấn công trong nhật ký hệ thống, bộ nhớ và mẫu tệp nghi ngờ.</li>
-              <li>Ứng phó sự cố: phân loại nhanh tệp đáng ngờ trong quá trình điều tra và xử lý.</li>
-              <li>Phân loại mẫu mã độc: sàng lọc ban đầu trước khi chuyển sang phân tích chuyên sâu.</li>
-              <li>Tự động hóa giám sát: tích hợp vào quy trình trung tâm an ninh để quét định kỳ.</li>
+            <ul class="fancy-list">
+              <li>
+                <span class="icon">🔍</span>
+                <span class="text"><strong>Săn tìm mối đe dọa</strong> Truy tìm dấu vết tấn công trong nhật ký hệ thống, bộ nhớ và các mẫu tệp nghi ngờ.</span>
+              </li>
+              <li>
+                <span class="icon">⚡</span>
+                <span class="text"><strong>Ứng phó sự cố</strong> Phân loại nhanh các tệp có nhãn đáng ngờ giữa vô vàn chỉ báo trong quá trình xử lý.</span>
+              </li>
+              <li>
+                <span class="icon">🔬</span>
+                <span class="text"><strong>Phân loại mã độc</strong> Sàng lọc và phân nhóm ban đầu trước khi chuyển sang Sandbox phân tích chuyên sâu.</span>
+              </li>
+              <li>
+                <span class="icon">🛡️</span>
+                <span class="text"><strong>Tự động giám sát</strong> Tích hợp vào quy trình của Trung tâm an ninh (SOC) để quét và báo cáo định kỳ.</span>
+              </li>
             </ul>
           </article>
 
-          <article class="arch-step reveal">
+          <article class="arch-step reveal new-brand-container">
             <span class="arch-layer">Tổ chức tiêu biểu</span>
-            <h3>Đơn vị sử dụng YARA</h3>
-            <div class="brand-wall">
-              <div class="brand-card">
-                <span class="brand-rank">01</span>
-                <span class="brand-chip">VirusTotal</span>
-              </div>
-              <div class="brand-card">
-                <span class="brand-rank">02</span>
-                <span class="brand-chip">CrowdStrike</span>
-              </div>
-              <div class="brand-card">
-                <span class="brand-rank">03</span>
-                <span class="brand-chip">Palo Alto Networks (Unit 42)</span>
-              </div>
-              <div class="brand-card">
-                <span class="brand-rank">04</span>
-                <span class="brand-chip">Mandiant</span>
-              </div>
+            <h3>Đơn vị áp dụng YARA</h3>
+            <div class="tech-brand-grid">
+               <div class="tech-card">
+                 <div class="tech-icon">VT</div>
+                 <div class="tech-info">
+                    <h4>VirusTotal</h4>
+                    <p>Google Cloud</p>
+                 </div>
+               </div>
+               <div class="tech-card">
+                 <div class="tech-icon">CS</div>
+                 <div class="tech-info">
+                    <h4>CrowdStrike</h4>
+                    <p>Falcon Platform</p>
+                 </div>
+               </div>
+               <div class="tech-card">
+                 <div class="tech-icon">PA</div>
+                 <div class="tech-info">
+                    <h4>Palo Alto</h4>
+                    <p>Unit 42</p>
+                 </div>
+               </div>
+               <div class="tech-card">
+                 <div class="tech-icon">MD</div>
+                 <div class="tech-info">
+                    <h4>Mandiant</h4>
+                    <p>Threat Intel</p>
+                 </div>
+               </div>
             </div>
           </article>
         </div>
@@ -251,20 +275,20 @@
 
         <div class="code-block reveal"><pre><code><span class="hl-keyword">import</span> <span class="hl-string">"pe"</span>
 
-<span class="hl-keyword">rule</span> <span class="hl-rule-name">Demo_WannaCry_Indicators</span> {
+<span class="hl-keyword">rule</span> <span class="hl-rule-name">Demo_WannaCry_Indicators</span> <span class="hl-bracket">{</span>
     <span class="hl-section">meta:</span>
-        <span class="hl-variable">author</span> = <span class="hl-string">"LapTrinhPython_DoAnGiuaKy_Yara"</span>
-        <span class="hl-variable">description</span> = <span class="hl-string">"Phat hien IOC lien quan WannaCry"</span>
-        <span class="hl-variable">date</span> = <span class="hl-string">"2026-04-13"</span>
+        <span class="hl-variable">author</span> <span class="hl-operator">=</span> <span class="hl-string">"Nguyễn Bá Thiều Khôi Nguyên - Hồ Quốc Long"</span>
+        <span class="hl-variable">description</span> <span class="hl-operator">=</span> <span class="hl-string">"Phát hiện mã độc tống tiền WannaCry dựa trên các chuỗi đặc trưng..."</span>
+        <span class="hl-variable">date</span> <span class="hl-operator">=</span> <span class="hl-string">"2026-03-18"</span>
 
     <span class="hl-section">strings:</span>
-        <span class="hl-variable">$s1</span> = <span class="hl-string">"mssecsvc2.0"</span> <span class="hl-keyword">ascii</span> <span class="hl-keyword">nocase</span>
-        <span class="hl-variable">$s2</span> = <span class="hl-string">"@WanaDecryptor@.exe"</span> <span class="hl-keyword">ascii</span> <span class="hl-keyword">nocase</span>
-        <span class="hl-variable">$s3</span> = <span class="hl-string">"Oops, your files have been encrypted!"</span> <span class="hl-keyword">ascii</span> <span class="hl-keyword">wide</span> <span class="hl-keyword">nocase</span>
+        <span class="hl-variable">$s1</span> <span class="hl-operator">=</span> <span class="hl-string">"mssecsvc2.0"</span> <span class="hl-keyword">ascii</span> <span class="hl-keyword">nocase</span>
+        <span class="hl-variable">$s2</span> <span class="hl-operator">=</span> <span class="hl-string">"@WanaDecryptor@.exe"</span> <span class="hl-keyword">ascii</span> <span class="hl-keyword">nocase</span>
+        <span class="hl-variable">$s3</span> <span class="hl-operator">=</span> <span class="hl-string">"Oops, your files have been encrypted!"</span> <span class="hl-keyword">ascii</span> <span class="hl-keyword">wide</span> <span class="hl-keyword">nocase</span>
 
     <span class="hl-section">condition:</span>
-        <span class="hl-module">pe</span>.<span class="hl-module">is_pe</span> <span class="hl-keyword">and</span> <span class="hl-number">2</span> <span class="hl-keyword">of</span> (<span class="hl-variable">$s*</span>)
-}</code></pre></div>
+        <span class="hl-module">pe</span><span class="hl-operator">.</span><span class="hl-module">is_pe</span> <span class="hl-keyword">and</span> <span class="hl-number">2</span> <span class="hl-keyword">of</span> <span class="hl-bracket">(</span><span class="hl-variable">$s*</span><span class="hl-bracket">)</span>
+<span class="hl-bracket">}</span></code></pre></div>
 
         <p class="reveal">
           Rule dùng module <code>pe</code> và yêu cầu tối thiểu 2 chỉ dấu xuất hiện đồng thời để giảm cảnh báo sai.
@@ -310,10 +334,10 @@
           =========================================== -->
     <section class="slide" id="slide-10">
       <div class="slide-content">
-         <div class="section-num reveal">08 — Họ malware trong dự án</div>
-        <h2 class="reveal">20 HỌ MALWARE ĐƯỢC PHÂN NHÓM THEO CHỨC NĂNG</h2>
+         <div class="section-num reveal">08 — Phạm vi nhận diện</div>
+        <h2 class="reveal">XÂY DỰNG TẬP LUẬT YARA</h2>
         <p class="reveal">
-          Tập luật hiện tại bao phủ 20 họ malware, tổ chức thành 4 nhóm chức năng để thuận tiện mở rộng và bảo trì.
+          Tập luật hiện tại bao phủ 20 họ mã độc nguy hiểm nhất hiện nay, được module hóa thành 4 nhóm hành vi để tối ưu quá trình rà quét và dễ dàng bảo trì.
         </p>
         <div class="malware-grid">
           <div class="malware-category reveal">
@@ -373,7 +397,7 @@
             <ul>
               <li>Triển khai thành công quy trình quét mã độc với cơ chế hai lớp.</li>
               <li>Xử lý được cả quét file đơn và quét thư mục nhiều tệp.</li>
-              <li>Lưu lịch sử quét và chữ ký vào PostgreSQL để truy vết.</li>
+              <li>Lưu lịch sử quét và chữ ký vào CSDL để truy vết.</li>
             </ul>
           </article>
 
@@ -382,7 +406,7 @@
             <ul>
               <li>Giao diện hiển thị trạng thái quét và kết quả phát hiện theo thời gian thực.</li>
               <li>Tạo báo cáo text phục vụ tổng hợp và đối chiếu.</li>
-              <li>Hỗ trợ mở rộng rule theo họ malware mà không thay đổi kiến trúc lõi.</li>
+              <li>Hỗ trợ mở rộng rule theo họ mã độc mà không thay đổi kiến trúc lõi.</li>
             </ul>
           </article>
         </div>
@@ -390,25 +414,25 @@
     </section>
 
         <!-- ===========================================
-          SLIDE 10: ADVANTAGES / LIMITATIONS / USE CASES
+          SLIDE 10: 
           =========================================== -->
     <section class="slide" id="slide-12">
       <div class="slide-content">
          <div class="section-num reveal">10 — Đánh giá</div>
         <h2 class="reveal">ƯU ĐIỂM & NHƯỢC ĐIỂM</h2>
 
-        <article class="arch-step reveal">
-          <span class="arch-layer">Ưu điểm</span>
-          <ul>
-            <li>Kiến trúc kết hợp đối chiếu mã băm và YARA cân bằng giữa tốc độ và độ chính xác.</li>
-            <li>Tập luật dễ mở rộng theo chỉ báo tấn công mới và theo từng họ mã độc.</li>
-            <li>Mô-đun hóa rõ ràng, thuận lợi cho bảo trì và nâng cấp.</li>
-          </ul>
-        </article>
+        <div class="pros-cons-grid">
+          <article class="eval-card pro-card reveal">
+            <h3> Ưu điểm</h3>
+            <ul>
+              <li>Kiến trúc kết hợp đối chiếu mã băm và YARA cân bằng giữa tốc độ và độ chính xác.</li>
+              <li>Tập luật dễ mở rộng theo chỉ báo tấn công mới và theo từng họ mã độc.</li>
+              <li>Mô-đun hóa rõ ràng, thuận lợi cho bảo trì và nâng cấp.</li>
+            </ul>
+          </article>
 
-        <div class="arch-flow">
-          <article class="arch-step reveal">
-            <span class="arch-layer">Nhược điểm</span>
+          <article class="eval-card con-card reveal">
+            <h3> Nhược điểm</h3>
             <ul>
               <li>Phụ thuộc chất lượng và độ cập nhật của tập luật.</li>
               <li>Không thay thế hoàn toàn phân tích hành vi động trong sandbox.</li>
@@ -432,7 +456,7 @@
             <span class="arch-layer">Đóng góp chính</span>
             <h3>Giá trị kỹ thuật đạt được</h3>
             <ul>
-              <li>Xây dựng thành công hệ thống phát hiện malware bằng Python với YARA.</li>
+              <li>Xây dựng thành công hệ thống phát hiện mã độc bằng Python với YARA.</li>
               <li>Áp dụng mô hình hai lớp giúp tối ưu tốc độ và tăng độ bao phủ phát hiện.</li>
               <li>Chuẩn hóa dữ liệu quét để truy vết và tái sử dụng trong nghiên cứu tiếp theo.</li>
             </ul>
@@ -442,8 +466,8 @@
             <span class="arch-layer">Hướng phát triển</span>
             <h3>Mở rộng trong tương lai</h3>
             <ul>
-              <li>Tích hợp phân tích hành vi động và sandbox tự động.</li>
-              <li>Bổ sung pipeline cập nhật rule từ threat intelligence feeds.</li>
+              <li>Tích hợp phân tích hành vi động thông qua môi trường cách ly (sandbox).</li>
+              <li>Xây dựng quy trình cập nhật tập luật tự động từ các nguồn dữ liệu tình báo mối đe dọa.</li>
               <li>Đánh giá thực nghiệm trên tập mẫu lớn để tinh chỉnh độ chính xác.</li>
             </ul>
           </article>
@@ -451,7 +475,7 @@
 
         <div class="highlight reveal">
           <p>
-            Kết luận: YARA là thành phần hiệu quả khi kết hợp với Python để xây dựng hệ thống phát hiện malware có tính thực tiễn và phù hợp môi trường học thuật.
+            <strong>Kết luận:</strong> YARA là thành phần hiệu quả khi kết hợp với Python để xây dựng hệ thống phát hiện mã độc có tính thực tiễn và phù hợp môi trường học thuật.
           </p>
         </div>
       </div>

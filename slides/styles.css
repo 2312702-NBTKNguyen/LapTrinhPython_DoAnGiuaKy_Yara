@@ -585,47 +585,144 @@ code {
    =========================================== */
 #slide-4c .yara-usage-grid {
     display: grid;
-    gap: var(--block-gap);
+    grid-template-columns: 1.3fr 1fr;
+    gap: var(--content-gap);
+    align-items: stretch;
 }
 
-#slide-4c .brand-wall {
+#slide-4c .yara-usage-grid .arch-step::after {
+    display: none;
+}
+
+#slide-4c .fancy-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.8rem 0 0 0 !important;
+}
+
+#slide-4c .fancy-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    margin-bottom: 0.7rem !important;
+    background: #ffffff;
+    padding: 0.6rem 0.8rem;
+    border-radius: 8px;
+    border: 1px solid #e7ddd0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    transition: transform 0.2s;
+}
+
+#slide-4c .fancy-list li:hover {
+    transform: translateX(4px);
+    border-color: #b85c38;
+}
+
+#slide-4c .fancy-list .icon {
+    font-size: 1.4rem;
+    line-height: 1.2;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+#slide-4c .fancy-list .text {
+    font-size: inherit;
+    font-family: var(--font-body);
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+
+#slide-4c .fancy-list strong {
+    color: #9a3f21;
+    display: block;
+    margin-bottom: 0.1rem;
+}
+
+#slide-4c .new-brand-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#slide-4c .tech-brand-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.55rem;
-    margin-top: 0.35rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    margin-top: 0.5rem;
 }
 
-#slide-4c .brand-card {
+#slide-4c .tech-card {
+    position: relative;
+    background: linear-gradient(145deg, #ffffff 0%, #f7f6f2 100%);
+    border: 1px solid #e7ddd0;
+    border-radius: 12px;
+    padding: 1.2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.6rem;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+    z-index: 1;
+}
+
+#slide-4c .tech-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(184, 92, 56, 0.05) 0%, rgba(196, 30, 58, 0.1) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+}
+
+#slide-4c .tech-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    border-color: #b85c38;
+    box-shadow: 0 10px 20px rgba(184, 92, 56, 0.12);
+}
+
+#slide-4c .tech-card:hover::before {
+    opacity: 1;
+}
+
+#slide-4c .tech-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+    color: #ffffff;
     display: flex;
     align-items: center;
-    gap: 0.65rem;
-    background: linear-gradient(155deg, #fff 0%, #f7f4ef 100%);
-    border: 1px solid #e7ddd0;
-    border-left: 4px solid #b85c38;
-    border-radius: 9px;
-    padding: 0.55rem 0.75rem;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-}
-
-#slide-4c .brand-rank {
-    width: 1.9rem;
-    height: 1.9rem;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
     justify-content: center;
-    font-size: 0.76rem;
     font-weight: 800;
-    color: #ffffff;
-    background: linear-gradient(135deg, #9a3f21 0%, #c56138 100%);
-    flex-shrink: 0;
+    font-size: 1.1rem;
+    letter-spacing: 0.05em;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, background 0.3s ease;
 }
 
-#slide-4c .brand-chip {
-    color: #7f2b14;
-    font-size: clamp(0.92rem, 1.25vw, 1.08rem);
-    font-weight: 700;
-    line-height: 1.34;
+#slide-4c .tech-card:hover .tech-icon {
+    transform: scale(1.1) rotate(4deg);
+    background: linear-gradient(135deg, #b85c38 0%, #8f1b31 100%);
+}
+
+#slide-4c .tech-info h4 {
+    color: var(--text-primary);
+    font-size: calc(var(--body-size) * 1.15);
+    font-family: var(--font-body);
+    font-weight: 800;
+    margin: 0;
+}
+
+#slide-4c .tech-info p {
+    color: var(--text-secondary);
+    font-size: calc(var(--body-size) * 1.05);
+    font-family: var(--font-body);
+    margin: 0;
+    line-height: 1.4;
 }
 
 @media (max-width: 760px) {
@@ -756,7 +853,11 @@ code {
 }
 
 .code-block .hl-operator {
-    color: #d4d4d4;
+    color: #cccccc;
+}
+
+.code-block .hl-bracket {
+    color: #ffd700;
 }
 
 .code-block .hl-module {
@@ -911,7 +1012,95 @@ tr:hover td {
 
 #slide-13 .highlight p {
     text-align: center;
-    font-style: italic;
+    font-style: normal;
+    font-weight: 500;
+}
+
+/* ===========================================
+   PROS & CONS CARDS
+   =========================================== */
+.pros-cons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--content-gap);
+    align-items: start;
+}
+
+.eval-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: clamp(1.2rem, 2.5vw, 2rem);
+    box-shadow: 0 4px 16px var(--shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+}
+
+.eval-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.eval-card h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: clamp(1.1rem, 1.8vw, 1.4rem);
+    margin-bottom: 1rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px dashed var(--border);
+}
+
+.pro-card {
+    border-top: 5px solid #2e7d32;
+    background: linear-gradient(180deg, rgba(46, 125, 50, 0.03) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.pro-card h3 {
+    color: #2e7d32;
+}
+
+.pro-card li {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: 0.8rem;
+    list-style: none;
+}
+
+.pro-card li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #2e7d32;
+    font-weight: bold;
+}
+
+.con-card {
+    border-top: 5px solid #c62828;
+    background: linear-gradient(180deg, rgba(198, 40, 40, 0.03) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.con-card h3 {
+    color: #c62828;
+}
+
+.con-card li {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: 0.8rem;
+    list-style: none;
+}
+
+.con-card li::before {
+    content: "✕";
+    position: absolute;
+    left: 0;
+    color: #c62828;
+    font-weight: bold;
+}
+
+.eval-card ul {
+    margin-left: 0;
 }
 
 /* ===========================================

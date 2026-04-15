@@ -29,6 +29,10 @@ class SlidePresentation {
         return;
       }
 
+      if (codeElement.firstElementChild) {
+        return; // Skip auto-highlighting if block already contains manual markup
+      }
+
       const rawCode = codeElement.textContent || "";
       let html = rawCode
         .replace(/&/g, "&amp;")
@@ -37,25 +41,25 @@ class SlidePresentation {
 
       html = html.replace(
         /#.*$/gm,
-        (m) => `<span class="code-token-comment">${m}</span>`,
+        (m) => `<span class="hl-comment">${m}</span>`,
       );
       html = html.replace(
         /"([^"\\]|\\.)*"/g,
-        (m) => `<span class="code-token-string">${m}</span>`,
+        (m) => `<span class="hl-string">${m}</span>`,
       );
       html = html.replace(
         /\b\d+\b/g,
-        (m) => `<span class="code-token-number">${m}</span>`,
+        (m) => `<span class="hl-number">${m}</span>`,
       );
       html = html.replace(
         /\b([a-zA-Z_]\w*)\.([a-zA-Z_]\w*)\b/g,
         (_m, p1, p2) => {
-          return `<span class="code-token-property">${p1}.${p2}</span>`;
+          return `<span class="hl-module">${p1}</span>.<span class="hl-variable">${p2}</span>`;
         },
       );
       html = html.replace(
         keywordPattern,
-        (m) => `<span class="code-token-keyword">${m}</span>`,
+        (m) => `<span class="hl-keyword">${m}</span>`,
       );
 
       codeElement.innerHTML = html;
