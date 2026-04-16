@@ -1,4 +1,4 @@
-# ỨNG DỤNG THƯ VIỆN YARA TRONG PHÁT HIỆN MÃ ĐỘC.
+# ỨNG DỤNG THƯ VIỆN YARA TRONG PHÁT HIỆN MÃ ĐỘC
 
 **Học phần:** Lập trình Python
 
@@ -17,10 +17,10 @@
 
 - Quét 1 file hoặc cả thư mục.
 - Phát hiện bằng 2 lớp:
-  - Hash Match: so khớp hash với dữ liệu signature đã đồng bộ.
+  - Hash Match: so khớp mã băm với dữ liệu signature đã đồng bộ.
   - YARA Match: so khớp theo luật YARA trong thư mục rules.
 - Hiển thị kết quả theo từng file (phát hiện / sạch / lỗi).
-- Lưu report quét vào thư mục logs.
+- Lưu báo cáo quét vào thư mục logs.
 - Đồng bộ signatures từ MalwareBazaar thông qua API.
 
 ## 2) Yêu cầu môi trường
@@ -62,7 +62,7 @@ pip install -r requirements.txt
 
 ### Bước 4: Tạo file .env
 
-Tạo file .env ở thư mục gốc dự án dựa trên `.env.example` và điền các giá trị phù hợp
+Tạo file .env ở thư mục gốc dự án dựa trên `.env.example` và điền các giá trị phù hợp.
 
 Lưu ý:
 
@@ -78,7 +78,7 @@ python main.py
 ### Bước 6: Thao tác trên giao diện
 
 1. Chọn file hoặc thư mục cần quét.
-2. (Tùy chọn) Nhấn "Đồng bộ signatures" để cập nhật dữ liệu hash từ MalwareBazaar.
+2. (Tùy chọn) Nhấn "Đồng bộ signatures" để cập nhật dữ liệu mã băm từ MalwareBazaar.
 3. Nhấn "Quét" để bắt đầu.
 4. Theo dõi:
    - Kết quả ở bảng Results.
